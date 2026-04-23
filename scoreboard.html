@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>直播看板 - 场地顺序优化版</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --bg-navy: #000b5e;
+            --bg-finished: #001a00;
+            --border-blue: #1a3ab2;
+            --text-yellow: #ffff00;
+            --text-white: #ffffff;
+        }
+
+        body {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 禁止全身滚动 */
+}
+
+ /* 找到这段代码并替换 */
+.global-header {
+    flex: 0 0 auto;
+    padding: 8px 0;
+    text-align: center; /* 🌟 新增：让标题居中 */
+}
+    .global-title { font-size: 26px; letter-spacing: 4px; margin: 0; }
+
+  .scoreboard-grid {
+    flex: 1; 
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr); 
+    gap: 8px;
+    padding: 8px;
+    overflow: hidden; 
+}
+
+        .match-card {
+            background-color: var(--bg-navy);
+            border: 1px solid var(--border-blue);
+            display: flex; flex-direction: column;
+            position: relative;
+        }
+
+        .match-card.finished { background-color: var(--bg-finished); border-color: #27ae60; }
+
+        .card-row-top {
+            display: flex; justify-content: space-between;
+            font-size: 14px; padding: 4px 10px;
+            background: rgba(0,0,0,0.4);
+        }
+
+        /* 🌟 选手信息区：名字加大，单位换行 */
+        .card-row-players {
+            display: flex; justify-content: space-between; padding: 8px 12px;
+            align-items: flex-start;
+        }
+        .player-info { display: flex; flex-direction: column; flex: 1; }
+        .p-left { align-items: flex-start; text-align: left; }
+        .p-right { align-items: flex-end; text-align: right; }
+
+        .name-txt { 
+            font-size: 28px; /* 名字显著加大 */
+            font-weight: 900; 
+            color: #fff;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+        .unit-txt { 
+            font-size: 16px; /* 单位小字 */
+            color: rgba(255,255,255,0.7); 
+            font-weight: normal;
+        }
+
+        .card-row-points {
+            display: flex; justify-content: center; align-items: center;
+            flex: 1;
+        }
+
+        .point-display {
+            font-size: 70px;
+            font-family: "Arial Black", sans-serif;
+            color: var(--text-yellow);
+            display: flex; align-items: center; gap: 20px;
+        }
+
+        .finished .point-display { font-size: 110px; color: #fff; }
+
+        .set-history-row {
+            text-align: center; font-size: 18px;
+            color: var(--text-yellow); padding-bottom: 12px;
+            letter-spacing: 2px; font-weight: bold;
+        }
+
+        .empty { opacity: 0.15; border-style: dashed; }
+.status-tag {
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    /* 待进行：蓝色 */
+    .waiting-tag { background: #2196f3; color: white; }
+    /* 正在进行：红色闪烁 */
+    .playing-tag { 
+        background: #ff5252; color: white; 
+        animation: status-blink 1s infinite; 
+    }
+    /* 已完赛：绿色 */
+    .finished-tag { background: #27ae60; color: white; }
+
+    @keyframes status-blink {
+        0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; }
+    }
+
+    /* 🌟 场地号样式：置于顶部中央，加大加粗 */
+    .court-label {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 20px;
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    </style>
+</head>
+<body>
+
+<div class="global-header">
+    <h1 class="global-title">2026年德阳市青少年羽毛球联赛 - 实时看板</h1>
+</div>
+
+<div class="scoreboard-grid" id="grid"></div>
+
+<script>
+    const socket = io();
+    const grid = document.getElementById('grid');
+
+    socket.on('connect', () => { socket.emit('request_all_scores'); });
+
+   socket.on('scoreboard_data', (displayList) => {
+        grid.innerHTML = '';
+        
+        displayList.forEach(m => {
+            const p1Data = parsePlayer(m.p1); 
+            const p2Data = parsePlayer(m.p2);
+            const isFinished = (m.status === 'finished');
+            const isPlaying = (m.status === 'playing');
+            const isWaiting = (m.status === 'waiting');
+
+            const card = document.createElement('div');
+            card.className = `match-card ${m.status}`;
+            
+            // 状态文字映射
+            let statusText = "待进行";
+            let statusClass = "waiting-tag";
+            if (isPlaying) { statusText = "正在进行"; statusClass = "playing-tag"; }
+            if (isFinished) { statusText = "已完赛"; statusClass = "finished-tag"; }
+
+           const isSwapped = m.isSwapped;
+            const pLeftData = isSwapped ? parsePlayer(m.p2) : parsePlayer(m.p1);
+            const pRightData = isSwapped ? parsePlayer(m.p1) : parsePlayer(m.p2);
+
+            // 🌟 核心：同时翻转左右的分数显示，让视觉完美对齐
+            let leftScore, rightScore, leftSets, rightSets;
+            if (isSwapped) {
+                leftScore = m.p2Score; rightScore = m.p1Score;
+                leftSets = m.p2Sets; rightSets = m.p1Sets;
+            } else {
+                leftScore = m.p1Score; rightScore = m.p2Score;
+                leftSets = m.p1Sets; rightSets = m.p2Sets;
+            }
+           let historyStr = m.setHistory || "";
+            if (isSwapped && historyStr) {
+                // 利用正则表达式，把字符串里所有的 "数字:数字" 替换为翻转后的顺序
+                historyStr = historyStr.replace(/(\d+)\s*:\s*(\d+)/g, '$2:$1');
+            }
+            const mainScore = isFinished ? `${leftSets}:${rightSets}` : `${leftScore}:${rightScore}`;
+            const subScore = isFinished ? historyStr : `当前局分 ${leftSets}:${rightSets}`;
+            card.innerHTML = `
+                <div class="card-row-top">
+                    <span style="color:#ffeb3b; font-weight:bold;">🕒 ${m.startTime}</span>
+                    <span class="court-label">${m.court} 号场</span> <span class="status-tag ${statusClass}">${statusText}</span>
+                </div>
+                <div style="font-size:18px; font-weight:bold; padding:4px 15px; color:#ccc;">${m.matchType || "比赛项目"}</div>
+                <div class="card-row-players">
+                    <div class="player-info p-left">
+                        <span class="name-txt">${pLeftData.name}</span>   <span class="unit-txt">${pLeftData.unit}</span>   </div>
+                    <div class="player-info p-right">
+                        <span class="name-txt">${pRightData.name}</span>  <span class="unit-txt">${pRightData.unit}</span>  </div>
+                </div>
+                </div>
+                <div class="card-row-points">
+                    <div class="point-display">${mainScore}</div>
+                </div>
+                <div class="set-history-row">${subScore}</div>
+            `;
+            grid.appendChild(card);
+        });
+
+        for(let i = displayList.length; i < 12; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'match-card empty';
+            grid.appendChild(empty);
+        }
+    });
+// 🌟 监听管理端推过来的赛事名称
+socket.on('update_tournament_name', (name) => {
+    const titleEl = document.querySelector('.global-title');
+    if (titleEl) {
+        titleEl.innerText = name + " - 实时看板";
+    }
+});
+   function parsePlayer(str) {
+        if(!str) return { name: "待定", unit: "" };
+        
+        // 🌟 核心修复 1：强行抹除所有隐藏的换行符和回车符
+        const cleanStr = str.replace(/[\r\n]+/g, ' ').trim();
+        
+        // 🌟 核心修复 2：增强型正则，精准提取第一个括号里的文字作单位，无视括号前后的杂乱空格
+        const parts = cleanStr.match(/^(.*?)[\(（]([^()（）]+)[\)）](.*)$/);
+        
+        if (parts) {
+            let name = parts[1].trim();
+            let unit = parts[2].trim();
+            let extra = parts[3].trim(); // 获取括号后面的可能存在的种子号 (如 1)
+            
+            if (extra) name += " " + extra; // 把种子号拼回到名字后面
+            return { name: name, unit: unit };
+        } else {
+            return { name: cleanStr, unit: "" };
+        }
+    }
+</script>
+</body>
+</html>

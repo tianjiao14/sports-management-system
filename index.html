@@ -1,0 +1,3192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体育赛事管理系统</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --primary-color: #27ae60;
+            --placement-color: #f39c12;
+            --bg-color: #f0f2f5;
+            --sidebar-bg: #2c3e50;
+            --sidebar-text: #bdc3c7;
+            --sidebar-active: #1abc9c;
+            --card-bg: #ffffff;
+            --text-main: #303133;
+            --border-color: #dcdfe6;
+            --line-color: #27ae60;
+            --line-thickness: 2px;
+        }
+
+        body { font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- 侧边栏布局 --- */
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+        .sidebar-header { padding: 25px 20px; font-size: 20px; font-weight: bold; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--sidebar-active); }
+        .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
+        .menu-label { padding: 10px 20px; font-size: 12px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; }
+        .menu-item { padding: 12px 20px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.3s; color: var(--sidebar-text); border-left: 4px solid transparent; }
+        .menu-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .menu-item.active { background: rgba(26, 188, 156, 0.1); color: var(--sidebar-active); border-left-color: var(--sidebar-active); font-weight: bold; }
+        .tournament-list-item { font-size: 14px; position: relative; }
+        .tournament-list-item .delete-btn { position: absolute; right: 10px; opacity: 0; transition: 0.2s; color: #e74c3c; font-size: 16px; }
+        .tournament-list-item:hover .delete-btn { opacity: 0.6; }
+        .tournament-list-item .delete-btn:hover { opacity: 1; }
+
+        /* --- 主内容区 --- */
+        .main-content { flex: 1; overflow-y: auto; padding: 30px; position: relative; }
+        .content-container { max-width: 1100px; margin: 0 auto; }
+        .container { background-color: var(--card-bg); padding: 35px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); margin-bottom: 30px; }
+        .section-title { font-size: 24px; font-weight: 600; padding-left: 15px; border-left: 5px solid var(--primary-color); margin-bottom: 30px; }
+
+        /* --- 基础组件 --- */
+        .upload-area { border: 2px dashed #1a73e8; padding: 50px; text-align: center; color: #1a73e8; border-radius: 12px; background: #f8fbff; cursor: pointer; transition: 0.3s; margin-bottom: 25px; }
+        .upload-area:hover { background: #eef4ff; border-color: #34a853; }
+        #log { display: none !important; }
+        .unit-hl { color: #ffcc00; font-weight: bold; }
+
+        .form-group { margin-bottom: 25px; }
+        .form-row { display: flex; gap: 20px; }
+        .form-col { flex: 1; }
+        label { display: block; font-weight: 500; margin-bottom: 10px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        
+        .button-group { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+        button { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; color: white; transition: 0.3s; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:disabled { background: #ccc !important; cursor: not-allowed; transform: none; }
+        .main-button { background-color: var(--primary-color); }
+        .secondary-button { background-color: #909399; }
+        .blue-button { background-color: #1a73e8; }
+        
+        .name-input-toggle { margin-bottom: 25px; display: flex; }
+        .name-input-toggle button { background: #fff; color: #666; border: 1px solid var(--border-color); color: var(--text-main); border-radius: 0; }
+        .name-input-toggle button:first-child { border-radius: 4px 0 0 4px; }
+        .name-input-toggle button:last-child { border-radius: 0 4px 4px 0; }
+        .name-input-toggle button.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .name-input-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+
+        /* --- 赛事图表样式 --- */
+        .data-table { border-collapse: collapse; width: 100%; margin-top: 15px; font-size: 14px; }
+        .data-table th, .data-table td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+.crosstable th small { font-weight: normal; color: #0f0f0f; font-size: 12px; display: block; margin-top: 4px; }
+        .data-table th { background-color: #f8f9fa; }
+        .crosstable .diagonal { background: linear-gradient(to top right, transparent calc(50% - 1px), #ccc, transparent calc(50% + 1px)); background-color: #f2f2f2; }
+        /* 🌟 修复积分表列宽不均的问题，强制等宽分配 */
+        .crosstable { 
+            table-layout: fixed; 
+        }
+        /* 固定左侧第一列（名字列）的宽度 */
+        .crosstable th:first-child { 
+            width: 140px; 
+        } 
+        /* 压缩最后三列（积分、净胜、名次）的宽度，把空间留给中间的选手对阵格 */
+        .crosstable th:nth-last-child(1), 
+        .crosstable th:nth-last-child(2), 
+        .crosstable th:nth-last-child(3) { 
+            width: 50px; 
+            padding: 4px; 
+        }
+        /* 保证超长单位名称会自动换行，不会撑破格子 */
+        .crosstable th, .crosstable td {
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+        .schedule-table th { background-color: #2c3e50; color: white; }
+        
+        .result-title { text-align: center; color: var(--primary-color); margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .bracket-wrapper { display: flex; overflow-x: auto; padding: 20px 0; width: 100%; justify-content: flex-start; }
+        .bracket { display: flex; margin: 0 auto; position: relative; padding-right: 60px; }
+        .round { display: flex; flex-direction: column; justify-content: space-around; margin-right: 100px; min-width: 120px; position: relative; }
+        .match { display: flex; flex-direction: column; justify-content: center; align-items: center;position: relative; margin: 15px 0; overflow: visible !important;}
+        
+        .participant {
+            background: #fff; border: 1px solid var(--border-color); border-radius: 4px;
+            padding: 6px 12px; font-size: 12px; font-weight: bold; position: relative; z-index: 2;
+            min-height: 30px; height: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            cursor: pointer; user-select: none; min-width: 90px; width: fit-content;
+            max-width: 250px; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; text-align: center; line-height: 1.2;
+            white-space: normal; word-break: break-all;
+        }
+
+        .participant small { display: block; font-size: 0.85em; font-weight: normal; opacity: 0.8; margin-top: 2px; }
+        .participant.winner { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .participant.winner small { color: #eee; } 
+        .participant.loser { color: #aaa; text-decoration: line-through; background-color: #f9f9f9; }
+        
+        .connector-line { position: absolute; z-index: 1; border-color: var(--line-color); border-style: solid; border-width: 0; pointer-events: none; }
+        .connector-top { right: -70px; width: 70px; top: 50%; border-top-width: var(--line-thickness); border-right-width: var(--line-thickness); border-top-right-radius: 8px; }
+        .connector-bottom { right: -70px; width: 70px; bottom: 50%; border-bottom-width: var(--line-thickness); border-right-width: var(--line-thickness); border-bottom-right-radius: 8px; }
+        .connector-top::after { content: ''; position: absolute; bottom: -1px; right: -20px; width: 20px; height: var(--line-thickness); background-color: var(--line-color); }
+        
+        .court-tag { position: absolute; top: -16px; left: 50% !important;transform: translateX(-50%) !important;font-size: 10px; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.2); white-space: nowrap; }
+        .court-info { font-size: 13px !important; font-weight: bold; display: block; margin-top: 2px; }
+        .schedule-table td .court-info { font-size: 13px !important; color: #409eff; font-weight: bold; display: block; }
+        
+        .score-inputs { position: absolute; top: auto; bottom: 50%; right: -75px; width: 60px; height: 20px; display: flex; align-items: center; justify-content: center; gap: 2px; z-index: 20; margin-bottom: 2px; }
+        .lower-match .score-inputs { top: 50%; bottom: auto; margin-top: 2px; margin-bottom: 0; }
+        .score-input { width: 24px !important; height: 20px; text-align: center; font-size: 11px; padding: 0 !important; border: 1px solid #27ae60; background: #fff; margin: 0 !important;}
+        .s-top, .s-bottom { position: static !important; }
+        .final-score { position: absolute; right: -60px; top: 50%; transform: translateY(-50%); background-color: #fff; padding: 2px 5px; border-radius: 4px; border: 1px solid var(--primary-color); }
+
+        .placement-section-title { color: var(--placement-color); text-align: center; font-size: 1.2em; font-weight: bold; margin: 50px 0 25px 0; }
+        .placement-header-small { color: var(--placement-color); text-align: center; font-size: 1em; margin-bottom: 15px; font-weight: bold; }
+        .bronze-container { display: flex; justify-content: center; }
+        .bronze-match { width: 100px; }
+        .placement-5-8-grid { display: flex; justify-content: center; gap: 80px; margin-top: 20px; flex-wrap: wrap; }
+        .placement-col { display: flex; flex-direction: column; justify-content: center; gap: 40px; min-width: 150px; }
+        
+        .participant.placement { border: 1px solid var(--placement-color); text-align: center; color: #555; margin-bottom: 0; margin-top: 10px; }
+        .participant.placement:first-child { margin-top: 0; }
+        .participant.placement:hover { background-color: #fffaf0; }
+        .participant.placement.winner { background-color: var(--placement-color); color: white; border-color: var(--placement-color); }
+        .participant.placement.loser { background-color: #fdfdfd; text-decoration: none; opacity: 0.6; }
+        #final-standings-container { text-align: center; }
+        .standings-list { list-style: none; padding: 0; display: inline-block; text-align: left; min-width: 250px; }
+        .standings-list li { padding: 12px 20px; border-bottom: 1px dashed #ddd; font-size: 16px; display: flex; justify-content: space-between; }
+        .standings-list strong { color: var(--primary-color); font-weight: bold; }
+/* --- 移动端适配样式 --- */
+@media (max-width: 768px) {
+    body { flex-direction: column; overflow: auto; }
+
+    /* 1. 侧边栏改为滑动抽屉式 */
+    .sidebar {
+        position: fixed;
+        left: -260px; /* 默认隐藏在左侧 */
+        top: 0;
+        height: 100%;
+        z-index: 2000;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+    }
+    .sidebar.mobile-active {
+        left: 0;
+    }
+
+    /* 2. 主内容区调整 */
+    .main-content {
+        padding: 15px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .container {
+        padding: 20px 15px;
+        margin-bottom: 15px;
+    }
+
+    /* 3. 表单行堆叠显示 */
+    .form-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    /* 4. 移动端专用的顶部导航条 */
+    .mobile-nav-bar {
+        display: flex !important;
+        align-items: center;
+        background-color: var(--sidebar-bg);
+        color: white;
+        padding: 10px 15px;
+        position: sticky;
+        top: 0;
+        z-index: 1500;
+    }
+    .hamburger-btn {
+        font-size: 24px;
+        cursor: pointer;
+        margin-right: 15px;
+    }
+
+    /* 5. 遮罩层 */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1900;
+    }
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    /* 6. 按钮组在手机上自动换行 */
+    .button-group {
+        justify-content: center;
+    }
+    button {
+        width: 100%; /* 移动端按钮占满一行更好点按 */
+        margin-bottom: 5px;
+    }
+
+    /* 7. 让积分表和赛程表支持横向滑动 */
+    .group-container {
+        overflow-x: auto;
+    }
+    .crosstable {
+        min-width: 600px; /* 强制积分表有最小宽度，防止在手机上挤扁 */
+    }
+}
+
+/* 默认隐藏移动端导航条 */
+.mobile-nav-bar { display: none; }
+
+@media print {
+    /* 1. 结构重置：确保多页可见 */
+    html, body {
+        height: auto !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+
+    /* 2. 隐藏页眉页脚网址和时间 */
+    @page { 
+        size: auto; 
+        margin: 5mm 10mm; 
+    }
+
+    .sidebar, #setup-view, #step1-view, #step2-view, #name-entry-view, 
+    #controls-container, .button-group, button, select, .score-inputs, .delete-btn,
+    .qualification-box { /* 🌟 加上 .qualification-box 把它在打印时彻底隐藏 */
+        display: none !important; 
+    }
+
+    /* 4. ⭐ 核心过滤：当处于“仅赛程模式”时，隐藏所有积分表和出线确认框 */
+    .print-schedule-only .crosstable, 
+    .print-schedule-only .qualification-box,
+    .print-schedule-only #final-standings-container {
+        display: none !important;
+    }
+
+    /* 5. 分页逻辑：第二阶段（淘汰赛）强制从新一页开始 */
+    .bracket-container { 
+        page-break-before: always !important; 
+        display: block !important;
+        padding-top: 30px !important;
+    }
+
+   .group-container, .crosstable, .schedule-table { 
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        margin-bottom: 30px !important;
+    }
+
+    /* 6. 表格美化：赛程表铺满 */
+    .data-table { width: 100% !important; border-collapse: collapse !important; }
+    .data-table th, .data-table td { border: 1px solid #000 !important; padding: 8px !important; }
+    
+    /* 7. 隐藏“推送”等操作文字 */
+    .court-tag span, .court-tag i { display: none !important; }
+    .court-tag { border: 1px solid #333 !important; display: inline-block !important; padding: 2px 5px !important; }
+}  
+.placement-block {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        display: block !important;
+    }
+
+    /* 2. 防止对阵的小方块或连线被切断 */
+    .match, .round {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* 3. 强制展开所有滚动区域，并隐藏滚动条残影 */
+    .bracket-wrapper {
+        overflow: visible !important;
+        overflow-x: visible !important;
+    }
+    .bracket-wrapper::-webkit-scrollbar {
+        display: none !important;
+    }
+</style>
+</head>
+<body>
+<div class="mobile-nav-bar">
+    <div class="hamburger-btn" onclick="toggleMobileSidebar()">☰</div>
+    <div style="font-weight: bold;">赛事助手</div>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
+<div class="sidebar">
+    <div class="sidebar-header">赛事助手 v2.0</div>
+    <div class="sidebar-menu">
+        <div class="menu-label">基础流程</div>
+        <div class="menu-item active" id="nav-import" onclick="showStep(1)">
+            <span>📁</span>名单导入解析
+        </div>
+        <div class="menu-item" id="nav-setup" onclick="showStep(2)">
+            <span>⚙️</span> 新建赛事设置
+        </div>
+        
+        <div class="menu-label" style="margin-top:20px;">我的比赛项目</div>
+        <div id="sidebar-tournament-list"></div>
+        <div class="menu-label" style="margin-top:20px;">系统管理</div>
+        <div class="menu-item" onclick="resetSystem()" style="color: #e74c3c;">
+            <span>🗑️</span> 一键重置系统
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="content-container">
+        
+        <div id="step1-view" class="container">
+            <h1 class="section-title" style="color:#1a73e8; border-left-color: #1a73e8;">第一步：名单导入</h1>
+            <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <b>📁 点击选择文件夹 或 拖入 Excel 报名表</b><br>
+                <span style="font-size:12px; color:#999;">支持自动从多个 Excel 提取名单并去重</span>
+                <input type="file" id="fileInput" multiple webkitdirectory directory accept=".xlsx, .xls" style="display:none">
+            </div>
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <button id="dlBtn" onclick="exportToExcel()" class="secondary-button" disabled>⬇️ 导出全项目汇总表 (.xlsx)</button>
+            </div>
+            <div id="parsed-projects-list" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+        </div>
+
+        <div id="step2-view" class="container" style="display:none;">
+            <h1 class="section-title">第二步：赛事基础设置</h1>
+            <form id="setup-form">
+                <div class="form-group mb-3">
+                    
+      <div class="form-group mb-3" style="background: #f8fbff; padding: 15px; border-radius: 8px; border: 1px solid #1a73e8;">
+    <label style="font-weight:bold; color:#1a73e8;">🏆 赛事名称 </label>
+    <input type="text" id="global-tournament-title" class="form-control" 
+           placeholder="例如：2026年德阳市青少年羽毛球联赛" 
+           oninput="syncTournamentName(this.value)">
+</div><label style="font-weight:bold;">项目名称</label>
+                    <input type="text" id="sport-name" class="form-control" value="新比赛" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <label style="font-weight:bold;">参赛人数/队数</label>
+                        <input type="number" id="num-participants" class="form-control" value="8" min="2" required>
+                    </div>
+
+                    <div class="form-col">
+    <label style="font-weight:bold;">运动项目</label>
+    <select id="sport-type-select" class="form-control">
+        <option value="badminton">羽毛球 (单项)</option>
+        <option value="table_tennis">乒乓球</option>
+        <option value="basketball">篮球</option>
+        <option value="generic">自定义 (通用记分牌)</option>
+        <option value="badminton_team" style="color: #1a73e8; font-weight: bold;">🏸 羽毛球团体赛</option>
+    </select>
+</div>
+
+                    <div class="form-col">
+                        <label style="font-weight:bold;">赛制选择</label>
+                        <select id="tournament-type" class="form-control" onchange="toggleRRSettings()">
+                            <option value="knockout">单败淘汰赛</option>
+                            <option value="round-robin">小组循环赛</option>
+                            <option value="mixed">混合赛制</option>
+                        </select>
+                    </div>
+
+                    <div class="form-col">
+                        <label style="font-weight:bold;">局数设置</label>
+                        <select id="match-format" class="form-control">
+                            <option value="1">单场/局决胜</option>
+                            <option value="3" selected>三局两胜</option>
+                            <option value="5">五局三胜</option>
+                            <option value="7">七局四胜</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="round-robin-settings" style="display:none; margin-top: 20px; padding: 20px; background: #fdfdfd; border: 1px solid #eee; border-radius: 8px;">
+                    <h4 style="margin-top:0; color: var(--primary-color);">⚙️ 循环赛/小组赛规则</h4>
+                    <div class="form-row">
+                        <div class="form-col"><label>胜场积分</label><input type="number" id="pts-win" value="3"></div>
+                        <div class="form-col"><label>平局积分</label><input type="number" id="pts-draw" value="1"></div>
+                        <div class="form-col"><label>负场积分</label><input type="number" id="pts-loss" value="0"></div>
+                        <div class="form-col"><label>小组数 (留空自动)</label><input type="number" id="num-groups" placeholder="自动计算"></div>
+                        <div class="form-col"><label>每组出线人数</label><input type="number" id="num-advance-per-group" value="2"></div>
+                    </div>
+                </div>
+
+                <div class="mt-4" style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+    <button type="button" onclick="document.getElementById('file-input').click()" style="background-color: #6366f1;">
+        📤 导入备份项目
+    </button>
+    
+    <button type="button" class="main-button" onclick="toNameEntry()">
+        下一步：核对名单 ➡️
+    </button>
+</div>
+            </form>
+        </div>
+
+        <div id="name-entry-view" class="container" style="display:none;">
+            <h2 class="section-title">第三步：核对参赛名单</h2>
+            <div class="name-input-toggle" style="margin-bottom: 20px; display: flex; gap: 10px;">
+                <button id="toggle-manual" type="button" class="main-button" style="background:#fff; color:#333; border:1px solid #ddd;">手动微调</button>
+                <button id="toggle-batch" type="button" class="main-button">批量粘贴</button>
+            </div>
+            <div id="manual-inputs" class="name-input-grid" style="display:none;"></div>
+            <div id="batch-input">
+                <textarea id="participants-list" placeholder="每行一个选手名，例如：&#10;张三(1)&#10;李四(德阳中学)" style="min-height: 250px;"></textarea>
+            </div>
+            <div class="button-group mt-4">
+                <button type="button" id="back-to-setup" class="secondary-button" onclick="showStep(2)">返回修改配置</button>
+                <button type="button" id="generate-btn" class="main-button" onclick="generateTournament()">🚀 确认生成对阵表</button>
+            </div>
+        </div>
+
+        <div id="results" style="margin-top: 30px;"></div>
+
+        <div id="controls-container" class="container" style="display:none; padding: 25px 35px; margin-top: 30px;">
+            <div style="background: #ebf5ff; padding: 15px 25px; border-radius: 8px; border: 1px solid #409eff; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                <div style="color: #1a73e8; font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                    🌐 全局编排
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <label style="margin:0;">场地数：</label>
+                    <input type="number" id="controls-global-courts" value="5" min="1" style="width: 60px; padding: 5px;">
+                    
+                    <label style="color: #e67e22; margin:0;">上午开始：</label>
+                    <input type="time" id="global-start-time" value="09:00" style="width: 100px; padding: 5px;">
+                    
+                    <label style="margin:0;">时长(分)：</label>
+                    <input type="number" id="global-duration" value="20" style="width: 60px; padding: 5px;">
+
+                    <label style="color: #e67e22; margin:0;">上午截止：</label>
+                    <input type="time" id="morning-end-time" value="12:00" style="width: 100px; padding: 5px;" title="如果比赛结束超过此时间，将跳到下午">
+
+                    <label style="color: #e74c3c; margin:0;">下午开始：</label>
+                    <input type="time" id="afternoon-start-time" value="14:00" style="width: 100px; padding: 5px;">
+                    <label style="color: #e74c3c; margin:0;">下午截止：</label>
+                    <input type="time" id="afternoon-end-time" value="18:00" style="width: 100px; padding: 5px;" title="如果比赛结束超过此时间，将排入第二天">
+                    <button type="button" onclick="assignGlobalCourts('controls-global-courts')" class="blue-button" style="padding: 10px 20px; background-color: #1a73e8;">⚡ 编排当前组别</button>
+                    <button type="button" onclick="pushAllScheduledMatches()" class="blue-button" style="padding: 10px 20px; background-color: #f39c12;">📤 推送当前组别</button>
+                    <button type="button" onclick="assignEverythingGlobal('controls-global-courts')" class="secondary-button" style="padding: 10px 20px; background-color: #e74c3c;">🌎 一键全局编排</button>
+                    <button type="button" onclick="pushEverythingGlobal()" class="blue-button" style="padding: 10px 20px; background-color: #9c27b0;">🌍 一键推送全部</button>
+                </div>
+            </div>
+
+            <div class="button-group" style="justify-content: center; gap: 12px;">
+                <button id="undo-btn" style="background-color: #4b5563;">↩️ 撤销比分</button>
+                <button id="refresh-btn" style="background-color: #f59e0b;">🔀 随机重抽签</button>
+                <button id="toggle-edit-names-btn" style="background-color: #10b981;">✏️ 修正名单</button>
+                <button id="save-btn" style="background-color: #10b981;">💾 保存本地</button>
+                <button id="print-btn" style="background-color: #1f2937;">🖨️ 打印当前表</button>
+    <button onclick="exportGlobalSchedule()" style="background-color: #8b5cf6;">🌍 导出全局总日程</button>
+    <button onclick="exportResultBook()" style="background-color: #059669; font-weight: bold; border: 2px solid #fff;">🏆 导出总成绩册</button>
+    <button id="export-json-btn" style="background-color: #9ca3af;">💾 备份项目</button>
+</div>
+        </div>
+
+    </div>
+</div>
+
+<input type="file" id="file-input" style="display:none" accept=".json">
+
+<script>
+const socket = io(window.location.origin); 
+
+// --- Socket.io 监听 ---
+socket.on('score_to_manager', (data) => {
+    const matchNode = document.getElementById(data.id);
+    if (matchNode && !matchNode.classList.contains('decided')) {
+        const inputs = matchNode.querySelector('.score-inputs');
+        if (inputs) {
+            inputs.querySelector('.s-top').value = data.s1;
+            inputs.querySelector('.s-bottom').value = data.s2;
+        }
+    }
+});
+
+socket.on('result_to_manager', async (data) => { // ⚠️ 注意这里加了 async
+    const set1 = data.setScore1 !== undefined ? data.setScore1 : data.score1;
+    const set2 = data.setScore2 !== undefined ? data.setScore2 : data.score2;
+    const details = data.details || "";
+
+    const matchNode = document.getElementById(data.id);
+
+    // === 核心修复：后台项目补偿机制 ===
+    if (!matchNode) {
+        // 修复 1：正确提取项目 ID (例如从 t_17123456_r0-m0 提取 t_17123456)
+        const parts = data.id.split('_');
+        if (parts.length < 2) return;
+        const projectId = parts[0] + '_' + parts[1];
+
+        if (allTournaments[projectId]) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(allTournaments[projectId].html, 'text/html');
+            const hiddenNode = doc.getElementById(data.id);
+            
+            if (hiddenNode) {
+                // 修复 2：真正实现后台的 HTML 写入逻辑
+                if (hiddenNode.classList.contains('match')) {
+                    // 淘汰赛：写入比分并标记完成
+                    let scoreDisplay = doc.createElement('div');
+                    scoreDisplay.className = 'final-score';
+                    scoreDisplay.innerHTML = `${set1} : ${set2}`;
+                    hiddenNode.appendChild(scoreDisplay);
+                    
+                    const inputs = hiddenNode.querySelector('.score-inputs');
+                    if (inputs) inputs.style.display = 'none';
+                    
+                    // (淘汰赛在后台不自动触发晋级，保留给你切回界面时手动点击胜者，防错位)
+                } else if (hiddenNode.tagName === 'TD' && hiddenNode.id.includes('rr-')) {
+                    // 循环赛：写入积分表
+                    const pNameSpans = hiddenNode.querySelectorAll('.p-name');
+                    if (pNameSpans.length >= 2) {
+                        const p1 = pNameSpans[0].getAttribute('data-realname') || pNameSpans[0].innerText.replace(/\s*\n\s*/g, '').trim();
+                        const p2 = pNameSpans[1].getAttribute('data-realname') || pNameSpans[1].innerText.replace(/\s*\n\s*/g, '').trim();
+                        const crossTable = hiddenNode.closest('.group-container')?.querySelector('.crosstable');
+
+                        if (crossTable) {
+                            // 模拟 getRealName 提取名字
+                            const headers = Array.from(crossTable.querySelectorAll('th.player-header')).map(th => th.getAttribute('data-name') || th.innerText.replace(/^\d+\.\s*/, '').replace(/\s*\n\s*/g, '').trim());
+                            const idx1 = headers.indexOf(p1);
+                            const idx2 = headers.indexOf(p2);
+
+                            if (idx1 !== -1 && idx2 !== -1) {
+                                const cell1 = crossTable.rows[idx1 + 1].cells[idx2 + 1];
+                                const cell2 = crossTable.rows[idx2 + 1].cells[idx1 + 1];
+                                
+                                const reversedDetails = details.split(' ').map(s => {
+                                    if(!s.includes(':')) return s;
+                                    let [s_left, s_right] = s.split(':');
+                                    return `${s_right}:${s_left}`;
+                                }).join(' ');
+
+                                cell1.innerHTML = `<strong>${set1}:${set2}</strong><br><span style="font-size:12px; color:#888; display:block; line-height:1.2; margin-top:2px;">${details}</span>`;
+                                cell2.innerHTML = `<strong>${set2}:${set1}</strong><br><span style="font-size:12px; color:#888; display:block; line-height:1.2; margin-top:2px;">${reversedDetails}</span>`;
+
+                                const courtInfo = hiddenNode.querySelector('.court-info');
+                                if (courtInfo) {
+                                    courtInfo.style.color = '#999';
+                                    courtInfo.innerText = `[已完赛 ${set1}:${set2}]`;
+                                }
+                                hiddenNode.style.backgroundColor = '#f9fafc';
+                            }
+                        }
+                    }
+                }
+                
+                // 修复 3：将更新后的 DOM 字符串写回，并强制定向保存到数据库
+                allTournaments[projectId].html = doc.body.innerHTML;
+                await dbMgr.put(allTournaments[projectId]); // 直接操作 DB，避开 saveData 的局限性
+            }
+        }
+        return; // 后台处理完毕，退出
+    }
+
+    // === 当前可见界面的正常完赛逻辑（保持不变） ===
+    if (matchNode.classList.contains('match') && !matchNode.classList.contains('decided')) {
+        const inputs = matchNode.querySelector('.score-inputs');
+        if (inputs) {
+            inputs.querySelector('.s-top').value = set1;
+            inputs.querySelector('.s-bottom').value = set2;
+            inputs.style.display = 'none';
+
+            let scoreDisplay = matchNode.querySelector('.final-score');
+            if (!scoreDisplay) {
+                scoreDisplay = document.createElement('div');
+                scoreDisplay.className = 'final-score';
+                matchNode.appendChild(scoreDisplay);
+            }
+            scoreDisplay.innerHTML = `${set1} : ${set2}`;
+            
+            const winnerSlot = (set1 > set2) ? 'top' : 'bottom';
+            const winnerNode = matchNode.querySelector(`[data-slot="${winnerSlot}"]`);
+            if (winnerNode) winnerNode.click();
+        }
+   } else if (matchNode.tagName === 'TD' && matchNode.id.includes('rr-')) {
+        const pNameSpans = matchNode.querySelectorAll('.p-name');
+        if (pNameSpans.length >= 2) {
+            const p1 = pNameSpans[0].getAttribute('data-realname') || pNameSpans[0].innerText.replace(/\s*\n\s*/g, '').trim();
+            const p2 = pNameSpans[1].getAttribute('data-realname') || pNameSpans[1].innerText.replace(/\s*\n\s*/g, '').trim();
+            const groupContainer = matchNode.closest('.group-container');
+            const crossTable = groupContainer.querySelector('.crosstable');
+
+            if (crossTable) {
+                const headers = Array.from(crossTable.querySelectorAll('th.player-header')).map(getRealName);
+                const idx1 = headers.indexOf(p1);
+                const idx2 = headers.indexOf(p2);
+
+                if (idx1 !== -1 && idx2 !== -1) {
+                    const cell1 = crossTable.rows[idx1 + 1].cells[idx2 + 1];
+                    const cell2 = crossTable.rows[idx2 + 1].cells[idx1 + 1];
+                    
+                    const content1 = `<strong>${set1}:${set2}</strong><br><span style="font-size:12px; color:#888; display:block; line-height:1.2; margin-top:2px;">${details}</span>`;
+                    
+                    const reversedDetails = details.split(' ').map(s => {
+                        if(!s.includes(':')) return s;
+                        let [s_left, s_right] = s.split(':');
+                        return `${s_right}:${s_left}`;
+                    }).join(' ');
+                    const content2 = `<strong>${set2}:${set1}</strong><br><span style="font-size:12px; color:#888; display:block; line-height:1.2; margin-top:2px;">${reversedDetails}</span>`;
+                    
+                    cell1.innerHTML = content1;
+                    cell2.innerHTML = content2;
+
+                    const courtInfo = matchNode.querySelector('.court-info');
+                    if (courtInfo) {
+                        courtInfo.style.color = '#999';
+                        courtInfo.innerText = `[已完赛 ${set1}:${set2}]`;
+                    }
+                    matchNode.style.backgroundColor = '#f9fafc';
+
+                    calculateGroupStandings(crossTable);
+                    updateStandings();
+                    saveData(false);
+                }
+            }
+        }
+    }
+    
+    // 如果在当前前台，常规保存
+    if (activeId && allTournaments[activeId]) {
+        allTournaments[activeId].html = ui.results.innerHTML;
+        saveData(false); 
+    }
+});
+// --- 生成与推送逻辑 ---
+function toggleRRSettings() {
+    const type = document.getElementById('tournament-type').value;
+    document.getElementById('round-robin-settings').style.display = (type === 'round-robin' || type === 'mixed') ? 'block' : 'none';
+}
+
+async function generateTournament() {
+    const name = document.getElementById('sport-name').value || "新比赛";
+    const count = parseInt(document.getElementById('num-participants').value) || 8;
+    const type = document.getElementById('tournament-type').value;
+    const format = parseInt(document.getElementById('match-format').value);
+    const sportType = document.getElementById('sport-type-select').value; 
+    
+    const id = 't_' + Date.now();
+    let players = [];
+    
+    // 1. 判断当前是在“手动微调”还是“批量粘贴”模式，并获取名单
+    const isManualMode = document.getElementById('manual-inputs').style.display !== 'none';
+    if (isManualMode) {
+        const inputs = document.querySelectorAll('#manual-inputs input');
+        inputs.forEach(input => {
+            if (input.value.trim()) players.push(input.value.trim());
+        });
+    } else {
+        const txt = document.getElementById('participants-list').value;
+        players = txt.split('\n').map(x => x.trim()).filter(x => x);
+    }
+
+    // 2. 核心修复：如果没有输入任何名单，自动根据“人数”补齐默认名字
+    if (players.length === 0) {
+        for (let i = 1; i <= count; i++) {
+            players.push(`选手 ${i}`);
+        }
+    } else if (players.length === 1) {
+        alert("❌ 参赛名单不足！请至少输入 2 名选手。");
+        return;
+    }
+
+    // 🌟 核心修复点：在此处提前将 activeId 设置为当前新 ID
+    // 这样 getBracketHTML 和 renderGroupStage 获取到的前缀才是当前项目的，防止多个项目 ID 撞车！
+    activeId = id; 
+
+    // 3. 生成对阵图
+    let html = `<h2 style="text-align:center">${name}</h2>`;
+    if (type === 'knockout') {
+        html += getBracketHTML(arrangePlayersWithSeeding(players), name);
+    } else {
+        html += renderGroupStage(players, name, type === 'mixed');
+    }
+
+    // 4. 保存并渲染
+    allTournaments[id] = { id, sportName: name, type, matchFormat: format, sportType: sportType, html, players, count };
+    setActive(id);
+    saveData(false);
+}
+// --- index.html 中的修复版 ---
+function pushToCourt(matchId, courtNum, isBatch = false) {
+    const matchNode = document.getElementById(matchId);
+    if (!matchNode || !socket.connected) return;
+
+    // 🌟 核心修复：在这里定义项目数据，否则后续代码会报错中断
+    const currentTournament = allTournaments[activeId]; 
+    if (!currentTournament) return;
+    const sportType = currentTournament.sportType || 'badminton';
+
+    let p1 = "", p2 = "";
+    if (matchNode.classList.contains('match')) {
+        p1 = matchNode.querySelector('[data-slot="top"]').innerText;
+        p2 = matchNode.querySelector('[data-slot="bottom"]').innerText;
+    } else {
+        const nameSpans = matchNode.querySelectorAll('.p-name');
+        if (nameSpans.length >= 2) {
+            p1 = nameSpans[0].getAttribute('data-realname') || nameSpans[0].innerText.replace(/\s*\n\s*/g, '').trim();
+            p2 = nameSpans[1].getAttribute('data-realname') || nameSpans[1].innerText.replace(/\s*\n\s*/g, '').trim();
+        }
+    }
+
+    // 提取时间（含天数前缀）
+    let matchTime = "待定";
+    const timeTag = matchNode.querySelector('.court-tag, .court-info');
+    if (timeTag) {
+        const timeMatch = timeTag.innerText.match(/(D\d+\s)?\d{2}:\d{2}/);
+        if (timeMatch) matchTime = timeMatch[0];
+    }
+
+    // 执行推送
+    socket.emit('push_match', {
+        id: matchId, 
+        court: courtNum, 
+        p1: p1, p2: p2,
+        time: matchTime,
+        title: currentTournament.sportName || "比赛项目", 
+        format: currentTournament.matchFormat || 3, 
+        sportType: sportType
+    });
+
+    if (!isBatch) alert(`🚀 已成功推送至 ${courtNum} 号场！`);
+}
+// --- index.html 新增全局推送函数 ---
+async function pushEverythingGlobal() {
+    const ids = Object.keys(allTournaments);
+    if (ids.length === 0) return;
+
+    if (!confirm(`🌍 准备推送所有项目（共 ${ids.length} 个）的未赛场次？`)) return;
+
+    socket.emit('clear_court_queues', 'all');
+
+    let totalCount = 0;
+    const parser = new DOMParser();
+
+    for (let id of ids) {
+        const tournament = allTournaments[id];
+        const doc = parser.parseFromString(tournament.html, 'text/html');
+        
+        // 🌟 核心修复：将 ^= 改为 *= 从而匹配带前缀的循环赛 TD
+        const allMatches = doc.querySelectorAll('.match, td[id*="rr-"]');
+        
+        allMatches.forEach(node => {
+            if (node.querySelector('.final-score') || node.querySelector('strong')) return;
+
+            const tag = node.querySelector('.court-tag, .court-info');
+            if (tag) {
+                const courtMatch = tag.innerText.match(/(\d+)号场/);
+                if (courtMatch) {
+                    const courtNum = parseInt(courtMatch[1]);
+                    
+                    let p1 = "", p2 = "";
+                    if (node.classList.contains('match')) {
+                        // 淘汰赛提取
+                        const tNode = node.querySelector('[data-slot="top"]');
+                        const bNode = node.querySelector('[data-slot="bottom"]');
+                        p1 = tNode ? tNode.innerText : "待定";
+                        p2 = bNode ? bNode.innerText : "待定";
+                    } else {
+                        // 🌟 循环赛/小组赛提取：确保能抓取到 .p-name 里的名字
+                        const nameSpans = node.querySelectorAll('.p-name');
+                        if (nameSpans.length >= 2) {
+                            p1 = nameSpans[0].innerText;
+                            p2 = nameSpans[1].innerText;
+                        } else {
+                            // 兼容直接写在 TD 里的文本
+                            const names = node.innerText.split(' VS ');
+                            if(names.length === 2) {
+                                p1 = names[0].split('\n')[0].trim();
+                                p2 = names[1].split('\n')[0].trim();
+                            }
+                        }
+                    }
+
+                    if (!p1 || !p2 || p1 === "轮空" || p2 === "轮空") return;
+
+                    let matchTime = "待定";
+                    const timeMatch = tag.innerText.match(/(D\d+\s)?\d{2}:\d{2}/);
+                    if (timeMatch) matchTime = timeMatch[0];
+
+                    socket.emit('push_match', {
+                        id: node.id,
+                        court: courtNum,
+                        p1: p1,
+                        p2: p2,
+                        time: matchTime,
+                        title: tournament.sportName,
+                        format: tournament.matchFormat,
+                        sportType: tournament.sportType
+                    });
+                    totalCount++;
+                }
+            }
+        });
+    }
+    alert(`✅ 全局推送完成！共成功推送 ${totalCount} 场比赛。`);
+}
+// --- index.html 确保选择器包含 .schedule-table td ---
+function pushAllScheduledMatches() {
+    if (!confirm("即将推送当前项目所有比赛。是否清空裁判端现有的积压比赛？")) return;
+    
+    socket.emit('clear_court_queues', 'all');
+    
+    // 🌟 确保选择器涵盖了淘汰赛(.match)和循环赛表格(td)
+    const allMatches = ui.results.querySelectorAll('.match:not(.decided), .schedule-table td');
+    let count = 0;
+
+    allMatches.forEach(node => {
+        // 如果已经有比分（strong标签），跳过
+        if (node.querySelector('strong')) return;
+
+        const tag = node.querySelector('.court-tag, .court-info');
+        if (tag) {
+            const matchId = node.id;
+            const courtMatch = tag.innerText.match(/(\d+)号场/);
+            
+            if (matchId && courtMatch) {
+                const courtNum = parseInt(courtMatch[1]);
+                pushToCourt(matchId, courtNum, true); // 这里会调用你已经修好的 pushToCourt
+                count++;
+            }
+        }
+    });
+
+    if (count > 0) alert(`🚀 成功！已将当前项目的 ${count} 场比赛推送到裁判端。`);
+    else alert("未发现可推送的比赛，请检查是否已进行“编排”。");
+}
+// --- IndexedDB 数据库 ---
+const dbMgr = {
+    dbName: "TournamentDB", storeName: "tournaments", db: null,
+    open() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, 2);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(this.storeName)) db.createObjectStore(this.storeName, { keyPath: "id" });
+            };
+            request.onsuccess = (e) => { this.db = e.target.result; resolve(); };
+            request.onerror = () => reject("数据库打开失败");
+        });
+    },
+    put(data) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, "readwrite");
+            const request = tx.objectStore(this.storeName).put(data);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject("保存失败");
+        });
+    },
+    getAll() {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, "readonly");
+            const request = tx.objectStore(this.storeName).getAll();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject("读取失败");
+        });
+    },
+    delete(id) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, "readwrite");
+            const request = tx.objectStore(this.storeName).delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject("删除失败");
+        });
+    },
+    clear() {
+        return new Promise((resolve) => {
+            const tx = this.db.transaction(this.storeName, "readwrite");
+            tx.objectStore(this.storeName).clear();
+            tx.oncomplete = () => resolve();
+        });
+    }
+};
+
+// --- 全局变量与初始化 ---
+let allTournaments = {};
+let activeId = null;
+let rawDataPool = [];
+let parsedProjectsMap = {};
+let historyStack = [];
+const MAX_HISTORY = 20;
+const ROUND_COLORS = ['#409eff', '#67c23a', '#e6a23c', '#f56c6c', '#a855f7', '#111827', '#06b6d4', '#ed64a6'];
+let isEditMode = false;
+let nameChangeTracker = [];
+
+const ui = {
+    results: document.getElementById('results'),
+    controls: document.getElementById('controls-container'),
+    manualInputs: document.getElementById('manual-inputs'),
+    batchInput: document.getElementById('batch-input'),
+    tournamentList: document.getElementById('sidebar-tournament-list')
+};
+
+async function init() {
+    try {
+        await dbMgr.open();
+        const data = await dbMgr.getAll();
+        data.forEach(t => { allTournaments[t.id] = t; });
+    } catch (e) { console.error("读取存档失败", e); }
+    
+    renderSidebarList();
+    const ids = Object.keys(allTournaments);
+    if (ids.length > 0) setActive(ids[ids.length - 1]);
+    else showStep(1);
+
+    document.getElementById('toggle-manual').onclick = () => toggleInputMode(true);
+    document.getElementById('toggle-batch').onclick = () => toggleInputMode(false);
+    document.getElementById('save-btn').onclick = () => saveData(true);
+    document.getElementById('refresh-btn').onclick = refreshTournament;
+    document.getElementById('print-btn').onclick = () => window.print();
+    document.getElementById('export-json-btn').onclick = exportJson;
+    document.getElementById('undo-btn').onclick = undoLastAction;
+    document.getElementById('toggle-edit-names-btn').onclick = toggleEditNamesMode;
+    document.getElementById('file-input').onchange = importJson;
+    
+    ui.results.addEventListener('click', handleMatchClick);
+    ui.results.addEventListener('input', handleTableInput);
+    ui.results.addEventListener('focusout', handleTableBlur);
+    window.addEventListener('resize', () => { if (document.querySelector('.bracket')) drawConnectors(); });
+
+    const dropZone = document.getElementById('dropZone');
+    document.getElementById('fileInput').onchange = (e) => handleFiles(e.target.files);
+    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.background = "#eef4ff"; };
+    dropZone.ondragleave = (e) => { e.preventDefault(); dropZone.style.background = "#f8fbff"; };
+    dropZone.ondrop = (e) => { e.preventDefault(); dropZone.style.background = "#f8fbff"; handleFiles(e.dataTransfer.files); };
+}
+document.getElementById('controls-global-courts').addEventListener('input', function() {
+    const num = parseInt(this.value);
+    if(num > 0 && socket && socket.connected) {
+        // 🌟 修复 Bug 4：裁判端监听的是 update_config
+        socket.emit('update_config', { maxCourts: num });
+        socket.emit('update_max_courts', num); 
+    }
+});
+function formatDisplayName(name) {
+    if (!name || name === "轮空" || name === "待定" || name.includes("负者") || name.includes("胜者")) return name;
+    let seedMark = "";
+    const seedMatch = name.match(/[\(（]\d+[\)）]\s*$/);
+    if (seedMatch) {
+        seedMark = ` <b style="color:#e67e22">${seedMatch[0]}</b>`;
+        name = name.replace(seedMatch[0], "").trim();
+    }
+    return name.replace(/([\(\（].*?[\)\）])/g, '<br><small>$1</small>') + seedMark;
+}
+function getRealName(th) {
+    if (th.hasAttribute('data-name')) return th.getAttribute('data-name');
+    return th.innerText.replace(/^\d+\.\s*/, '').replace(/\s*\n\s*/g, '').trim();
+}
+async function resetSystem() {
+    if (!confirm("⚠️ 警告：\n此操作将删除所有已生成的比赛及存档。\n\n确定要继续吗？")) return;
+    allTournaments = {}; activeId = null; rawDataPool = []; parsedProjectsMap = {}; historyStack = [];
+    await dbMgr.clear();
+    ui.tournamentList.innerHTML = '';
+    const parsedList = document.getElementById('parsed-projects-list');
+    if (parsedList) parsedList.innerHTML = '';
+    const dlBtn = document.getElementById('dlBtn');
+    if (dlBtn) dlBtn.disabled = true;
+    showStep(1);
+    alert("系统已重置。");
+}
+
+function showStep(step) {
+    document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('step1-view').style.display = 'none';
+    document.getElementById('step2-view').style.display = 'none';
+    document.getElementById('name-entry-view').style.display = 'none';
+    ui.results.style.display = 'none';
+    ui.controls.style.display = 'none';
+
+    if (step === 1) {
+        document.getElementById('step1-view').style.display = 'block';
+        document.getElementById('nav-import').classList.add('active');
+        activeId = null; 
+    } else if (step === 2) {
+        document.getElementById('step2-view').style.display = 'block';
+        document.getElementById('nav-setup').classList.add('active');
+        activeId = null;
+    }
+}
+
+function renderSidebarList() {
+    ui.tournamentList.innerHTML = '';
+    Object.values(allTournaments).forEach(t => {
+        const div = document.createElement('div');
+        div.className = `menu-item tournament-list-item ${t.id === activeId ? 'active' : ''}`;
+        div.innerHTML = `<span>🏆</span><div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${t.sportName}</div><span class="delete-btn" onclick="deleteTournament(event, '${t.id}')" title="删除">×</span>`;
+        div.onclick = () => setActive(t.id);
+        ui.tournamentList.appendChild(div);
+    });
+}
+
+function setActive(id) {
+    if (!allTournaments[id]) return showStep(1);
+    activeId = id;
+    
+    // 隐藏所有设置视图
+    document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('step1-view').style.display = 'none';
+    document.getElementById('step2-view').style.display = 'none';
+    document.getElementById('name-entry-view').style.display = 'none';
+    
+    // 渲染存储的 HTML
+    ui.results.innerHTML = allTournaments[id].html;
+    ui.results.style.display = 'block';
+    ui.controls.style.display = 'block';
+    renderSidebarList(); 
+    
+    // ✨ 核心修复：延迟处理连接线和自动计算逻辑
+    setTimeout(() => { 
+        if (document.querySelector('.bracket')) { 
+            drawConnectors(); 
+            autoAdvanceByes(); 
+        }
+        
+        // 🌟 修复核心 1：每次打开项目，强制重新遍历计算积分表。解决后台完赛未结算问题！
+        const crossTables = document.querySelectorAll('.crosstable');
+        if (crossTables.length > 0) {
+            crossTables.forEach(table => calculateGroupStandings(table));
+        }
+        
+        // 如果是混合赛制，处理淘汰赛出线同步
+        const t = allTournaments[id];
+        if (t && t.type === 'mixed') {
+            const koContent = document.getElementById('mixed-ko-content');
+            if (koContent && koContent.innerHTML.trim() === "") {
+                prepareMixedBracketPlaceholder();
+            } else {
+                // 🌟 修复核心 2：确保刚刚计算出的第一二名，能够立刻穿透替换掉淘汰赛里的 [A组第1] 等占位符
+                syncMixedBracket();
+            }
+        }
+        
+        updateStandings();
+    }, 100);
+}
+async function deleteTournament(e, id) {
+    e.stopPropagation();
+    if(confirm(`确定要彻底删除 "${allTournaments[id].sportName}" 吗？`)) {
+        await dbMgr.delete(id);
+        delete allTournaments[id];
+        if (activeId === id) {
+            const remainingIds = Object.keys(allTournaments);
+            if (remainingIds.length > 0) setActive(remainingIds[remainingIds.length - 1]);
+            else showStep(1);
+        }
+        renderSidebarList();
+    }
+}
+
+function toNameEntry() {
+    document.getElementById('step2-view').style.display = 'none';
+    document.getElementById('name-entry-view').style.display = 'block';
+    const count = parseInt(document.getElementById('num-participants').value);
+    renderNameInputs(count);
+}
+
+// --- Excel处理逻辑 ---
+function parseDataToPool(dataRows, colMap, headerUnit, headerGroup) {
+    let doubleMap = {}; 
+    let teamMap = {}; // 🌟 新增：用于收集团体赛大名单
+    
+    dataRows.forEach(row => {
+        let pName = cleanName(row[colMap.name]);
+        if (!pName || pName === "姓名" || pName === "序号" || pName === "选手") return;
+
+        let pUnit = headerUnit; 
+        if (colMap.unit !== -1) {
+            let rowVal = String(row[colMap.unit] || "").trim();
+            if (rowVal && !/^\d+$/.test(rowVal) && rowVal.length > 1) {
+                pUnit = cleanUnit(rowVal);
+            }
+        }
+        
+        let group = headerGroup;
+        if (colMap.group !== -1) {
+            let gVal = String(row[colMap.group] || "").trim();
+            if (gVal && gVal.length > 1) group = standardizeGroup(gVal);
+        }
+        
+        if (!group || !pUnit) return; 
+
+        const gender = (String(row[colMap.gender] || "").includes("女")) ? "女" : "男";
+
+        // 单打识别
+        if (colMap.single !== -1) {
+            const sVal = String(row[colMap.single] || "").trim();
+            if (sVal !== "" && sVal !== "0") {
+                rawDataPool.push({
+                    team: pUnit, group, gender, event: '单打',
+                    name: `${pName}(${pUnit})`
+                });
+            }
+        }
+
+        // 双打识别
+        if (colMap.double !== -1) {
+            const dVal = String(row[colMap.double] || "").trim().toUpperCase();
+            let dMarkMatch = dVal.match(/[A-Z0-9]/i); 
+            if (dMarkMatch) {
+                let dMark = dMarkMatch[0];
+                const pairKey = `${pUnit}_${group}_${gender}_${dMark}`;
+                if (!doubleMap[pairKey]) doubleMap[pairKey] = [];
+                doubleMap[pairKey].push({ name: pName, unit: pUnit });
+            }
+        }
+
+        // 🌟 新增：团体识别 (如果标记了团体，就把他加入该单位该组别的大名单)
+        if (colMap.team !== undefined && colMap.team !== -1) {
+            const tVal = String(row[colMap.team] || "").trim();
+            // 只要不是空或者"0"或者"false"，就代表勾选了团体赛
+            if (tVal !== "" && tVal !== "0" && tVal.toLowerCase() !== "false") {
+                const teamKey = `${pUnit}_${group}_${gender}`;
+                if (!teamMap[teamKey]) teamMap[teamKey] = { unit: pUnit, group: group, gender: gender, players: [] };
+                teamMap[teamKey].players.push(pName);
+            }
+        }
+    });
+
+    // 双打组队（保持原有逻辑不变）
+    for (let key in doubleMap) {
+        const ps = doubleMap[key];
+        const groupName = key.split('_')[1]; 
+        const gender = key.split('_')[2];
+        for (let j = 0; j < ps.length; j += 2) {
+            if (ps[j + 1]) {
+                const p1 = ps[j]; const p2 = ps[j + 1];
+                rawDataPool.push({
+                    team: p1.unit, group: groupName, gender: gender, event: '双打',
+                    name: `${p1.name} / ${p2.name}(${p1.unit})`
+                });
+            }
+        }
+    }
+
+    // 🌟 新增：整合团体赛名单并推入数据池
+    for (let key in teamMap) {
+        const t = teamMap[key];
+        rawDataPool.push({
+            team: t.unit, group: t.group, gender: t.gender, event: '团体赛',
+            // 🌟 核心修改：直接使用干净的单位名称，不再拼接大名单
+            name: t.unit 
+        });
+    }
+
+    renderParsedButtons();
+}
+function standardizeGroup(rawStr) {
+    if (!rawStr) return null;
+    const s = String(rawStr).replace(/\s/g, "");
+    if (s.includes("五年级")) return "小学五年级";
+    if (s.includes("六年级")) return "小学六年级";
+    if (s.includes("五年级") || s.includes("六年级") || s.includes("小学甲组")) return "小学甲组";
+    if (s.includes("三年级") || s.includes("四年级") || s.includes("小学乙组")) return "小学乙组";
+    if (s.includes("初二") || s.includes("八年级") || s.includes("初中二年级")|| s.includes("8年级")) return "八年级组";
+    if (s.includes("初一") || s.includes("七年级") || s.includes("初中一年级")|| s.includes("7年级")) return "七年级组";
+    if (s.includes("初三") || s.includes("九年级") || s.includes("初中三年级")|| s.includes("9年级")) return "九年级组";
+    if (s.includes("高中")) return "高中组";
+   if (s.endsWith("组")) return s.replace(/男子|女子|单打/g, "");
+    return s.replace(/男子|女子|单打/g, "") + "组";
+}
+
+function cleanName(n) { return n ? String(n).trim().replace(/\s+/g, "") : ""; }
+function cleanUnit(u) { 
+    if (!u) return "未知单位";
+    return String(u).trim()
+        .replace(/报名表|运动员|统计表|汇总表|羽毛球/g, "")
+        .replace(/[\(（](初中|高中|小学|七年级|八年级|九年级|甲|乙).*?组?[\)）]/g, "") 
+        .replace(/[\)）\s]+$/g, "") 
+        .trim();
+}
+
+async function handleFiles(files) {
+    rawDataPool = []; 
+    let failedFiles = [];
+    for (let file of files) {
+        if (file.name.startsWith('~$')) continue;
+        const countBefore = rawDataPool.length;
+        // 关键修改：允许识别 .csv
+        if (file.name.match(/\.(xlsx|xls|csv)$/i)) await processExcel(file); 
+        else if (file.name.match(/\.docx$/i)) await processDocx(file);
+        
+        if (rawDataPool.length === countBefore) failedFiles.push(file.name);
+    }
+    document.getElementById('dlBtn').disabled = rawDataPool.length === 0;
+    renderParsedButtons(); 
+    if (rawDataPool.length > 0) {
+        alert("名单解析成功！共识别 " + rawDataPool.length + " 条报名项目。");
+    } else {
+        alert("未能识别有效报名信息，请检查表头（需包含姓名、性别、单打/双打等）");
+    }
+}
+async function processExcel(file) {
+    try {
+        const data = await file.arrayBuffer();
+        const wb = XLSX.read(data);
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+
+        let capturedUnit = ""; // 存储识别到的单位/队名
+        let capturedGroup = ""; 
+        let col = { name: -1, gender: -1, group: -1, single: -1, double: -1, unit: -1, team: -1 };
+        let dataStartIdx = -1;
+
+        // 1. 【优先级一：内容优先】扫描前 15 行，抓取抬头横向信息（如“队名：德阳外国语学校”）
+        for (let i = 0; i < Math.min(rows.length, 15); i++) {
+            const rowArr = rows[i].map(c => String(c || "").trim());
+            const fullRowText = rowArr.join("|");
+
+            // 识别横向写的“单位”、“学校”或“队名”
+            const unitMatch = fullRowText.match(/(单位|学校|队名|代表队|参赛队)[：:\s]*[|]*\s*([^|]+)/);
+            if (unitMatch && !capturedUnit) {
+                let potential = cleanUnit(unitMatch[2]);
+                if (potential.length > 1) {
+                    capturedUnit = potential;
+                    console.log("从表格内容提取到单位:", capturedUnit);
+                }
+            }
+
+            // 识别组别
+            const groupMatch = fullRowText.match(/(组别|参赛组别)[：:\s]+([^|]+)/);
+            if (groupMatch && !capturedGroup) {
+                capturedGroup = standardizeGroup(groupMatch[2]);
+            }
+
+            // 2. 【优先级二：列标题优先】识别列标题中的单位/队名列
+            rowArr.forEach((cell, idx) => {
+                const c = cell.replace(/\s/g, "");
+                if (c === "姓名") { col.name = idx; dataStartIdx = i + 1; }
+                if (c === "性别") col.gender = idx;
+                if (c === "单打") col.single = idx;
+                if (c === "双打") col.double = idx;
+                if (c.includes("团体")) col.team = idx;
+                if (c.includes("组别") || c === "组") col.group = idx;
+                
+                // 如果列标题里有单位/队名列，标记索引
+                if (/(单位|学校|队名|代表队)/.test(c) && !/序号|NO|ID/i.test(c) && c.length <= 4) {
+                    col.unit = idx;
+                }
+            });
+        }
+
+        // 3. 【优先级三：文件名兜底】如果表格里完全找不到单位信息，最后才用文件名
+        if (!capturedUnit || capturedUnit.length < 2) {
+            // 剔除扩展名，取文件名第一段
+            capturedUnit = file.name.split(".")[0].replace(/\s/g, "").split(/[-_]/)[0];
+            console.log("表格内无单位信息，使用文件名兜底:", capturedUnit);
+        }
+
+        if (col.name === -1) {
+            alert("识别失败：未找到‘姓名’列。");
+            return;
+        }
+
+        const dataRows = rows.slice(dataStartIdx);
+        // 调用解析，这里的 capturedUnit 将作为默认单位传入
+        parseDataToPool(dataRows, col, capturedUnit, capturedGroup);
+
+    } catch (e) { console.error("解析出错:", e); }
+}
+async function processDocx(file) {
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = result.value;
+        const tables = tempDiv.querySelectorAll('table');
+
+        let extractedTeamName = "";
+        const fullText = tempDiv.innerText || tempDiv.textContent;
+        const teamMatch = fullText.match(/(?:队名|单位|代表队)[：:]\s*([^\s\n]+)/);
+        if (teamMatch) extractedTeamName = cleanUnit(teamMatch[1]);
+
+        tables.forEach(table => {
+            const trs = table.querySelectorAll('tr');
+            let col = { name: -1, gender: -1, group: -1, single: -1, double: -1, remark: -1 };
+            let headerIdx = -1;
+
+            for (let i = 0; i < Math.min(trs.length, 5); i++) {
+                const cells = trs[i].querySelectorAll('td');
+                cells.forEach((cell, idx) => {
+                    const txt = cell.innerText.trim();
+                    if (txt === "姓名") { col.name = idx; headerIdx = i; }
+                    if (txt === "性别") col.gender = idx;
+                    if (txt === "组别") col.group = idx;
+                    if (txt.includes("单打")) col.single = idx;
+                    if (txt.includes("双打")) col.double = idx;
+                    if (txt === "备注") col.remark = idx;
+                });
+                if (col.name !== -1) break;
+            }
+
+            if (col.name === -1) return;
+            const wordRows = [];
+            for (let i = headerIdx + 1; i < trs.length; i++) {
+                wordRows.push(Array.from(trs[i].querySelectorAll('td')).map(td => td.innerText.trim()));
+            }
+            parseDataToPool(wordRows, col, extractedTeamName);
+        });
+    } catch (e) { console.error("Word解析失败:", e); }
+}
+
+function renderParsedButtons() {
+    parsedProjectsMap = {};
+    rawDataPool.forEach(p => {
+        const sName = `${p.group}${p.gender}${p.event}`.substring(0, 31);
+        if (!parsedProjectsMap[sName]) parsedProjectsMap[sName] = [];
+        parsedProjectsMap[sName].push(p.name);
+    });
+    
+    const btnContainer = document.getElementById('parsed-projects-list');
+    btnContainer.innerHTML = '<h3 style="width: 100%; margin-bottom: 10px; color: var(--primary-color);">➡️ 选择要编排的项目：</h3>';
+    
+    Object.keys(parsedProjectsMap).sort().forEach(title => {
+        const btn = document.createElement('button');
+        btn.className = 'main-button';
+        btn.style.margin = '5px';
+        btn.style.backgroundColor = '#1a73e8';
+        btn.innerText = `${title} (${parsedProjectsMap[title].length}人/对)`;
+        btn.onclick = () => loadProjectIntoSetup(title, parsedProjectsMap[title]);
+        btnContainer.appendChild(btn);
+    });
+}
+
+function loadProjectIntoSetup(title, playersList) {
+    const cleanTitle = title.replace(/\s*[\(\（].*$/, '');
+    document.getElementById('sport-name').value = cleanTitle;
+    document.getElementById('num-participants').value = playersList.length;
+    document.getElementById('participants-list').value = playersList.join('\n');
+    document.getElementById('toggle-manual').classList.remove('active');
+    document.getElementById('toggle-batch').classList.add('active');
+    document.getElementById('manual-inputs').style.display = 'none';
+    document.getElementById('batch-input').style.display = 'block';
+    showStep(2);
+}
+
+function exportToExcel() {
+    const wb = XLSX.utils.book_new();
+    const projects = {};
+    rawDataPool.forEach(p => {
+        const sName = `${p.group}${p.gender}${p.event}`.substring(0, 31);
+        if (!projects[sName]) projects[sName] = [];
+        projects[sName].push({ "序号": projects[sName].length + 1, "姓名/组合": p.name, "代表单位": p.team, "性别": p.gender, "组别": p.group, "项目": p.event});
+    });
+    Object.keys(projects).sort().forEach(title => {
+        const ws = XLSX.utils.json_to_sheet(projects[title]);
+        ws['!cols'] = [{wch:6},{wch:45},{wch:25},{wch:8},{wch:12},{wch:12},{wch:30}];
+        XLSX.utils.book_append_sheet(wb, ws, title);
+    });
+    XLSX.writeFile(wb, `全项目汇总表_${new Date().getTime()}.xlsx`);
+}
+
+// --- 其余功能逻辑 ---
+function toggleInputMode(isManual) {
+    ui.manualInputs.style.display = isManual ? 'grid' : 'none';
+    ui.batchInput.style.display = isManual ? 'none' : 'block';
+    document.getElementById('toggle-manual').className = isManual ? 'active' : '';
+    document.getElementById('toggle-batch').className = !isManual ? 'active' : '';
+}
+
+function renderNameInputs(n) {
+    ui.manualInputs.innerHTML = '';
+    for (let i = 0; i < n; i++) ui.manualInputs.innerHTML += `<input type="text" placeholder="选手 ${i + 1}">`;
+}
+
+async function refreshTournament() {
+    const t = allTournaments[activeId];
+    if (!t) return;
+    if (!confirm("确定要重新随机生成对阵吗？\n警告：已录入的比分将清空！")) return;
+    
+    if (t.type === 'knockout') t.html = getBracketHTML(arrangePlayersWithSeeding(t.players), t.sportName);
+    else t.html = renderGroupStage(t.players, t.sportName, t.type === 'mixed');
+    
+    setActive(activeId);
+    if (t.type === 'mixed') { prepareMixedBracketPlaceholder(); updateStandings(); }
+    await saveData(false);
+}
+
+async function saveData(alertUser = true) {
+    if (activeId && ui.results.style.display !== 'none') {
+        allTournaments[activeId].html = ui.results.innerHTML;
+    }
+    try {
+        await dbMgr.put(allTournaments[activeId]);
+        if (alertUser) alert("已保存");
+    } catch (e) { alert("保存失败: " + e); }
+}
+
+function exportJson() {
+    const blob = new Blob([JSON.stringify(allTournaments)], {type: "application/json"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `比赛备份_${new Date().toLocaleDateString()}.json`;
+    link.click();
+}
+
+async function importJson(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+        try {
+            const imported = JSON.parse(ev.target.result);
+            let firstId = null;
+            
+            for (let id in imported) {
+                if (!firstId) firstId = id;
+                allTournaments[id] = imported[id];
+              
+                await dbMgr.put(imported[id]); 
+            }
+            
+            alert("项目导入成功！");
+            
+                     if (firstId) {
+                setActive(firstId); 
+            } else {
+                location.reload(); // 兜底刷新
+            }
+        } catch(err) { 
+            console.error(err);
+            alert("文件格式错误或解析失败，请确保是本系统导出的 .json 文件"); 
+        }
+    };
+    reader.readAsText(file);
+}
+// 淘汰赛算法
+function getStandardSeedOrder(numSlots) {
+    let order = [1, 2];
+    while (order.length < numSlots) {
+        const nextOrder = [];
+        const nextN = order.length * 2 + 1;
+        for (let i = 0; i < order.length; i++) {
+            const val = order[i];
+            const complement = nextN - val;
+            if (i % 2 === 0) { nextOrder.push(val); nextOrder.push(complement); }
+            else { nextOrder.push(complement); nextOrder.push(val); }
+        }
+        order = nextOrder;
+    }
+    return order.map(r => r - 1);
+}
+
+function arrangePlayersWithSeeding(names) {
+    let n = names.length;
+    let total = Math.pow(2, Math.ceil(Math.log2(n))); 
+    let seeds = [], nonSeeds = [];
+    names.forEach(p => {
+        const m = p.match(/[\(（](\d+)[\)）]\s*$/);
+        if (m && !isNaN(m[1])) seeds.push({ name: p, rank: parseInt(m[1]) });
+        else nonSeeds.push(p);
+    });
+    seeds.sort((a, b) => a.rank - b.rank);
+
+    const getUnit = (name) => { const m = name.match(/[\(（](.*?)[\)）]/); return m ? m[1].trim() : "个人"; };
+    let unitGroups = {};
+    nonSeeds.forEach(p => {
+        let u = getUnit(p);
+        if (!unitGroups[u]) unitGroups[u] = [];
+        unitGroups[u].push(p);
+    });
+
+    let topPool = [], bottomPool = [], toggle = true; 
+    let unitNames = Object.keys(unitGroups).sort(() => Math.random() - 0.5);
+    unitNames.forEach(u => {
+        let players = unitGroups[u].sort(() => Math.random() - 0.5);
+        players.forEach((p, index) => {
+            if (index % 2 === 0) { if (toggle) topPool.push(p); else bottomPool.push(p); } 
+            else { if (toggle) bottomPool.push(p); else topPool.push(p); }
+        });
+        if (players.length % 2 !== 0) toggle = !toggle;
+    });
+
+    let seedSlots = getStandardSeedOrder(total);
+    let finalBracket = new Array(total).fill("轮空");
+    let topHalfIndices = [], bottomHalfIndices = [];
+    const halfLimit = total / 2;
+
+    seedSlots.forEach(slotIdx => {
+        if (slotIdx < halfLimit) topHalfIndices.push(slotIdx);
+        else bottomHalfIndices.push(slotIdx);
+    });
+
+    seeds.forEach((seed, i) => {
+        let slot = seedSlots[i];
+        finalBracket[slot] = seed.name;
+        topHalfIndices = topHalfIndices.filter(idx => idx !== slot);
+        bottomHalfIndices = bottomHalfIndices.filter(idx => idx !== slot);
+    });
+
+    topHalfIndices.forEach(idx => { if (topPool.length > 0) finalBracket[idx] = topPool.shift(); });
+    bottomHalfIndices.forEach(idx => { if (bottomPool.length > 0) finalBracket[idx] = bottomPool.shift(); });
+    
+    let remaining = [...topPool, ...bottomPool];
+    [...topHalfIndices, ...bottomHalfIndices].forEach(idx => {
+        if (finalBracket[idx] === "轮空" && remaining.length > 0) finalBracket[idx] = remaining.shift();
+    });
+
+    return finalBracket;
+}
+
+/**
+ * 生成完整的淘汰赛对阵图 HTML
+ * 包含：主赛程、3-4名决赛、5-8名排名赛及最终名次容器
+ */
+function getBracketHTML(playerList, title) {
+    // ✨ 核心修复：建立项目唯一前缀，防止全局推送时 ID 冲突导致数据覆盖
+    const prefix = activeId ? activeId + "_" : ""; 
+    
+    let html = `<div class="container bracket-container" style="margin-top:0px; border-top:none;">
+                <h2 class="result-title" style="margin-top:20px;">${title}</h2>`;
+    
+    const n = playerList.length;
+    const rounds = Math.ceil(Math.log2(n));
+    const slots = Math.pow(2, rounds);
+    
+    // --- 1. 主赛程生成 ---
+    html += `<div class="bracket-wrapper"><div class="bracket">`;
+    for (let r = 0; r < rounds; r++) {
+        html += `<div class="round" data-round="${r}">`;
+        const matchesCount = slots / Math.pow(2, r + 1);
+        
+        for (let m = 0; m < matchesCount; m++) {
+            let p1 = "待定", p2 = "待定";
+            let c1 = "participant unplayed", c2 = "participant unplayed";
+            
+            // 第一轮逻辑：填充初始名单
+            if (r === 0) {
+                p1 = playerList[m * 2] || "轮空";
+                p2 = playerList[m * 2 + 1] || "轮空";
+                if (p1 !== "轮空") c1 = "participant";
+                if (p2 !== "轮空") c2 = "participant";
+            }
+            
+            const isFinal = (r === rounds - 1);
+            let finalLabel = isFinal ? `<div class="placement-header-small" style="font-size:16px; color:var(--primary-color); margin-bottom:10px;">1-2名决赛</div>` : "";
+
+            const lowerClass = (m % 2 !== 0) ? "lower-match" : ""; 
+            let scoreHtml = `<div class="score-inputs"><input type="text" class="score-input s-top"><input type="text" class="score-input s-bottom"></div>`;
+            
+            // ✨ ID 加上项目前缀
+            html += `<div class="match ${lowerClass}" id="${prefix}r${r}-m${m}" data-mid="${m}">
+                ${finalLabel}
+                <div class="${c1}" data-slot="top">${formatDisplayName(p1)}</div>
+                ${scoreHtml}  
+                <div class="${c2}" data-slot="bottom">${formatDisplayName(p2)}</div>
+            </div>`;
+        }
+        html += `</div>`;
+    }
+    html += `</div></div>`; 
+
+    // --- 2. 3-4名决赛生成 ---
+    if (n >= 4) {
+        html += `<div class="placement-block">
+        <div class="placement-section-title">3-4名决赛</div>
+        <div class="bronze-container">
+            <div class="match bronze-match" id="${prefix}match-bronze" data-type="bronze">
+                <div class="participant placement unplayed" data-slot="top">半决赛负者1</div>
+                <div class="score-inputs"><input type="text" class="score-input s-top"><input type="text" class="score-input s-bottom"></div>
+                <div class="participant placement unplayed" data-slot="bottom">半决赛负者2</div>
+            </div>
+        </div></div>`;
+    }
+    
+    // --- 3. 5-8名排名赛生成 ---
+    if (n >= 8) {
+        html += `
+        <div class="placement-block container" style="margin-top:50px;">
+            <div class="placement-section-title" style="color: #d48806; margin-bottom:20px;">5-8 名排名赛</div>
+            <div class="bracket-wrapper">
+                <div class="bracket" id="bracket-58">
+                    <div class="round" data-round="0">
+                        <div class="match" id="${prefix}match-58-semi-1" data-type="58_semi_1" data-mid="0">
+                            <div class="participant placement unplayed" data-slot="top">八强负者1</div>
+                            <div class="score-inputs"><input type="text" class="score-input s-top"><input type="text" class="score-input s-bottom"></div>
+                            <div class="participant placement unplayed" data-slot="bottom">八强负者2</div>
+                        </div>
+                        <div class="match" id="${prefix}match-58-semi-2" data-type="58_semi_2" data-mid="1">
+                            <div class="participant placement unplayed" data-slot="top">八强负者3</div>
+                            <div class="score-inputs"><input type="text" class="score-input s-top"><input type="text" class="score-input s-bottom"></div>
+                            <div class="participant placement unplayed" data-slot="bottom">八强负者4</div>
+                        </div>
+                    </div>
+                    <div class="round" data-round="1">
+                        <div class="match" id="${prefix}match-56-final" data-type="56_final" data-mid="0">
+                            <div class="placement-header-small" style="font-size:16px; color:#e67e22; margin-bottom:10px;">5-6名决赛</div>
+                            <div class="participant placement unplayed" data-slot="top" style="border-color:#e67e22; border-width:2px;">待定</div>
+                            <div class="score-inputs"><input type="text" class="score-input s-top"><input type="text" class="score-input s-bottom"></div>
+                            <div class="participant placement unplayed" data-slot="bottom" style="border-color:#e67e22; border-width:2px;">待定</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:30px; border-top: 1px dashed #ffd666; padding-top:20px; text-align:center;">
+                <div class="placement-header-small" style="color:#999; margin-bottom:15px;">7-8名决赛</div>
+                <div style="display:inline-block;">
+                    <div class="match" id="${prefix}match-78-final" data-type="78_final" data-mid="0" style="margin:0 auto;">
+                        <div class="participant placement unplayed" data-slot="top">待定</div>
+                        <div class="score-inputs"><input type="text" class="score-input s-top"><input type="text" class="score-input s-bottom"></div>
+                        <div class="participant placement unplayed" data-slot="bottom">待定</div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    // --- 4. 最终名次显示容器 ---
+    html += `<div id="final-standings-container" style="display:none; margin-top:40px;">
+                <h2 class="result-title">🏆 最终名次 🏆</h2>
+                <ul class="standings-list"></ul>
+             </div></div>`;
+             
+    return html;
+}
+
+function drawConnectors() {
+    document.querySelectorAll('.connector-line').forEach(el => el.remove());
+    document.querySelectorAll('.match').forEach(m => { m.style.position = 'relative'; m.style.top = '0px'; });
+
+    const brackets = document.querySelectorAll('.bracket');
+    brackets.forEach(bracket => {
+        const rounds = bracket.querySelectorAll('.round');
+        for (let r = 0; r < rounds.length - 1; r++) {
+            const matches = rounds[r].querySelectorAll('.match');
+            const nextRound = rounds[r+1];
+            const nextMatches = nextRound.querySelectorAll('.match');
+            
+            for (let i = 0; i < matches.length; i += 2) {
+                const topMatch = matches[i];
+                const bottomMatch = matches[i+1];
+                if (!topMatch || !bottomMatch) continue;
+
+                const getMatchCenter = (m) => {
+                    const p1 = m.querySelector('[data-slot="top"]');
+                    const p2 = m.querySelector('[data-slot="bottom"]');
+                    return (p1.offsetTop + p1.offsetHeight + p2.offsetTop) / 2;
+                };
+
+                const topMatchCenter = getMatchCenter(topMatch);
+                const botMatchCenter = getMatchCenter(bottomMatch);
+                const bracketRect = bracket.getBoundingClientRect();
+                const topAbsMid = topMatch.getBoundingClientRect().top + topMatchCenter - bracketRect.top;
+                const botAbsMid = bottomMatch.getBoundingClientRect().top + botMatchCenter - bracketRect.top;
+                const midPointY = (topAbsMid + botAbsMid) / 2;
+
+                const dist = botAbsMid - topAbsMid;
+                const lineTop = document.createElement('div');
+                lineTop.className = 'connector-line connector-top';
+                lineTop.style.top = `${topMatchCenter}px`;
+                lineTop.style.height = `${dist / 2}px`;
+                topMatch.appendChild(lineTop);
+
+                const lineBottom = document.createElement('div');
+                lineBottom.className = 'connector-line connector-bottom';
+                lineBottom.style.bottom = 'auto'; 
+                lineBottom.style.top = `${botMatchCenter - (dist/2)}px`;
+                lineBottom.style.height = `${dist / 2}px`;
+                bottomMatch.appendChild(lineBottom);
+
+                const topScores = topMatch.querySelector('.score-inputs');
+                if (topScores) {
+                    topScores.style.top = 'auto';
+                    topScores.style.bottom = (topMatch.getBoundingClientRect().height - topMatchCenter) + 'px';
+                    topScores.style.marginBottom = '5px';
+                    topScores.style.transform = 'none';
+                }
+
+                const bottomScores = bottomMatch.querySelector('.score-inputs');
+                if (bottomScores) {
+                    bottomScores.style.bottom = 'auto';
+                    bottomScores.style.top = `${botMatchCenter}px`;
+                    bottomScores.style.marginTop = '5px';
+                    bottomScores.style.transform = 'none';
+                }
+
+                const nextMatchIdx = Math.floor(i / 2);
+                const targetMatch = nextMatches[nextMatchIdx];
+                if (targetMatch) {
+                    const targetCenter = getMatchCenter(targetMatch);
+                    const targetAbsMid = targetMatch.getBoundingClientRect().top + targetCenter - bracketRect.top;
+                    const offset = midPointY - targetAbsMid;
+                    targetMatch.style.top = `${offset}px`;
+
+                    const targetScores = targetMatch.querySelector('.score-inputs');
+                    if (targetScores) {
+                        targetScores.style.bottom = 'auto';
+                        targetScores.style.top = `${targetCenter}px`;
+                        targetScores.style.transform = 'translateY(-50%)'; 
+                        targetScores.style.marginTop = '0';
+                    }
+                }
+            }
+        }
+    });
+}
+
+function handleMatchClick(e) {
+    if (isEditMode) return; 
+    const p = e.target.closest('.participant');
+    if (!p || p.classList.contains('unplayed') || p.textContent.trim() === "轮空") return;
+    
+    const match = p.parentElement;
+    if (match.classList.contains('decided')) {
+        if(confirm("撤销这场比赛结果？")) resetMatch(match);
+        return;
+    }
+
+    saveHistory();
+    const winner = p;
+    const top = match.querySelector('[data-slot="top"]');
+    const bottom = match.querySelector('[data-slot="bottom"]');
+    const loser = (winner === top) ? bottom : top;
+    
+    const inputs = match.querySelector('.score-inputs');
+    if (inputs) {
+        const sTop = inputs.querySelector('.s-top').value.trim();
+        const sBottom = inputs.querySelector('.s-bottom').value.trim();
+        if (sTop !== '' || sBottom !== '') {
+            inputs.style.display = 'none';
+            const scoreDisplay = document.createElement('div');
+            scoreDisplay.className = 'final-score';
+            scoreDisplay.textContent = `${sTop || 0} : ${sBottom || 0}`;
+            match.appendChild(scoreDisplay);
+        }
+    }
+
+    match.classList.add('decided');
+    const courtTag = match.querySelector('.court-tag');
+    if (courtTag) courtTag.style.display = 'none';
+    
+    winner.classList.add('winner');
+    loser.classList.add('loser');
+
+    let winnerHtml = winner.innerHTML.replace(/[🥇🥈🥉]/g, '').trim();
+    let loserHtml = loser.innerHTML.replace(/[🥇🥈🥉]/g, '').trim();
+
+    const bracket = match.closest('.bracket');
+    const roundDiv = match.closest('.round');
+    
+    if (roundDiv && bracket) {
+        const r = parseInt(roundDiv.dataset.round);
+        const m = parseInt(match.dataset.mid);
+        const totalR = bracket.querySelectorAll('.round').length; 
+        const nextR = roundDiv.nextElementSibling;
+        
+        // 晋级主赛程胜者
+        if (nextR && nextR.classList.contains('round')) {
+            const nextMIdx = Math.floor(m / 2);
+            const nextSlot = (m % 2 === 0) ? 'top' : 'bottom';
+            const targetMatch = nextR.querySelector(`.match[data-mid="${nextMIdx}"]`);
+            if (targetMatch) {
+                const targetSlot = targetMatch.querySelector(`[data-slot="${nextSlot}"]`);
+                if (targetSlot) { 
+                    targetSlot.innerHTML = winnerHtml; 
+                    targetSlot.classList.remove('unplayed'); 
+                    
+                    // 【终极修复】延迟 100 毫秒推送，确保 DOM 上的“待定”已经完全变成真名
+                    setTimeout(() => {
+                        const nextTag = targetMatch.querySelector('.court-tag');
+                        if (nextTag && targetMatch.id) {
+                            const courtMatch = nextTag.innerText.match(/(\d+)号场/);
+                            if (courtMatch) {
+                                pushToCourt(targetMatch.id, parseInt(courtMatch[1]), true);
+                            }
+                        }
+                    }, 100);
+                }
+            }
+        }
+        
+        if (r === totalR - 1) { winner.innerHTML = '🥇 ' + winnerHtml; loser.innerHTML = '🥈 ' + loserHtml; }
+
+        if (bracket.id !== 'bracket-58') {
+            if (r === totalR - 2) updateSlot('bronze', 'unplayed', loserHtml);
+            if (r === totalR - 3) updateSlot((m < 2) ? '58_semi_1' : '58_semi_2', 'unplayed', loserHtml);
+        } else {
+            if (r === 0) updateSlot('78_final', 'unplayed', loserHtml);
+        }
+    }
+
+    if (match.dataset.type === 'bronze') winner.innerHTML = '🥉 ' + winnerHtml;
+
+    updateStandings();
+    saveData(false);
+}
+
+function updateSlot(matchType, className, htmlContent) {
+    // 🌟 核心修复：改用 data-type 选择器。彻底解决“八强负者”名字无法更新的致命 Bug
+    const match = ui.results.querySelector(`.match[data-type="${matchType}"]`);
+    if (!match) return;
+    for (let s of match.querySelectorAll('.participant')) {
+        const txt = s.textContent.trim();
+        if (s.classList.contains('unplayed') || txt.includes('待定') || txt.includes('胜者') || txt.includes('负者') || txt.includes('八强')) {
+            s.innerHTML = htmlContent;
+            s.classList.remove('unplayed');
+            
+            // 【自动同步】名字落位后，如果该场次已经排了场地，立刻静默推送到裁判端
+            setTimeout(() => {
+                const tag = match.querySelector('.court-tag, .court-info');
+                if (tag && match.id) {
+                    const courtMatch = tag.innerText.match(/(\d+)号场/);
+                    if (courtMatch) {
+                        pushToCourt(match.id, parseInt(courtMatch[1]), true);
+                    }
+                }
+            }, 100);
+            break; 
+        }
+    }
+}
+function resetMatch(match) {
+    if (!match) return;
+    const roundDiv = match.closest('.round');
+    const bracket = match.closest('.bracket') || document.querySelector('.bracket');
+    const totalRounds = bracket ? bracket.querySelectorAll('.round').length : -1;
+
+    if (roundDiv) {
+        const r = parseInt(roundDiv.dataset.round);
+        const m = parseInt(match.dataset.mid);
+        if (match.querySelector('.winner')) {
+            const nextR = roundDiv.nextElementSibling;
+            if (nextR) {
+                const nextMatch = nextR.querySelector(`.match[data-mid="${Math.floor(m / 2)}"]`);
+                if (nextMatch) {
+                    if (nextMatch.classList.contains('decided')) resetMatch(nextMatch);
+                    const targetSlot = nextMatch.querySelector(`[data-slot="${(m % 2 === 0) ? 'top' : 'bottom'}"]`);
+                    if (targetSlot) { targetSlot.innerHTML = "待定"; targetSlot.classList.add('unplayed'); }
+                }
+            }
+            handlePlacementReset(r, m, totalRounds, match);
+        }
+    } else {
+        handlePlacementReset(-1, -1, -1, match);
+    }
+    
+    match.classList.remove('decided');
+    const courtTag = match.querySelector('.court-tag');
+    if (courtTag) courtTag.style.display = 'block';
+    match.querySelectorAll('.participant').forEach(p => {
+        p.classList.remove('winner', 'loser');
+        p.innerHTML = p.innerHTML.replace(/[🥇🥈🥉]/g, '').trim();
+    });
+    const scoreDisplay = match.querySelector('.final-score');
+    if (scoreDisplay) scoreDisplay.remove();
+    const inputs = match.querySelector('.score-inputs');
+    if (inputs) {
+        inputs.style.display = 'flex';
+        inputs.style.visibility = 'visible';
+        inputs.querySelectorAll('input').forEach(i => i.value = "");
+    }
+    updateStandings();
+    saveData(false);
+}
+
+function handlePlacementReset(r, m, totalRounds, match) {
+    if (r !== -1 && r === totalRounds - 2) {
+        const bronzeMatch = ui.results.querySelector('[data-type="bronze"]');
+        if (bronzeMatch) {
+            if (bronzeMatch.classList.contains('decided')) resetMatch(bronzeMatch);
+            const slotIdx = (m % 2 === 0) ? 0 : 1;
+            const slots = bronzeMatch.querySelectorAll('.participant');
+            slots[slotIdx].textContent = `半决赛负者${slotIdx + 1}`;
+            slots[slotIdx].classList.add('unplayed');
+        }
+    }
+    if (r !== -1 && r === totalRounds - 3) {
+        const targetMatch = ui.results.querySelector(`[data-type="${(m < 2) ? '58_semi_1' : '58_semi_2'}"]`);
+        if (targetMatch) {
+            if (targetMatch.classList.contains('decided')) resetMatch(targetMatch);
+            const slots = targetMatch.querySelectorAll('.participant');
+            slots[(m % 2 === 0) ? 0 : 1].textContent = "八强负者";
+            slots[(m % 2 === 0) ? 0 : 1].classList.add('unplayed');
+        }
+    }
+    if (match.dataset.type === '58_semi_1' || match.dataset.type === '58_semi_2') {
+        const final56 = ui.results.querySelector('[data-type="56_final"]');
+        const final78 = ui.results.querySelector('[data-type="78_final"]');
+        const slotIdx = (match.dataset.type === '58_semi_1') ? 0 : 1;
+        [final56, final78].forEach(f => {
+            if (f) {
+                if (f.classList.contains('decided')) resetMatch(f);
+                const s = f.querySelectorAll('.participant')[slotIdx];
+                s.textContent = (f === final56) ? "胜者" : "负者";
+                s.classList.add('unplayed');
+            }
+        });
+    }
+}
+
+function autoAdvanceByes() {
+    const round0 = ui.results.querySelector('.round[data-round="0"]');
+    if(!round0) return;
+    setTimeout(() => {
+        round0.querySelectorAll('.match').forEach(m => {
+            if (m.classList.contains('decided')) return;
+            const top = m.querySelector('[data-slot="top"]');
+            const bottom = m.querySelector('[data-slot="bottom"]');
+            if (top.textContent === "轮空" && bottom.textContent !== "轮空") {
+                bottom.click();
+                const inputs = m.querySelector('.score-inputs');
+                if(inputs) inputs.style.visibility = 'hidden';
+            } else if (bottom.textContent === "轮空" && top.textContent !== "轮空") {
+                top.click();
+                const inputs = m.querySelector('.score-inputs');
+                if(inputs) inputs.style.visibility = 'hidden';
+            }
+        });
+    }, 100);
+}
+
+function updateStandings() {
+    const t = allTournaments[activeId];
+    if (!t) return;
+
+    const cleanName = (name) => {
+        if (!name) return "";
+        return name.replace(/[🥇🥈🥉]/g, '').replace(/[\(（][A-Z]?\d+[\)）]\s*$/g, '').replace(/^\d+\.\s*/, '').trim();
+    };
+
+    let standingsData = [];
+    const getRes = (selector) => {
+        const m = ui.results.querySelector(selector);
+        if (m && m.classList.contains('decided')) {
+            const w = m.querySelector('.winner');
+            const l = m.querySelector('.loser');
+            return { winner: w ? cleanName(w.textContent) : "", loser: l ? cleanName(l.textContent) : "" };
+        }
+        return null;
+    };
+    
+    const rounds = ui.results.querySelectorAll('.bracket .round');
+    if (rounds.length > 0) {
+        const finalMatch = rounds[rounds.length - 1].querySelector('.match');
+        const res = getRes(`#${finalMatch.id}`); 
+        if (res) { standingsData.push({ title: '🥇 冠军', name: res.winner, rank: 1 }); standingsData.push({ title: '🥈 亚军', name: res.loser, rank: 2 }); }
+    }
+    
+    const r34 = getRes('[data-type="bronze"]');
+    if (r34) { standingsData.push({ title: '🥉 季军', name: r34.winner, rank: 3 }); standingsData.push({ title: '第四名', name: r34.loser, rank: 4 }); }
+    const r56 = getRes('[data-type="56_final"]');
+    if (r56) { standingsData.push({ title: '第五名', name: r56.winner, rank: 5 }); standingsData.push({ title: '第六名', name: r56.loser, rank: 6 }); }
+    const r78 = getRes('[data-type="78_final"]');
+    if (r78) { standingsData.push({ title: '第七名', name: r78.winner, rank: 7 }); standingsData.push({ title: '第八名', name: r78.loser, rank: 8 }); }
+
+    if (t.type === 'round-robin') {
+        ui.results.querySelectorAll('.crosstable').forEach((table) => {
+            table.querySelectorAll('tbody tr').forEach(row => {
+                const rankVal = row.cells[row.cells.length - 1].innerText.trim();
+                if (rankVal && !isNaN(rankVal)) {
+                    let titleText = `第${rankVal}名`;
+                    if (rankVal == 1) titleText = '🥇 冠军';
+                    if (rankVal == 2) titleText = '🥈 亚军';
+                    if (rankVal == 3) titleText = '🥉 季军';
+                    if (rankVal == 4) titleText = '第四名';
+                    if (rankVal == 5) titleText = '第五名';
+                    if (rankVal == 6) titleText = '第六名';
+                    if (rankVal == 7) titleText = '第七名';
+                    if (rankVal == 8) titleText = '第八名';
+                    standingsData.push({ title: titleText, name: cleanName(row.cells[0].innerText), rank: parseInt(rankVal) });
+                }
+            });
+        });
+    }
+
+    let cont = document.getElementById('final-standings-container');
+    if (standingsData.length === 0) { if (cont) cont.style.display = 'none'; return; }
+
+    if (!cont) {
+        cont = document.createElement('div');
+        cont.id = 'final-standings-container';
+        cont.style.textAlign = 'center';
+        cont.style.backgroundColor = '#f4f6f8';
+        cont.style.padding = '40px 20px';
+        cont.style.borderRadius = '12px';
+        cont.style.marginTop = '50px';
+        cont.innerHTML = `<h2 style="color: #27ae60; font-size: 28px; margin-bottom: 30px; font-weight: bold;">🏆 最终名次 🏆</h2><ul class="standings-list" style="list-style: none; padding: 0; margin: 0 auto; display: inline-block;"></ul>`;
+    }
+
+    const ul = cont.querySelector('.standings-list');
+    standingsData.sort((a, b) => a.rank - b.rank);
+    
+    ul.innerHTML = standingsData.map(item => `
+        <li style="padding: 16px 20px; border-bottom: 1px dashed #dcdfe6; font-size: 16px; display: flex; align-items: center; justify-content: flex-start; min-width: 350px;">
+            <div style="color: #27ae60; font-weight: bold; width: 100px; text-align: left; font-size: 18px;">${item.title}</div>
+            <div style="color: #333; text-align: left; flex: 1;">${item.name}</div>
+        </li>
+    `).join('');
+
+    const lastLi = ul.querySelector('li:last-child');
+    if(lastLi) lastLi.style.borderBottom = 'none';
+
+    cont.style.display = 'block';
+    ui.results.appendChild(cont); 
+}
+
+function renderGroupStage(players, title, isMixed) {
+    const type = isMixed ? 'mixed' : 'round-robin';
+    const count = players.length;
+    const winPts = document.getElementById('pts-win')?.value || 3;
+    const drawPts = document.getElementById('pts-draw')?.value || 1;
+    const lossPts = document.getElementById('pts-loss')?.value || 0;
+
+    let numGroups = 1; 
+    if (isMixed) {
+        const manualGroups = parseInt(document.getElementById('num-groups')?.value);
+        if (!isNaN(manualGroups) && manualGroups > 0) numGroups = manualGroups;
+        else {
+            if (count >= 4) {
+                let autoGroups = 1;
+                while ((autoGroups * 2) * 3 <= count) autoGroups *= 2;
+                if (autoGroups === 1 && count >= 4) autoGroups = 2;
+                numGroups = autoGroups;
+            }
+        }
+    }
+
+    const getUnit = (name) => { const m = name.match(/[\(（](.*?)[\)）]/); return m ? m[1].trim() : "个人"; };
+
+    let seedUnits = {}, otherUnits = {};
+    players.forEach(p => {
+        const unit = getUnit(p);
+        const isSeed = /[\(（]\d+[\)）]\s*$/.test(p);
+        const targetMap = isSeed ? seedUnits : otherUnits;
+        if (!targetMap[unit]) targetMap[unit] = [];
+        targetMap[unit].push(p);
+    });
+
+    const groups = Array.from({ length: numGroups }, () => []);
+    let currentGroupIndex = 0;
+    const distribute = (unitMap) => {
+        const uNames = Object.keys(unitMap).sort(() => 0.5 - Math.random());
+        uNames.forEach(u => {
+            const members = unitMap[u].sort(() => 0.5 - Math.random());
+            members.forEach(player => {
+                groups[currentGroupIndex % numGroups].push(player);
+                currentGroupIndex++;
+            });
+        });
+    };
+    distribute(seedUnits);
+    distribute(otherUnits);
+    groups.forEach(g => g.sort(() => 0.5 - Math.random()));
+
+   let html = `<div class="container">
+        <h2 class="result-title">${title} - ${isMixed ? '第一阶段：小组赛' : '循环赛积分表'}</h2>
+        <p style="text-align:center; color:#666; font-size:13px; margin-top:-20px; margin-bottom:20px;">
+            计分规则：胜 ${winPts} / 平 ${drawPts} / 负 ${lossPts}
+        </p>
+    </div>`;
+    
+    groups.forEach((group, index) => {
+        const isSingleGroup = groups.length === 1;
+        const groupName = isSingleGroup ? "全组" : `${String.fromCharCode(65 + index)} 组`;
+        let groupHtml = `<div class="group-container container" data-group-index="${index}"><h3>${groupName} 积分表</h3>`;
+        
+       const headerCols = group.map((p, i) => `<th data-name="${p}">${i+1}. ${formatDisplayName(p)}</th>`).join('');
+        const bodyRows = group.map((player, rIdx) => {
+            const cells = group.map((_, cIdx) => rIdx === cIdx ? '<td class="diagonal"></td>' : '<td contenteditable="true"></td>').join('');
+            return `<tr><th class="player-header" data-name="${player}">${rIdx+1}. ${formatDisplayName(player)}</th>${cells}<td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>`;
+        }).join('');
+        
+        groupHtml += `<table class="data-table crosstable">
+            <thead><tr><th>${isSingleGroup?'':String.fromCharCode(65+index)}</th>${headerCols}<th>积分</th><th>净胜</th><th>名次</th></tr></thead>
+            <tbody>${bodyRows}</tbody></table>`;
+        
+        if (isMixed) {
+            const advanceCount = parseInt(document.getElementById('num-advance-per-group')?.value) || 2;
+            let selectHtml = '';
+            for (let i = 1; i <= advanceCount; i++) {
+                let options = `<option value="">--待定--</option>` + group.map(p => `<option value="${p}">${p}</option>`).join('');
+                selectHtml += `<div style="flex:1;"><label>第 ${i} 名</label><select class="rank-select rank-${i}" onchange="syncMixedBracket()">${options}</select></div>`;
+            }
+            groupHtml += `<div class="qualification-box" style="background:#fdf6ec; padding:15px; margin-top:15px; border-radius:4px; border:1px solid #faecd8;">
+                <div style="font-weight:bold; color:#e6a23c; margin-bottom:10px;">🏆 ${groupName} 出线确认</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">${selectHtml}</div>
+            </div>`;
+        }
+
+        groupHtml += `<h3 style="margin-top: 30px;">${groupName} 对阵日程</h3>`;
+        let gp = group.map((name, idx) => ({ name: name, pindex: idx + 1 })); 
+        if (gp.length % 2 !== 0) gp.push({ name: '轮空', pindex: -1 });
+        
+        const numRounds = gp.length - 1;
+        let schedule = Array.from({length: numRounds}, () => []);
+        let tempGp = [...gp];
+        
+        for (let r = 0; r < numRounds; r++) {
+            for (let i = 0; i < tempGp.length / 2; i++) {
+                const p1 = tempGp[i], p2 = tempGp[tempGp.length - 1 - i];
+                
+                // 🌟 绝对拦截器：只要对手是“轮空”，就不往赛程表里写数据，彻底隐身！
+                if (p1.name !== '轮空' && p2.name !== '轮空') {
+                    schedule[r].push(`
+                        <div style="display:flex; justify-content:center; align-items:center; gap:8px;">
+                            <div class="p-name" data-realname="${p1.name}" data-idx="${p1.pindex}" style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${formatDisplayName(p1.name)}</div>
+                            <div style="font-size:12px; color:#999; font-weight:bold;">VS</div>
+                            <div class="p-name" data-realname="${p2.name}" data-idx="${p2.pindex}" style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${formatDisplayName(p2.name)}</div>
+                        </div>
+                    `);
+                }
+            }
+            tempGp.splice(1, 0, tempGp.pop()); 
+        }
+        
+        const maxMatches = Math.max(0, ...schedule.map(r => r.length));
+        let schedHtml = `<table class="data-table schedule-table"><thead><tr>${Array.from({length: numRounds}, (_, i) => `<th>第 ${i+1} 轮</th>`).join('')}</tr></thead><tbody>`;
+        for (let i = 0; i < maxMatches; i++) {
+            schedHtml += `<tr>`;
+            for (let r = 0; r < numRounds; r++) {
+                const matchCellId = `${activeId}_rr-${index}-${r}-${i}`; 
+        schedHtml += `<td id="${matchCellId}">${schedule[r][i] || ''}</td>`;
+    }
+            schedHtml += `</tr>`;
+        }
+        schedHtml += '</tbody></table>';
+        groupHtml += schedHtml + '</div>';
+        html += groupHtml;
+    });
+
+    if (isMixed) {
+        html += `
+        <div id="mixed-ko-section">
+            <div id="mixed-ko-content"></div>
+        </div>`;
+     
+setTimeout(() => { prepareMixedBracketPlaceholder(); }, 50);
+    }
+    return html; 
+}
+
+function prepareMixedBracketPlaceholder() {
+    const containers = document.querySelectorAll('.group-container');
+    const advanceCount = parseInt(document.getElementById('num-advance-per-group')?.value) || 2;
+    let bracketList = [];
+
+    if (containers.length === 2 && advanceCount === 2) {
+        bracketList = ["[A组第1]", "[B组第2]", "[A组第2]", "[B组第1]"];
+    } else if (containers.length === 4 && advanceCount === 2) {
+       bracketList = ["[A组第1]", "[B组第2]", "[C组第1]", "[D组第2]", "[D组第1]", "[C组第2]", "[B组第1]", "[A组第2]"];
+    } else {
+        for (let i = 0; i < containers.length; i++) {
+            for (let r = 1; r <= advanceCount; r++) {
+                bracketList.push(`[${String.fromCharCode(65 + i)}组第${r}]`);
+            }
+        }
+    }
+
+    const koContent = document.getElementById('mixed-ko-content');
+    if (koContent) {
+        koContent.innerHTML = getBracketHTML(bracketList, "第二阶段：淘汰赛对阵");
+        
+        koContent.querySelectorAll('.participant').forEach(slot => {
+            const txt = slot.textContent.trim();
+            if (txt.startsWith('[')) {
+                slot.setAttribute('data-placeholder', txt);
+                slot.classList.add('unplayed');
+            }
+        });
+        
+       setTimeout(() => {
+            drawConnectors();
+            syncMixedBracket();
+       
+            saveData(false); 
+        }, 150);
+    }
+}
+
+function syncMixedBracket() {
+    let nameMap = {};
+    document.querySelectorAll('.group-container').forEach((container, gIdx) => {
+        const groupLetter = String.fromCharCode(65 + gIdx);
+        for (let r = 1; r <= 8; r++) {
+            const sel = container.querySelector(`.rank-${r}`);
+            if (sel) nameMap[`[${groupLetter}组第${r}]`] = sel.value;
+        }
+    });
+
+    document.querySelectorAll('#mixed-ko-content .participant').forEach(slot => {
+        const placeholder = slot.getAttribute('data-placeholder');
+       if (placeholder && nameMap[placeholder] !== undefined) {
+            const realName = nameMap[placeholder];
+            const oldHtml = slot.innerHTML; // 记录更新前的名字
+            
+            if (realName) {
+                slot.innerHTML = formatDisplayName(realName);
+                slot.classList.remove('unplayed');
+            } else {
+                slot.innerHTML = placeholder; 
+                slot.classList.add('unplayed');
+            }
+            
+            // 🌟 核心自动推送：如果占位符变成了真名，且该场次已经排了场地，则静默更新裁判端
+            if (slot.innerHTML !== oldHtml) {
+                const matchNode = slot.closest('.match');
+                if (matchNode && matchNode.id) {
+                    const tag = matchNode.querySelector('.court-tag');
+                    if (tag) {
+                        const courtMatch = tag.innerText.match(/(\d+)号场/);
+                        if (courtMatch) {
+                            setTimeout(() => { 
+                                pushToCourt(matchNode.id, parseInt(courtMatch[1]), true); 
+                            }, 50);
+                        }
+                    }
+                }
+            }
+        }
+    });
+    autoAdvanceByes();
+}
+
+function advanceMixedToKnockout() {
+    saveHistory();
+    const oldWrapper = document.getElementById('knockout-stage-wrapper');
+    if (oldWrapper) { if (!confirm("检测到淘汰赛对阵已存在，是否重新生成？")) return; oldWrapper.remove(); }
+    const oldStandings = document.getElementById('final-standings-container');
+        if (oldStandings) oldStandings.remove();
+        const mixedKoSection = document.getElementById('mixed-ko-section');
+        if (mixedKoSection) mixedKoSection.remove();
+
+        const containers = document.querySelectorAll('.group-container');
+    const advanceCount = parseInt(document.getElementById('num-advance-per-group')?.value) || 2;
+    let q = []; 
+
+    for (let i = 0; i < containers.length; i++) {
+        for (let r = 1; r <= advanceCount; r++) {
+            const select = containers[i].querySelector(`.rank-${r}`);
+            const val = select ? select.value : null;
+            if (!val) { alert(`请完整确认“第 ${String.fromCharCode(65 + i)} 组”的晋级名单！`); return; }
+            q.push({ name: val, rank: r, group: i });
+        }
+    }
+
+    let bracketList = [];
+    const getQ = (g, r) => {
+        const found = q.find(x => x.group === g && x.rank === r);
+        return found ? `${found.name}(${String.fromCharCode(65 + g)}${r})` : "待定";
+    };
+
+    if (containers.length === 2 && advanceCount === 3) {
+        bracketList = [ getQ(0, 1), "轮空", getQ(1, 2), getQ(0, 3), getQ(0, 2), getQ(1, 3), "轮空", getQ(1, 1) ];
+    } 
+    else if (containers.length === 4 && advanceCount === 2) {
+        bracketList = [ getQ(0, 1), getQ(1, 2), getQ(2, 1), getQ(3, 2), getQ(3, 1), getQ(2, 2), getQ(1, 1), getQ(0, 2) ];
+    }
+    else {
+        let qualifiedForSeeding = [];
+        q.forEach(item => qualifiedForSeeding.push(`${item.name}(${item.rank})`));
+        bracketList = arrangePlayersWithSeeding(qualifiedForSeeding);
+    }
+
+    const title = "第二阶段：淘汰赛";
+    const bracketHTML = getBracketHTML(bracketList, title);
+    const wrapper = document.createElement('div');
+    wrapper.id = "knockout-stage-wrapper";
+    wrapper.innerHTML = bracketHTML;
+    ui.results.appendChild(wrapper);
+
+    const advanceControls = document.getElementById('advance-controls');
+    if (advanceControls) advanceControls.style.display = 'none';
+
+    setTimeout(() => { 
+        drawConnectors(); autoAdvanceByes(); updateStandings(); 
+        wrapper.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+}
+
+function timeToMins(timeStr) {
+    let [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + m;
+}
+
+function minsToTime(mins) {
+    let h = Math.floor(mins / 60) % 24;
+    let m = mins % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+/**
+ * 提取当前页面中所有待办比赛场次
+ * 包含：小组循环赛、淘汰赛主赛程、排名赛
+ * 核心：为每场比赛注入 totalRounds 以支持“长路径优先”编排
+ */
+function collectMatchesFromElement(root) {
+    let queue = [];
+    
+    // 1. 提取小组循环赛 (Round Robin)
+    root.querySelectorAll('.group-container').forEach(container => {
+        const table = container.querySelector('.schedule-table');
+        const crosstable = container.querySelector('.crosstable');
+        if (!table || !crosstable) return;
+
+        // 获取该小组的所有选手列表（用于匹配积分表中的完赛状态）
+       const players = Array.from(crosstable.querySelectorAll('th.player-header')).map(getRealName);
+        
+        // 获取该小组赛的总轮次
+        const maxRounds = table.querySelectorAll('thead th').length;
+
+        for (let r = 0; r < maxRounds; r++) {
+            table.querySelectorAll('tbody tr').forEach(row => {
+                const cell = row.cells[r];
+                // 排除空单元格、轮空场次
+                    if (cell && cell.textContent.trim() !== "" && !cell.textContent.includes('轮空')) {
+                    let p1Name, p2Name;
+                    const pNames = cell.querySelectorAll('.p-name');
+                    if (pNames.length >= 2) {
+                        p1Name = pNames[0].getAttribute('data-realname') || pNames[0].innerText.replace(/\s*\n\s*/g, '').trim();
+                        p2Name = pNames[1].getAttribute('data-realname') || pNames[1].innerText.replace(/\s*\n\s*/g, '').trim();
+                    } else {
+                        const names = cell.innerText.split(' VS ').map(n => n.trim());
+                        p1Name = names[0]; p2Name = names[1];
+                    }
+                    const idxA = players.indexOf(p1Name);
+                    const idxB = players.indexOf(p2Name);
+                    
+                    // 检查积分表中对应单元格是否有 <strong> 标签（代表已录入比分/已完赛）
+                    let isPlayed = (idxA !== -1 && idxB !== -1 && crosstable.rows[idxA + 1]?.cells[idxB + 1]?.querySelector('strong'));
+                    
+                    if (!isPlayed) {
+                        queue.push({ 
+                            node: cell, 
+                            type: 'rr', 
+                            round: r, 
+                            totalRounds: maxRounds // 注入总轮次用于优先级排序
+                        });
+                    }
+                }
+            });
+        }
+    });
+
+    // 2. 提取淘汰赛主赛程 (Main Bracket)
+    // 排除掉 ID 包含 "58" 的排名赛容器，避免重复提取
+    const mainBracket = root.querySelector('.bracket:not([id*="58"])');
+    if (mainBracket) {
+        const koRounds = mainBracket.querySelectorAll('.round');
+        const totalKoRounds = koRounds.length;
+        
+        koRounds.forEach((round, rIdx) => {
+            round.querySelectorAll('.match').forEach(m => {
+                // 排除已决定胜负的场次
+                if (m.classList.contains('decided')) return; 
+
+                // 决赛 (最后一轮) 给予特殊的 999 权重，确保最后进行
+                let weight = (rIdx === totalKoRounds - 1) ? 999 : rIdx;
+                
+                queue.push({ 
+                    node: m, 
+                    type: 'ko', 
+                    round: weight, 
+                    totalRounds: totalKoRounds // 注入总轮次
+                });
+            });
+        });
+    }
+
+    // 3. 提取 3-4 名及 5-8 名排名赛
+    root.querySelectorAll('.placement-block .match').forEach(m => {
+        if (m.classList.contains('decided')) return;
+        
+        const type = m.getAttribute('data-type');
+        let weight = 300; // 排名赛基础轮次权重
+        let projectTotalRounds = 3; // 排名赛通常视为较短路径
+
+        // 精细化权重：决赛类场次稍后排
+        if (type === '56_final' || type === '78_final') {
+            weight = 310;
+        } else if (type === 'bronze') {
+            weight = 400; // 3-4名决赛通常较晚
+        }
+        
+        queue.push({ 
+            node: m, 
+            type: 'ko', 
+            round: weight, 
+            totalRounds: projectTotalRounds 
+        });
+    });
+
+    return queue;
+}
+/**
+ * 完整版赛事智能编排逻辑（硬性隔离版）
+ * 逻辑：所有小组赛(RR)执行完 -> 整体停顿 -> 开启淘汰赛(KO)
+ */
+function applySchedulingLogic(matchQueue, inputId) {
+    const numCourts = parseInt(document.getElementById(inputId).value) || 5;
+    const duration = parseInt(document.getElementById('global-duration').value) || 20;
+    
+    // 1. 读取时间配置（支持不限时设置）
+    const morningStartStr = document.getElementById('global-start-time').value;
+    const morningStart = morningStartStr ? timeToMins(morningStartStr) : timeToMins("09:00");
+    const morningEnd = document.getElementById('morning-end-time').value ? timeToMins(document.getElementById('morning-end-time').value) : Infinity;
+    const afternoonStart = document.getElementById('afternoon-start-time').value ? timeToMins(document.getElementById('afternoon-start-time').value) : Infinity;
+    const afternoonEnd = document.getElementById('afternoon-end-time').value ? timeToMins(document.getElementById('afternoon-end-time').value) : Infinity;
+
+    // 2. 核心排序：类型第一（RR在前，KO在后），压力值（长路径）第二
+    matchQueue.sort((a, b) => {
+        // 第一优先级：类型 (rr 永远在 ko 之前)
+        if (a.type === 'rr' && b.type === 'ko') return -1;
+        if (a.type === 'ko' && b.type === 'rr') return 1;
+
+        // 第二优先级：决赛 (round 999) 必须最后
+        if (a.round === 999 && b.round !== 999) return 1;
+        if (a.round !== 999 && b.round === 999) return -1;
+
+        // 第三优先级：长路径优先（剩余轮次多的项目先插空）
+        const weightA = (a.totalRounds || 0) - a.round;
+        const weightB = (b.totalRounds || 0) - b.round;
+        if (weightA !== weightB) return weightB - weightA;
+
+        return a.round - b.round;
+    });
+    
+    // 3. 状态初始化
+    let currentDay = 0;
+    let courtUsage = new Array(numCourts).fill(morningStart);
+    let playerBusyUntil = {}; 
+    let maxRRFinishTime = 0; // 🌟 关键：记录所有小组赛的全局最晚结束时间
+
+    matchQueue.forEach((match) => {
+        // 4. 提取球员名单以检查冲突
+        let p1 = "", p2 = "";
+        if (match.type === 'ko') {
+            const t = match.node.querySelector('[data-slot="top"]');
+            const b = match.node.querySelector('[data-slot="bottom"]');
+            p1 = t ? t.innerText.trim() : "";
+            p2 = b ? b.innerText.trim() : "";
+        } else {
+            const nameSpans = match.node.querySelectorAll('.p-name');
+            if (nameSpans.length >= 2) {
+                p1 = nameSpans[0].innerText.trim();
+                p2 = nameSpans[1].innerText.trim();
+            }
+        }
+
+        const getReadyTime = (name) => {
+            if (!name || name === "待定" || name === "轮空") return 0;
+            return playerBusyUntil[name] || 0;
+        };
+        const playersReadyAt = Math.max(getReadyTime(p1), getReadyTime(p2));
+
+        // 5. 计算开始时间
+        let bestCourtIdx = 0;
+        let earliestStartPossible = Infinity;
+
+        for (let i = 0; i < numCourts; i++) {
+            // 🌟 核心修改点：
+            // 如果是淘汰赛(ko)，它的开始时间必须 >= 场馆空闲, >= 球员打完, 且必须 >= 所有小组赛结束的时间
+            let possibleStart = Math.max(courtUsage[i], playersReadyAt);
+            if (match.type === 'ko') {
+                possibleStart = Math.max(possibleStart, maxRRFinishTime);
+            }
+
+            if (possibleStart < earliestStartPossible) {
+                earliestStartPossible = possibleStart;
+                bestCourtIdx = i;
+            }
+        }
+
+        let startTime = earliestStartPossible;
+
+        // 决赛逻辑
+        if (match.round === 999) startTime = Math.max(startTime, ...courtUsage);
+
+        // 6. 拦截器：午休与跨天
+        if (morningEnd !== Infinity && afternoonStart !== Infinity) {
+            if (startTime + duration > morningEnd && startTime < afternoonStart) {
+                startTime = afternoonStart;
+            }
+        }
+        if (afternoonEnd !== Infinity && startTime + duration > afternoonEnd) {
+            currentDay++;
+            courtUsage = new Array(numCourts).fill(morningStart);
+            playerBusyUntil = {};
+            startTime = morningStart; 
+            maxRRFinishTime = 0; // 新的一天，重置标记
+            bestCourtIdx = 0;
+        }
+
+        // 7. 渲染结果
+        const timeStr = minsToTime(startTime);
+        const dayPrefix = currentDay > 0 ? `D${currentDay + 1} ` : ""; 
+        const courtNum = bestCourtIdx + 1;
+        const color = ROUND_COLORS[match.round % ROUND_COLORS.length] || '#27ae60';
+
+        if (match.type === 'ko') {
+            let tag = match.node.querySelector('.court-tag') || document.createElement('div');
+            tag.className = 'court-tag';
+            tag.style.backgroundColor = color;
+            tag.innerHTML = `${dayPrefix}${timeStr} | ${courtNum}号场 <span style="cursor:pointer; margin-left:5px; border-left:1px solid #fff; padding-left:5px;" onclick="event.stopPropagation(); pushToCourt('${match.node.id}', ${courtNum})">⚡推送</span>`;
+            match.node.appendChild(tag);
+        } else {
+            let info = match.node.querySelector('.court-info') || document.createElement('span');
+            info.className = 'court-info';
+            info.style.color = color;
+            info.innerHTML = `<br>${dayPrefix}${timeStr} ${courtNum}号场`;
+            match.node.appendChild(info);
+        }
+
+        // 8. 更新全局状态
+        const finishTime = startTime + duration;
+        courtUsage[bestCourtIdx] = finishTime;
+        
+        // 🌟 关键：如果是小组赛，更新全局最晚结束时间
+        if (match.type === 'rr') {
+            maxRRFinishTime = Math.max(maxRRFinishTime, finishTime);
+        }
+
+        if (p1 && p1 !== "待定" && p1 !== "轮空") playerBusyUntil[p1] = finishTime;
+        if (p2 && p2 !== "待定" && p2 !== "轮空") playerBusyUntil[p2] = finishTime;
+    });
+}
+function assignGlobalCourts(inputId) {
+    const courtInput = document.getElementById(inputId);
+    const numCourts = parseInt(courtInput.value) || 5;
+
+    if (socket && socket.connected) {
+        socket.emit('update_config', { maxCourts: numCourts });
+        socket.emit('update_max_courts', numCourts);
+    }
+    if (!activeId) { alert("请先从左侧菜单选中一个项目再进行编排"); return; }
+    
+    const matches = collectMatchesFromElement(ui.results);
+    if (matches.length === 0) { alert("当前项目暂无待办场次"); return; }
+
+    if (!confirm(`找到 ${matches.length} 场待办比赛，准备按 ${numCourts} 片场地进行智能排程？`)) return;
+
+    matches.forEach(m => {
+        const oldTag = m.node.querySelector('.court-tag, .court-info');
+        if (oldTag) oldTag.remove();
+    });
+
+    applySchedulingLogic(matches, inputId);
+    saveData(false);
+    alert(`✅ 编排完成！场地数已同步至所有裁判端。`);
+}
+async function assignEverythingGlobal(inputId) {
+    const ids = Object.keys(allTournaments);
+    if (ids.length === 0) return;
+    let masterQueue = [];
+    const parser = new DOMParser();
+
+    for (let id of ids) {
+        const doc = parser.parseFromString(allTournaments[id].html, 'text/html');
+        doc.querySelectorAll('.court-tag, .court-info').forEach(el => el.remove());
+        
+        const projectMatches = collectMatchesFromElement(doc);
+        projectMatches.forEach(m => {
+            m.projectId = id; 
+            m.docFragment = doc;
+            masterQueue.push(m);
+        });
+    }
+
+    if (masterQueue.length === 0) { alert("所有比赛项目均已完成，无待办场次。"); return; }
+    
+    applySchedulingLogic(masterQueue, inputId);
+
+    for (let id of ids) {
+        const firstMatch = masterQueue.find(m => m.projectId === id);
+        if (firstMatch) {
+            allTournaments[id].html = firstMatch.docFragment.body.innerHTML;
+            await dbMgr.put(allTournaments[id]);
+        }
+    }
+    
+    if (activeId) setActive(activeId); 
+    alert("全项目总编排大功告成！已遵循轮次顺序且决赛最后进行。");
+}
+
+function saveHistory() {
+    const currentState = ui.results.innerHTML;
+    if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== currentState) {
+        historyStack.push(currentState);
+        if (historyStack.length > MAX_HISTORY) historyStack.shift();
+    }
+}
+
+function undoLastAction() {
+    if (historyStack.length === 0) { alert("没有更多可以撤销的操作了"); return; }
+    const lastState = historyStack.pop();
+    ui.results.innerHTML = lastState;
+    if (document.querySelector('.bracket')) drawConnectors();
+    if (activeId) allTournaments[activeId].html = lastState;
+    updateStandings(); 
+    saveData(false);
+}
+
+function handleTableInput(e) {
+    const cell = e.target;
+    if (cell.tagName !== 'TD' || !cell.isContentEditable || !cell.closest('.crosstable')) return;
+    const row = cell.parentElement;
+    const table = row.parentElement.parentElement;
+    const rowIndex = row.rowIndex; 
+    const colIndex = cell.cellIndex; 
+    const totalCols = table.rows[0].cells.length;
+    if (colIndex > totalCols - 4) return; 
+    
+    const val = cell.innerText.trim();
+    const match = val.match(/^(\d+)\s*([:：\-\s])\s*(\d+)([\s\S]*)$/);
+    
+    if (match) {
+        const s1 = match[1], sep = match[2], s2 = match[3], details = match[4].trim(); 
+        let mirrorDetails = "";
+        if (details) mirrorDetails = details.replace(/(\d+)\s*([:：\-\s])\s*(\d+)/g, "$3$2$1");
+        let html = `<strong>${s2}${sep}${s1}</strong>`;
+        if (mirrorDetails) html += `<br><span style="font-size:12px; color:#888; display:block; line-height:1.2;">${mirrorDetails}</span>`;
+        if (table.rows[colIndex] && table.rows[colIndex].cells[rowIndex]) {
+            const mirrorCell = table.rows[colIndex].cells[rowIndex];
+            if (mirrorCell.innerHTML !== html) mirrorCell.innerHTML = html;
+        }
+    } else if (val === "") {
+         if (table.rows[colIndex] && table.rows[colIndex].cells[rowIndex]) {
+            const mirrorCell = table.rows[colIndex].cells[rowIndex];
+            if (mirrorCell.innerText !== "") mirrorCell.innerHTML = "";
+        }
+    }
+}
+
+function handleTableBlur(e) {
+    const cell = e.target;
+    if (cell.tagName !== 'TD' || !cell.isContentEditable || !cell.closest('.crosstable')) return;
+    
+    saveHistory();
+    
+    const colIndex = cell.cellIndex;
+    const totalCols = cell.parentElement.cells.length;
+    if (colIndex >= totalCols - 3) {
+        saveData(false);
+        return;
+    }
+
+    const val = cell.innerText.trim();
+    // 【核心修复】修改正则表达式，捕获大比分后面的所有内容（详细比分）
+    const match = val.match(/^(\d+)\s*[:：\-\s]\s*(\d+)([\s\S]*)$/); 
+    if (match) {
+        const s1 = match[1], s2 = match[2], details = match[3].trim();
+        let html = `<strong>${s1}:${s2}</strong>`;
+        
+        // 如果原本就有详细比分（details），重新封装并保留它
+        if (details) {
+            html += `<br><span style="font-size:12px; color:#888; display:block; line-height:1.2; margin-top:2px;">${details}</span>`;
+        }
+        cell.innerHTML = html;
+    }
+    const table = cell.closest('.crosstable');
+    calculateGroupStandings(table); 
+    updateStandings();
+    saveData(false);
+}
+function calculateGroupStandings(table) {
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    const winPts = document.getElementById('pts-win') ? parseInt(document.getElementById('pts-win').value) : 3;
+    const drawPts = document.getElementById('pts-draw') ? parseInt(document.getElementById('pts-draw').value) : 1;
+    const lossPts = document.getElementById('pts-loss') ? parseInt(document.getElementById('pts-loss').value) : 0;
+    
+    let stats = [];
+    let anyMatchPlayed = false; 
+
+    rows.forEach((row, rowIndex) => {
+        let totalPts = 0, totalNet = 0;
+        const playerName = getRealName(row.cells[0]);
+        let hasPlayed = false; // 新增：标记该选手是否有已完成的比赛
+
+        for (let j = 1; j < row.cells.length - 3; j++) {
+            const cellText = row.cells[j].innerText.trim();
+            const scoreMatch = cellText.match(/^(\d+)\s*[:：\-\s]\s*(\d+)/);
+            if (scoreMatch) {
+                anyMatchPlayed = true; 
+                hasPlayed = true; 
+                const s1 = parseInt(scoreMatch[1]), s2 = parseInt(scoreMatch[2]);
+                if (s1 > s2) totalPts += winPts;
+                else if (s1 === s2) totalPts += drawPts;
+                else totalPts += lossPts;
+                totalNet += (s1 - s2);
+            }
+        }
+
+        // 修改点：如果未参赛，积分和净胜球显示为空字符串而不是 0
+        row.cells[row.cells.length - 3].innerText = hasPlayed ? totalPts : "";
+        row.cells[row.cells.length - 2].innerText = hasPlayed ? totalNet : "";
+        
+        stats.push({ row: row, name: playerName, pts: totalPts, net: totalNet, hasPlayed: hasPlayed });
+    });
+
+    const groupContainer = table.closest('.group-container');
+
+    // 修改点：如果全组都没有比赛，名次显示为空
+    if (!anyMatchPlayed) {
+        stats.forEach(item => {
+            item.row.cells[item.row.cells.length - 1].innerText = ""; 
+        });
+        if (groupContainer) {
+            groupContainer.querySelectorAll('.rank-select').forEach(sel => sel.value = "");
+        }
+        syncMixedBracket();
+        saveData(false);
+        return; 
+    }
+
+    // 仅对已录入成绩的选手进行排名
+    const sorted = stats.filter(s => s.hasPlayed).sort((a, b) => { 
+        if (b.pts !== a.pts) return b.pts - a.pts; 
+        return b.net - a.net; 
+    });
+    
+    // 初始化名次列为空
+    stats.forEach(s => s.row.cells[s.row.cells.length - 1].innerText = "");
+
+    let currentRank = 1;
+    sorted.forEach((item, index) => {
+        if (index > 0 && item.pts === sorted[index - 1].pts && item.net === sorted[index - 1].net) {
+            // 并列逻辑保持不变
+        } else {
+            currentRank = index + 1;
+        }
+        
+        item.row.cells[item.row.cells.length - 1].innerText = currentRank;
+        
+        if (groupContainer) {
+            const select = groupContainer.querySelector(`.rank-${index + 1}`);
+            if (select) {
+                for (let option of select.options) {
+                    if (option.value === item.name) { select.value = option.value; break; }
+                }
+            }
+        }
+    });
+    
+    syncMixedBracket(); 
+    saveData(false);
+}
+function toggleEditNamesMode() {
+    isEditMode = !isEditMode;
+    const btn = document.getElementById('toggle-edit-names-btn');
+    const allTargets = document.querySelectorAll('.participant:not(.winner):not(.loser), .crosstable th.player-header');
+    
+    if (isEditMode) {
+        btn.textContent = "✅ 完成修正";
+        btn.style.backgroundColor = "#f56c6c";
+        nameChangeTracker = []; 
+        allTargets.forEach(el => {
+            const txt = el.innerText.trim();
+            if (txt !== "轮空" && txt !== "" && !/^\d+\.$/.test(txt)) {
+                nameChangeTracker.push({ el: el, originalText: txt });
+                el.contentEditable = "true"; el.style.outline = "2px dashed #409eff"; el.style.backgroundColor = "#fffbe6"; el.style.cursor = "text";
+            }
+        });
+    } else {
+        btn.textContent = "✏️ 修正名单";
+        btn.style.backgroundColor = "#67c23a";
+        nameChangeTracker.forEach(item => {
+            const newText = item.el.innerText.trim();
+            if (newText !== item.originalText) { if (item.el.closest('.crosstable')) syncGroupStageNames(item.el, item.originalText, newText); }
+            item.el.contentEditable = "false"; item.el.style.outline = "none"; item.el.style.backgroundColor = ""; item.el.style.cursor = "pointer";
+        });
+        refreshQualificationSelects(); 
+        saveData(false); 
+    }
+}
+
+function syncGroupStageNames(targetEl, oldFullText, newFullText) {
+    const groupContainer = targetEl.closest('.group-container');
+    if (!groupContainer) return;
+
+    // 1. 严格提取选手序号 (例如从 "4. 杨紫逸晨" 中提取 "4")
+    const matchOrder = oldFullText.match(/^(\d+)\.\s*/);
+    if (!matchOrder) return;
+    const playerIndex = matchOrder[1]; 
+
+    // 2. 提取纯净的新名字
+    const cleanNew = newFullText.replace(/^\d+\.\s*/, '').trim();
+    
+    // 3. 同步积分表中的所有表头 (只看序号，不看名字)
+    const table = groupContainer.querySelector('.crosstable');
+    const allHeaders = table.querySelectorAll('th');
+    allHeaders.forEach(h => {
+        // 只要序号匹配 (例如 data-name 对应或文本开头匹配)，就更新
+        if (h.innerText.startsWith(playerIndex + '.')) {
+            h.setAttribute('data-name', cleanNew);
+            h.innerHTML = `${playerIndex}. ${formatDisplayName(cleanNew)}`;
+        }
+    });
+
+    // 4. 精确更新对阵日程表 (【关键】只通过 data-idx 匹配)
+    const scheduleNodes = groupContainer.querySelectorAll('.schedule-table .p-name');
+    scheduleNodes.forEach(node => {
+        const nodeIdx = node.getAttribute('data-idx');
+        if (nodeIdx === playerIndex) {
+            node.setAttribute('data-realname', cleanNew);
+            // 重新渲染显示，并保持你之前的 Flex 垂直排版样式
+            node.innerHTML = formatDisplayName(cleanNew);
+            node.style.display = 'flex';
+            node.style.flexDirection = 'column';
+            node.style.alignItems = 'center';
+            node.style.lineHeight = '1.2';
+        }
+    });
+
+    // 5. 同步更新下方的出线下拉框
+    const selects = groupContainer.querySelectorAll('select.rank-select');
+    selects.forEach(sel => {
+        for (let opt of sel.options) {
+            if (opt.value === oldFullText.replace(/^\d+\.\s*/, '').trim()) {
+                opt.value = cleanNew;
+                opt.text = cleanNew;
+            }
+        }
+    });
+}
+function refreshQualificationSelects() {
+    const groups = document.querySelectorAll('.group-container');
+    groups.forEach(group => {
+        const latestNames = Array.from(group.querySelectorAll('.crosstable th.player-header')).map(getRealName);
+        const selects = group.querySelectorAll('select.rank-select');
+        selects.forEach(sel => {
+            const currentVal = sel.value;
+            sel.innerHTML = `<option value="">--请选择--</option>` + latestNames.map(name => `<option value="${name}">${name}</option>`).join('');
+            sel.value = currentVal; 
+        });
+    });
+}
+/**
+ * 终极版成绩册导出：防漏查、抗换行干扰
+ */
+function exportResultBook() {
+    const ids = Object.keys(allTournaments);
+    if (ids.length === 0) {
+        alert("暂无项目数据！");
+        return;
+    }
+
+    const tournamentTitle = document.getElementById('global-tournament-title').value || "赛事成绩册";
+    
+    const parser = new DOMParser();
+    
+   let bookHtml = `
+        <div id="result-book-print-view" style="padding: 20px; font-family: 'SimSun', serif;">
+            <div style="page-break-after: always;">
+                <h1 style="text-align: center; font-size: 32px; margin-bottom: 30px;">${tournamentTitle}</h1>
+                <h2 style="text-align: center; font-size: 24px; margin-bottom: 40px;">成绩总榜单</h2>
+    `;
+
+ids.forEach(id => {
+        const t = allTournaments[id];
+        const doc = parser.parseFromString(t.html, 'text/html');
+        
+        let extractedStandings = [];
+
+        // 🔍 策略 1：先尝试从底部的“最终名次”大榜列表提取
+        const standingsItems = doc.querySelectorAll('.standings-list li');
+        if (standingsItems.length > 0) {
+            standingsItems.forEach(li => {
+                extractedStandings.push({
+                    rank: li.querySelector('div:first-child')?.innerText.trim() || "",
+                    fullName: li.querySelector('div:last-child')?.innerText.trim() || ""
+                });
+            });
+        } 
+        // 🔍 策略 2：如果没有大榜列表，直接从积分表中强行抓取
+        else {
+            const crosstables = doc.querySelectorAll('.crosstable');
+            crosstables.forEach(table => {
+                const rows = Array.from(table.querySelectorAll('tbody tr'));
+                rows.forEach(row => {
+                    const rankVal = row.cells[row.cells.length - 1]?.innerText.trim();
+                    if (rankVal && !isNaN(rankVal)) {
+                        // 🌟 修复：积分表抓取时不再强加“冠军”文字，直接用数字
+                        let rankTitle = `第${rankVal}名`; 
+                        let fullName = row.cells[0].innerText.replace(/^\d+\.\s*/, '').trim();
+                        extractedStandings.push({ rank: rankTitle, fullName: fullName });
+                    }
+                });
+            });
+        }
+
+        // 🌟 统一对所有提取到的名次进行绝对排序，兼容汉字和数字
+        extractedStandings.sort((a, b) => {
+            const getRankNum = (str) => {
+                if (str.includes('冠军')) return 1;
+                if (str.includes('亚军')) return 2;
+                if (str.includes('季军')) return 3;
+                if (str.includes('四')) return 4;
+                if (str.includes('五')) return 5;
+                if (str.includes('六')) return 6;
+                if (str.includes('七')) return 7;
+                if (str.includes('八')) return 8;
+                const num = parseInt(str.replace(/\D/g, ''));
+                return isNaN(num) ? 99 : num; 
+            };
+            return getRankNum(a.rank) - getRankNum(b.rank);
+        });
+
+        // 如果提取到了名次，就生成表格
+        if (extractedStandings.length > 0) {
+            bookHtml += `
+                <div style="margin-bottom: 40px; page-break-inside: avoid;">
+                    <h3 style="font-size: 20px; border-left: 8px solid #333; padding-left: 15px; margin-bottom: 15px;">
+                        组别：${t.sportName}
+                    </h3>
+                    <table style="width: 100%; border-collapse: collapse; text-align: center;">
+                        <thead>
+                            <tr style="background: #f2f2f2;">
+                                <th style="border: 1px solid #000; padding: 8px; width: 40%;">姓名</th>
+                                <th style="border: 1px solid #000; padding: 8px; width: 20%;">名次</th>
+                                <th style="border: 1px solid #000; padding: 8px; width: 40%;">单位</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+            extractedStandings.forEach(item => {
+                // 抹除多余换行符
+                const cleanFullName = item.fullName.replace(/[\r\n]+/g, '').replace(/\s+/g, ' ').trim();
+                
+                // 拆分姓名和单位
+                const nameMatch = cleanFullName.match(/^(.*?)[\(（](.*?)[\)）]$/);
+                const name = nameMatch ? nameMatch[1].trim() : cleanFullName;
+                const unit = nameMatch ? nameMatch[2].trim() : "-";
+
+                // 🌟🌟🌟 核心修复：终极格式化拦截器
+                // 将所有可能的旧数据（如 🥇冠军、第四名、第5名）强制转换为统一的 "第X名"
+                let displayRank = "";
+                if (item.rank.includes('冠军')) displayRank = "第1名";
+                else if (item.rank.includes('亚军')) displayRank = "第2名";
+                else if (item.rank.includes('季军')) displayRank = "第3名";
+                else if (item.rank.includes('四')) displayRank = "第4名";
+                else if (item.rank.includes('五')) displayRank = "第5名";
+                else if (item.rank.includes('六')) displayRank = "第6名";
+                else if (item.rank.includes('七')) displayRank = "第7名";
+                else if (item.rank.includes('八')) displayRank = "第8名";
+                else {
+                    // 如果已经是数字类型，直接提取数字并拼接
+                    let num = item.rank.replace(/\D/g, '');
+                    displayRank = num ? `第${num}名` : item.rank;
+                }
+
+                bookHtml += `
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 8px;">${name}</td>
+                        <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">${displayRank}</td>
+                        <td style="border: 1px solid #000; padding: 8px;">${unit}</td>
+                    </tr>`;
+            });
+
+            bookHtml += `</tbody></table></div>`;
+        }
+    });
+
+    bookHtml += `</div>`; // 结束封面页
+
+   // --- 构建后续页（详细积分和对阵图） ---
+    ids.forEach((id, index) => {  
+        const t = allTournaments[id];
+        const doc = parser.parseFromString(t.html, 'text/html');
+
+        // 🌟 核心修复：判断是否是最后一个项目。如果是，就不加强制换行符
+        const pageBreakStyle = (index === ids.length - 1) ? "" : "page-break-after: always;";
+
+        bookHtml += `
+            <div style="${pageBreakStyle} padding: 20px;">
+                <h2 style="font-size: 24px; color: #1a73e8; border-bottom: 2px solid #1a73e8; padding-bottom: 10px; margin-bottom: 30px;">
+                    项目：${t.sportName} 详细成绩
+                </h2>`;
+
+        // 提取循环赛积分表
+        const crosstables = doc.querySelectorAll('.group-container');
+        crosstables.forEach(group => {
+            const table = group.querySelector('.crosstable');
+            if (table) {
+                table.querySelectorAll('td').forEach(td => td.removeAttribute('contenteditable'));
+                // 🌟 核心修复：加上 page-break-inside: avoid，强行保证表格作为一个整体打印
+                bookHtml += `<div style="margin-bottom: 30px; page-break-inside: avoid; break-inside: avoid;">
+                                <h4 style="margin-bottom:10px;">${group.querySelector('h3')?.innerText || '积分表'}</h4>
+                                ${table.outerHTML}
+                             </div>`;
+            }
+        });
+
+        const brackets = doc.querySelectorAll('.bracket-container');
+        brackets.forEach(bracket => {
+            bracket.querySelectorAll('.score-inputs, .court-tag, .court-info').forEach(el => el.remove());
+            bookHtml += `<div style="margin-top:20px;">${bracket.outerHTML}</div>`;
+        });
+
+        bookHtml += `</div>`;
+    });
+
+    bookHtml += `</div>`;
+
+    const originalContent = ui.results.innerHTML;
+    ui.results.innerHTML = bookHtml;
+
+    setTimeout(() => {
+        window.print();
+        ui.results.innerHTML = originalContent;
+    }, 500);
+}
+// 仅导出赛程的逻辑
+function exportScheduleOnly() {
+    // 给结果容器临时加上一个“仅赛程模式”的类名
+    const results = document.getElementById('results');
+    results.classList.add('print-schedule-only');
+    
+    // 调用打印
+    window.print();
+    
+    // 打印完成后移除，不影响网页显示
+    results.classList.remove('print-schedule-only');
+}
+/**
+ * 提取所有项目的已编排赛程，生成并打印全局总表（增加场序）
+ */
+function exportGlobalSchedule() {
+    const ids = Object.keys(allTournaments);
+    if (ids.length === 0) {
+        alert("目前没有任何比赛项目。");
+        return;
+    }
+
+    let allMatches = [];
+    const parser = new DOMParser();
+
+    // 1. 遍历所有项目提取数据
+    ids.forEach(id => {
+        const t = allTournaments[id];
+        const doc = parser.parseFromString(t.html, 'text/html');
+        
+        // 查找所有带场次标签的单元格或对阵块
+        const matchNodes = doc.querySelectorAll('.match, .schedule-table td');
+        
+        matchNodes.forEach(node => {
+            const tag = node.querySelector('.court-tag, .court-info');
+            if (tag && tag.innerText.includes('号场')) {
+                const tagText = tag.innerText;
+                
+                // 正则解析：D1 09:00 | 1号场
+                const dayMatch = tagText.match(/D(\d+)/);
+                const timeMatch = tagText.match(/\d{2}:\d{2}/);
+                const courtMatch = tagText.match(/(\d+)号场/);
+
+                let p1 = "待定", p2 = "待定";
+                if (node.classList.contains('match')) {
+                    const tNode = node.querySelector('[data-slot="top"]');
+                    const bNode = node.querySelector('[data-slot="bottom"]');
+                    p1 = tNode ? tNode.innerText.trim() : "待定";
+                    p2 = bNode ? bNode.innerText.trim() : "待定";
+                } else {
+                    const pNames = node.querySelectorAll('.p-name');
+                    if (pNames.length >= 2) {
+                        p1 = pNames[0].getAttribute('data-realname') || pNames[0].innerText.replace(/\s*\n\s*/g, '').trim();
+                        p2 = pNames[1].getAttribute('data-realname') || pNames[1].innerText.replace(/\s*\n\s*/g, '').trim();
+                    } else {
+                        const names = node.innerText.split(/VS/i);
+                        if(names.length >= 2) {
+                            p1 = names[0].split('\n')[0].trim();
+                            p2 = names[1].split('\n')[0].trim();
+                        }
+                    }
+                }
+
+                if (timeMatch && courtMatch) {
+                    allMatches.push({
+                        day: dayMatch ? parseInt(dayMatch[1]) : 1,
+                        time: timeMatch[0],
+                        court: parseInt(courtMatch[1]),
+                        project: t.sportName,
+                        matchup: `${p1} VS ${p2}`
+                    });
+                }
+            }
+        });
+    });
+
+    if (allMatches.length === 0) {
+        alert("未发现已编排的赛程，请先进行‘全局编排’后再导出。");
+        return;
+    }
+
+    // 2. 排序：天数 -> 时间 -> 场地
+    allMatches.sort((a, b) => {
+        if (a.day !== b.day) return a.day - b.day;
+        if (a.time !== b.time) return a.time.localeCompare(b.time);
+        return a.court - b.court;
+    });
+
+    // 3. 构造全局表格 HTML（增加场序 i+1）
+    let tableRows = allMatches.map((m, i) => `
+        <tr>
+            <td style="width:60px">D${m.day}</td>
+            <td style="width:50px; font-weight:bold; color:#666;">${i + 1}</td>
+            <td style="font-weight:bold; width:80px">${m.time}</td>
+            <td style="width:80px">${m.court}号场</td>
+            <td style="color:#27ae60; width:120px">${m.project}</td>
+            <td style="text-align:left; padding-left:15px;">${m.matchup}</td>
+        </tr>
+    `).join('');
+
+    let globalTableHtml = `
+        <div id="global-print-view">
+            <h1 style="text-align:center; margin-bottom:20px;">赛事总日程表</h1>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>场序</th>
+                        <th>时间</th>
+                        <th>场地</th>
+                        <th>比赛项目</th>
+                        <th>对阵详情</th>
+                    </tr>
+                </thead>
+                <tbody>${tableRows}</tbody>
+            </table>
+        </div>
+    `;
+
+    // 4. 临时替换并打印
+    const originalContent = ui.results.innerHTML;
+    ui.results.innerHTML = globalTableHtml;
+    
+    setTimeout(() => {
+        window.print();
+        ui.results.innerHTML = originalContent; 
+    }, 100);
+}
+// 初始化时从本地读取赛事名称
+document.addEventListener('DOMContentLoaded', () => {
+    const savedName = localStorage.getItem('globalTournamentName') || "体育赛事管理系统";
+    const input = document.getElementById('global-tournament-title');
+    if (input) {
+        input.value = savedName;
+        // 等待 socket 连接后同步
+        setTimeout(() => syncTournamentName(savedName), 1000);
+    }
+});
+
+function syncTournamentName(name) {
+    localStorage.setItem('globalTournamentName', name);
+    if (socket && socket.connected) {
+        socket.emit('set_tournament_name', name);
+    }
+}
+function toggleMobileSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('mobile-active');
+    overlay.classList.toggle('active');
+}
+
+// 优化：点击侧边栏菜单后自动隐藏（手机端）
+document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+            toggleMobileSidebar();
+        }
+    });
+});
+init();
+</script>
+</body>
+</html>

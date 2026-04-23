@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>专业裁判端-响应式版</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0e0e0e; 
+            --text: #ffffff;
+            --badminton-green: #198964; 
+            --tt-green: #004d2c; /* 统一乒乓绿 */
+            --tt-yellow: #ffff00; 
+            --red: #ff5252; 
+            --blue: #2196f3;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            font-family: -apple-system, "PingFang SC", sans-serif; 
+            background: #000; margin: 0; color: var(--text); 
+            height: 100dvh; overflow: hidden; display: flex; flex-direction: column; 
+        }
+@keyframes toss-spin {
+    0% { transform: rotateX(0deg); opacity: 0.5; }
+    50% { transform: rotateX(180deg); opacity: 1; }
+    100% { transform: rotateX(360deg); opacity: 0.5; }
+}
+
+.toss-animating {
+    animation: toss-spin 0.1s infinite linear;
+    color: #ffeb3b !important;
+}
+
+.toss-winner {
+    color: #27ae60 !important;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+}
+        #umpire-screen { display: none; height: 100%; flex-direction: column; flex: 1; }
+        .main-layout { 
+            display: flex; flex-direction: column; flex: 1; 
+            overflow: hidden; background: #000; 
+            min-height: 0; /* 🌟 关键修复 */
+        }
+
+        /* 🌟 模块化容器样式 */
+       .sport-module { display: none !important; flex-direction: column; width: 100%; overflow: hidden; }
+        .sport-module.active { display: flex !important; }
+
+     /* --- 1. 乒乓球专业界面样式 (全黑晶锐现代版) --- */
+        #module-table_tennis { 
+            /* 彻底抛弃纯绿，改用电竞/转播级的深邃暗黑背景 */
+            background: #0f1115; 
+            color: #ffffff;
+            /* 确保填满整个可用空间，消灭底部黑边 */
+            width: 100%; 
+            height: 100%; 
+        }
+        
+      .tt-header { 
+    flex: 0 0 auto; 
+    display: flex; 
+    background: #000; /* 底色背景 */
+    border-bottom: 2px solid #2a2d35; 
+    z-index: 10;
+    padding: 0; /* 移除内边距，让红蓝色彩铺满 */
+}
+
+#tt-name-p1 { 
+    background: #b91c1c !important; /* 专业红 */
+    border-right: 1px solid rgba(255,255,255,0.2);
+}
+
+#tt-name-p2 { 
+    background: #1d4ed8 !important; /* 专业蓝 */
+    border-right: none;
+}
+
+.tt-name {
+    flex: 1;
+    padding: 12px 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5); /* 增强文字识别度 */
+}
+        
+        .tt-main { 
+            flex: 1; /* 强制撑满中间所有区域 */
+            display: flex; 
+            position: relative; 
+            min-height: 0; 
+            overflow: hidden; /* 🌟 核心修复：绝对禁止任何字体溢出到下方的表格中 */
+        }
+        
+        .tt-side { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer;
+            padding: 10px;
+            /* 加入轻微的中心聚光灯渐变，提升立体感 */
+            background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 70%);
+            transition: background 0.1s ease;
+        }
+        .tt-side:active { background: rgba(255,255,255,0.08); } 
+        
+        /* 中间的高级分割线 */
+        .tt-main::after {
+            content: '';
+            position: absolute;
+            left: 50%; top: 5%; bottom: 5%;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, #2a2d35, transparent);
+            transform: translateX(-50%);
+        }
+
+        .tt-set-score { 
+            /* 局分使用亮金色 */
+            font-size: clamp(24px, 6vh, 50px); 
+            color: #fbbf24; 
+            font-weight: 900; 
+            margin-bottom: 1.5vh;
+            text-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+        }
+        .tt-score-serve-container {
+            position: relative; /* 🌟 建立定位基准，让发球点相对于容器定位 */
+            display: flex;
+            flex-direction: row; /* 水平排列 */
+            align-items: center; /* 垂直居中对齐 */
+            justify-content: center; /* 水平居中对齐比分 */
+        }
+       .tt-point-score { 
+            font-size: clamp(60px, 30vw, 250px); /* 限制最大和最小字号 */
+            color: #ffffff; 
+            font-weight: 900; 
+            font-family: "Arial Black", Impact, sans-serif; 
+            line-height: 0.85;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        }
+        
+    .tt-serve-dot { 
+            width: clamp(15px, 3vw, 20px); 
+            height: clamp(15px, 3vw, 20px); 
+            background: #ffffff; 
+            border-radius: 50%; 
+            position: absolute;
+            right: -2.5vw;
+            margin-top: 0 !important;
+            display: none; 
+            box-shadow: 0 0 15px #ffffff, inset 0 -2px 4px rgba(0,0,0,0.4); 
+        }
+
+        
+        .tt-footer-table { 
+            flex: 0 0 auto; 
+            background: #14161a; 
+            border-top: 1px solid #2a2d35; 
+            padding-bottom: env(safe-area-inset-bottom); /* 适配全面屏底部小黑条 */
+            z-index: 10;
+        }
+        
+        .tt-res-table { 
+            width: 100%; border-collapse: collapse; 
+            font-size: clamp(12px, 2.5vw, 15px); 
+            color: #94a3b8; text-align: center; 
+        }
+        .tt-res-table th { background: #0f1115; padding: 10px 4px; border: 1px solid #2a2d35; font-weight: normal;}
+        .tt-res-table td { background: transparent; padding: 10px 4px; border: 1px solid #2a2d35; font-weight: bold;}
+        
+        .tt-res-table td.active-set { 
+            /* 底部表格当前局：使用赛博朋克蓝进行高亮 */
+            background: #1e293b; 
+            color: #38bdf8; 
+            font-size: 1.15em;
+            box-shadow: inset 0 0 10px rgba(56, 189, 248, 0.15);
+        }
+
+     /* --- 2. 羽毛球场样式 --- */
+      .court-area { 
+            background: #0e0e0e; 
+            padding: 10px; 
+            flex: 0 0 auto; /* 🌟 核心修复1：禁止球场被红蓝计分板压缩 */
+            width: 100%;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+        
+        .badminton-court { 
+            width: 100%; 
+            max-width: 800px; 
+            aspect-ratio: 13.4 / 6.1; /* 保持真实比例 */
+            background: var(--badminton-green); 
+            border: 2px solid white; 
+            position: relative; 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            grid-template-rows: 1fr 1fr; 
+            overflow: hidden;
+            margin: auto; /* 🌟 核心修复2：确保在横屏的大空间里绝对居中 */
+        }
+        
+      .court-line { position: absolute; background: white; pointer-events: none; z-index: 1; }
+        .line-net { left: 50%; top: 0; bottom: 0; width: 4px; transform: translateX(-50%); z-index: 2; background: #ddd; box-shadow: 0 0 5px rgba(0,0,0,0.5);}
+        .line-short-left { left: 35.2%; top: 0; bottom: 0; width: 2px; }
+        .line-short-right { right: 35.2%; top: 0; bottom: 0; width: 2px; }
+        .line-doubles-back-left { left: 5.7%; top: 0; bottom: 0; width: 2px; }
+        .line-doubles-back-right { right: 5.7%; top: 0; bottom: 0; width: 2px; }
+        .line-singles-side-top { left: 0; right: 0; top: 7.5%; height: 2px; }
+        .line-singles-side-bottom { left: 0; right: 0; bottom: 7.5%; height: 2px; }
+        .line-center-left { left: 0; width: 35.2%; top: 50%; height: 2px; transform: translateY(-50%); }
+        .line-center-right { right: 0; width: 35.2%; top: 50%; height: 2px; transform: translateY(-50%); }
+
+        /* 🌟 核心修复3：动态缩放球员标签，防止撑破场地 */
+        .player-slot { 
+            position: relative; z-index: 10; 
+            display: flex; align-items: center; justify-content: center; 
+            padding: 2px; 
+        }
+/* --- 增强版羽毛球发球图标 (SVG 实现) --- */
+.player-serving-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+}
+
+/* 左半场 (Team 1) -> 名字在左，图标在右 */
+.icon-placement-right { flex-direction: row !important; }
+/* 右半场 (Team 2) -> 图标在左，名字在右 */
+.icon-placement-left { flex-direction: row-reverse !important; }
+
+.player-tag {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 2px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.1);
+    white-space: nowrap;
+    font-size: 1.2em;
+}
+
+.player-tag.serving-now {
+    border-color: #ffeb3b !important;
+    box-shadow: 0 0 15px rgba(255, 235, 59, 0.6) !important;
+}
+
+.serve-shuttle {
+    width: 38px; /* 进一步加大 */
+    height: 38px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23FFF' d='M20 12l4 32h16l4-32z'/%3E%3Cpath fill='%23DDD' d='M24 12l2 32h12l2-32z'/%3E%3Cpath fill='%23FFD700' d='M24 44a8 8 0 0016 0z'/%3E%3Cpath fill='%23C0C0C0' d='M20 15h24M21 22h22M22 29h20' stroke='%23999' stroke-width='1'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    }
+
+    /* 羽毛球准备遮罩 */
+       .court-half-label {
+    position: absolute;
+    top: 50%;
+    left: 25%; /* 左半场中心 */
+    transform: translate(-50%, -50%);
+    font-size: clamp(12px, 4vw, 22px);
+    color: rgba(255, 255, 255, 0.9); /* 淡淡的水印感 */
+    font-weight: 900;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 5;
+    text-align: center;
+}
+.label-right { left: 75%; } /* 右半场中心 */
+.court-score-digital {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: clamp(40px, 12vw, 85px); /* 字体很大，很有冲击力 */
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.95); /* 几乎纯白，非常明显 */
+    font-family: "Arial Black", sans-serif;
+    z-index: 6;
+    pointer-events: none;
+    text-shadow: 0 0 20px rgba(0,0,0,0.8); /* 强阴影确保在绿地上清晰 */
+}
+
+#court-score-left {
+    right: 52%; /* 位于中心线左侧，留出一点空隙 */
+}
+
+#court-score-right {
+    left: 52%; /* 位于中心线右侧，对称排列 */
+}
+
+/* 竖屏时稍微缩小一点，防止挤到名字 */
+@media (orientation: portrait) {
+    .court-score-digital { font-size: 15vw; }
+}
+/* --- 优化：赛前准备界面 (覆盖比分，不遮挡名字) --- */
+#prep-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100dvh;
+    background: rgba(0, 0, 0, 0.3); /* 背景调淡，隐约可见球场 */
+    z-index: 200;
+    display: none; /* 由 JS 控制 */
+    pointer-events: none; /* 穿透到下方 */
+}
+
+.prep-box {
+    background: #1a1a1a;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    pointer-events: auto; /* 恢复点击 */
+    padding: 20px;
+    overflow-y: auto;
+}
+.prep-box .btn-ctrl {
+    height: 40px;
+    font-size: 14px !important;
+    margin: 3px 0;
+    background: #333;
+    border: 1px solid #555;
+}
+
+.prep-box .confirm-btn {
+    height: 80px;
+    background: var(--badminton-green) !important;
+    font-size: 22px !important;
+    margin-top: 20px;
+}
+
+        /* 通用样式 */
+        .score-container { 
+            flex: 1; display: flex; flex-direction: row; 
+            background: #000; gap: 2px; 
+            min-height: 0; /* 🌟 关键修复 */
+        }
+       .score-card { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; } /* 🌟 加上 relative 定位 */
+        .score-card.red { background: var(--red); }
+        .score-card.blue { background: var(--blue); }
+        .score-val { 
+            /* 🌟 vmin 取屏幕宽高较小的那一边，clamp 限制最大最小字号 */
+            font-size: clamp(60px, 25vmin, 250px); 
+            font-weight: 900; 
+            font-family: "Arial Black", sans-serif; 
+            color: white; 
+            line-height: 1; /* 避免行高过大 */
+            margin: 0; 
+        }
+.generic-name-label { 
+            position: absolute; top: 12%; 
+            font-size: clamp(18px, 4vh, 32px); font-weight: bold; 
+            color: rgba(255,255,255,0.95); text-align: center; 
+            width: 90%; line-height: 1.2; 
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8); 
+            pointer-events: none; /* 防止挡住点击加分 */
+        }
+        .match-info-bar { background:#222; color:#fff; padding: 5px 15px; font-size:12px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .footer-controls { 
+    /* 🌟 核心修改：增加总高度，并利用 padding 把按钮“顶”上去 */
+    height: 85px; 
+    display: grid; 
+    grid-template-columns: repeat(6, 1fr); 
+    gap: 6px; 
+    /* 重点：底部增加 20px 基础间距，并自动适配手机小黑条 (safe-area) */
+    padding: 6px 6px calc(20px + env(safe-area-inset-bottom)); 
+    background: #0e0e0e; 
+    flex-shrink: 0; 
+    border-top: 1px solid #333; /* 增加一条分界线，更显专业 */
+}
+       .btn-ctrl { 
+    background: #333; 
+    border: none; 
+    color: white; 
+    border-radius: 8px; 
+    font-size: 13px; /* 稍微调大一点字体更易读 */
+    font-weight: bold; 
+    height: 45px; /* 🌟 固定按钮高度，不让它随父容器无限拉伸 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+        
+        #setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; background: #1a1a1a; }
+        .court-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 90%; }
+        .court-btn { background: #333; border: 1px solid #444; color: white; padding: 20px; border-radius: 12px; font-size: 18px; font-weight: bold; }
+/* 🏀 篮球横屏专业排版 */
+#module-basketball { height: 100%; display: flex; flex-direction: column; background: #000; }
+
+.bb-header-professional {
+    flex: 0 0 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    background: #1a1a1a;
+    border-bottom: 2px solid #333;
+}
+
+.bb-clock-main { font-family: monospace; font-size: 32px; color: #ff9800; font-weight: bold; }
+.bb-shot-main { font-family: monospace; font-size: 32px; color: #f44336; font-weight: bold; margin-left: 15px; }
+.bb-period-box { font-size: 18px; color: #aaa; }
+
+.bb-body-landscape {
+    flex: 1;
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    min-height: 0;
+}
+
+.bb-team-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #111;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+/* 🌟 优化：让球队信息和比分区域撑开，占据主要空间 */
+.bb-team-info { 
+    text-align: center; 
+    margin-bottom: 10px; 
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center;
+}
+.bb-name-label { font-size: clamp(20px, 4vh, 36px); font-weight: bold; color: #fff; }
+.bb-mini-stats { font-size: clamp(14px, 2.5vh, 20px); color: #aaa; margin-top: 10px; }
+
+/* 🌟 优化：比分字体极大化 */
+.bb-score-display { 
+    /* 核心修复：改用 vw (屏幕宽度) 作为自适应基准，防止竖屏溢出 */
+    font-size: clamp(50px, 18vw, 160px); 
+    font-weight: 900; 
+    font-family: Impact, sans-serif; 
+    line-height: 1; 
+    margin: 15px 0;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+}
+.home .bb-score-display { color: #ff5252; }
+.away .bb-score-display { color: #2196f3; }
+
+/* 🌟 优化：取消按钮的无限拉伸，固定按钮高度并放在底部 */
+.bb-action-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    flex: 0 0 auto; /* 核心修复：不让它挤占屏幕 */
+    padding-top: 15px;
+    border-top: 1px solid #333; 
+}
+
+/* 🌟 优化：规范按钮大小，增加按压动画 */
+.bb-act-btn {
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 15px 0; /* 固定内边距，让按钮高度适中 */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+.bb-act-btn:active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+.bb-act-btn.p3 { background: #b91c1c; }
+.bb-act-btn.p2 { background: #dc2626; }
+.bb-act-btn.p1 { background: #ef4444; }
+.bb-act-btn.foul { background: #4b5563; }
+.bb-act-btn.timeout { background: #7c3aed; } /* 暂停按钮用紫色区分 */
+
+.bb-timer-controls {
+    flex: 0 0 70px;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 6px;
+    padding: 8px;
+    background: #1a1a1a;
+}
+
+.bb-ctrl-btn { border: none; border-radius: 6px; color: #fff; font-weight: bold; font-size: 18px; }
+.timer-toggle { background: #059669; }
+.reset24, .reset14 { background: #991b1b; }
+.next-pd { background: #374151; }
+ /* ============================================================
+   🌟 极致优化：竖屏（手机垂直持握）适配方案
+   ============================================================ */
+@media (orientation: landscape) {
+    .main-layout { flex-direction: row !important; }
+   #module-badminton.active { flex: 0 0 55% !important; border-right: 2px solid #333; }
+    #module-badminton.active ~ #generic-score-container { flex: 1 !important; display: flex !important; }
+    
+    /* 🌟 核心修改：乒乓球模式占据 100% 宽度，并强行隐藏右侧红蓝牌 */
+    #module-table_tennis.active { flex: 1 1 100% !important; }
+    #module-table_tennis.active ~ #generic-score-container { display: none !important; }
+    #generic-score-container { flex: 1 !important; display: flex !important; }
+    
+    .court-area { height: 100%; padding: 10px; }
+    .badminton-court { width: 100%; height: auto; max-height: 90%; } /* 适配高度 */
+
+    #prep-overlay { flex-direction: row; justify-content: flex-end; }
+    .prep-box { width: 45%; height: 100%; border-left: 4px solid #ffeb3b; }
+}
+
+/* --- B. 竖屏模式：遮住下方比分，露出上方球场 (G1-14) --- */
+@media (orientation: portrait) {
+    .main-layout { flex-direction: column !important; }
+    #module-badminton.active { flex: 0 0 40% !important; height: 40dvh !important; }
+    #generic-score-container { flex: 1 !important; display: flex !important; flex-direction: row !important;height: auto !important; }
+    
+    .court-area { height: 100%; padding: 5px; }
+    .badminton-court { width: 95%; height: auto; max-height: 95%; } /* 确保不溢出 */
+
+    #prep-overlay { flex-direction: column; justify-content: flex-end; }
+    .prep-box { 
+        width: 100%; height: 65%; /* 遮住下半部分比分区 */
+        border-radius: 20px 20px 0 0; 
+        border-top: 6px solid #ffeb3b; 
+    }
+
+    .score-card .score-val { font-size: 30vw !important; } /* 竖屏比分极大化 */
+}
+
+/* 修正横屏高度较小时的球场比例，防止“被踩扁”的感觉 */
+@media (orientation: landscape) and (max-height: 500px) {
+    .court-area {
+        padding: 5px;
+    }
+    .badminton-court {
+        height: 90%; /* 强制球场撑开 */
+    }
+}
+/* 🌟 2. 专门针对手机横屏的“极致高度适配” (已包含超大号发球指示灯优化) */
+        @media (orientation: landscape) and (max-height: 500px) {
+            /* 极致压缩顶部空间 */
+            .tt-header { padding: 2px 0; }
+            .tt-name { 
+                flex-direction: row; 
+                gap: 8px; 
+                font-size: clamp(12px, 4vh, 16px); 
+            }
+            
+            /* 极致压缩底部表格 */
+            .tt-footer-table th, .tt-footer-table td { 
+                padding: 2px; 
+                font-size: 11px; 
+            }
+            
+            /* 压缩局分大小 */
+            .tt-set-score { 
+                font-size: 16px; 
+                margin-bottom: 2px; 
+            }
+            
+            /* 核心修复：大幅调低比分比例，同时加入 vw 双重限制，配合更紧凑的行高 */
+            .tt-point-score { 
+                font-size: min(20vw, 28vh) !important; 
+                line-height: 0.75 !important; 
+            }
+            
+            /* 🌟 核心优化：横屏时大幅放大发球指示灯 */
+            .tt-serve-dot { 
+                margin-top: 4px; /* 稍微加大间距，避免和局分贴太近 */
+                width: 18px !important;  /* 🌟 从 8px 放大到 18px */
+                height: 18px !important; /* 🌟 从 8px 放大到 18px */
+                /* 强化发球红点的光晕效果，使其更醒目 */
+                box-shadow: 0 0 15px #ff5252, inset 0 -2px 4px rgba(0, 0, 0, 0.4); 
+            }
+
+            /* 横屏时强行压缩底部的裁判控制按钮栏 */
+            .footer-controls { 
+                height: 45px; 
+                padding: 2px; 
+            }
+            .btn-ctrl {
+                font-size: 10px;
+            }
+        } 
+    </style>
+</head>
+<body>
+
+<div id="setup-screen">
+    <h2 style="color:white; margin-bottom:30px;">选择负责场地</h2>
+    <div class="court-grid" id="court-buttons-container"></div>
+</div>
+
+<div id="umpire-screen">
+<div id="umpire-screen">
+    <div id="occupied-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; flex-direction:column; align-items:center; justify-content:center;">
+        <h2 style="color:#ff5252;">⚠️ 执裁冲突</h2>
+        <p style="color:white;">另一名裁判正在处理此场比赛</p>
+        <button onclick="showSetup()" style="padding:10px 20px; background:#444; color:white; border:none; border-radius:5px;">返回场地选择</button>
+    </div>
+    </div>
+    <div class="main-layout" id="main-ui-stack">
+        
+       <div id="module-table_tennis" class="sport-module">
+            
+            <div class="tt-header">
+                <div class="tt-name" id="tt-name-p1">选手1</div>
+                <div class="tt-name" id="tt-name-p2">选手2</div>
+            </div>
+            
+            <div class="tt-main">
+                <div class="tt-side" onclick="addPoint(1)">
+                    <div class="tt-set-score" id="tt-set-p1">0</div>
+                    
+                    <div class="tt-score-serve-container">
+                        <div class="tt-point-score" id="tt-point-p1">0</div>
+                        <div class="tt-serve-dot" id="tt-dot-p1"></div> </div>
+                </div>
+                
+                <div style="width:1px; background:rgba(255,255,255,0.1); height:100%;"></div>
+                
+                <div class="tt-side" onclick="addPoint(2)">
+                    <div class="tt-set-score" id="tt-set-p2">0</div>
+                    
+                    <div class="tt-score-serve-container">
+                        <div class="tt-point-score" id="tt-point-p2">0</div>
+                        <div class="tt-serve-dot" id="tt-dot-p2"></div> </div>
+                </div>
+            </div>
+ <div class="tt-footer-table">
+                <table class="tt-res-table">
+                    <thead>
+                        <tr id="tt-table-head"><th>选手</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr id="tt-table-p1"><td>P1</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                        <tr id="tt-table-p2"><td>P2</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+
+        <div id="module-badminton" class="sport-module">
+      <div class="court-area">
+                <div class="badminton-court">
+                    <div class="court-line line-net"></div>
+                    <div id="court-score-left" class="court-score-digital">0</div>
+                    <div id="court-score-right" class="court-score-digital">0</div>
+                    <div class="court-half-label" id="unit-left"></div>
+                    <div class="court-half-label label-right" id="unit-right"></div>
+                    <div class="court-line line-short-left"></div>
+                    <div class="court-line line-short-right"></div>
+                    <div class="court-line line-doubles-back-left"></div>
+                    <div class="court-line line-doubles-back-right"></div>
+                    <div class="court-line line-center-left"></div>
+                    <div class="court-line line-center-right"></div>
+                    <div class="court-line line-singles-side-top"></div>
+                    <div class="court-line line-singles-side-bottom"></div>
+                    
+                    <div class="player-slot" id="slot-1-1" onclick="manualSetPos(1, 1)"></div>
+                    <div class="player-slot" id="slot-2-1" onclick="manualSetPos(2, 1)"></div>
+                    <div class="player-slot" id="slot-1-0" onclick="manualSetPos(1, 0)"></div>
+                    <div class="player-slot" id="slot-2-0" onclick="manualSetPos(2, 0)"></div>
+                </div>
+            </div>
+            <div id="prep-overlay">
+    <div class="prep-box">
+        <div style="text-align:center; color:#ffeb3b; font-weight:bold; margin-bottom:15px; font-size:16px;">🏸 赛前准备 / 挑边</div>
+        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:10px; text-align:center; border: 1px solid rgba(255,255,255,0.1);">
+                        <div style="color:#888; font-size:12px; margin-bottom:12px;"></div>
+                        <div style="perspective: 800px; width: 60px; height: 60px; margin: 0 auto 15px; cursor: pointer;" onclick="runToss()">
+                            <div id="coin" style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 2s cubic-bezier(0.2, 0.8, 0.3, 1);">
+                                <div style="position: absolute; width: 100%; height: 100%; background: linear-gradient(135deg, #f1c40f, #d35400); border-radius: 50%; border: 2px solid #f39c12; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; color: white; box-shadow: inset 0 0 10px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5);">正面</div>
+                                <div style="position: absolute; width: 100%; height: 100%; background: linear-gradient(135deg, #bdc3c7, #7f8c8d); border-radius: 50%; border: 2px solid #95a5a6; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; color: white; transform: rotateY(180deg); box-shadow: inset 0 0 10px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5);">反面</div>
+                            </div>
+                        </div>
+                        <div id="toss-result" style="color:#aaa; font-size:14px; font-weight:bold; height: 24px; display: flex; align-items: center; justify-content: center;">等待挑边</div>
+                    </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button class="btn-ctrl" onclick="swapSides()">🔄 左右对调</button>
+            <button class="btn-ctrl" onclick="manualToggleServer()">🏸 换发球方</button>
+            <button class="btn-ctrl" onclick="manualSwapPos(1)" style="background:#444">↕️ 左侧对调</button>
+            <button class="btn-ctrl" onclick="manualSwapPos(2)" style="background:#444">↕️ 右侧对调</button>
+        </div>
+        <button onclick="startMatchNow()" style="width:100%; background:var(--badminton-green); color:white; border:none; padding:15px; border-radius:8px; margin-top:15px; font-size:18px; font-weight:900; box-shadow:0 4px 10px rgba(0,0,0,0.5);">✅ 站位确认，开始比赛</button>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
+            <button onclick="cancelPrep()" style="background:#4b5563; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold;">🔙 返回待赛列表</button>
+            <button onclick="handleWalkover()" style="background:#dc2626; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold;">🏳️ 选手弃权</button>
+        <div id="walkover-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:rgba(0,0,0,0.85); z-index:300; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#1e1e1e; padding:25px; border-radius:12px; width:100%; max-width:400px; border-top:6px solid #dc2626; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+        <h3 style="color:#ff5252; margin-top:0; text-align:center; font-size:22px;">🚨 选手弃权处理</h3>
+        <p style="color:#aaa; font-size:14px; text-align:center; margin-bottom:20px;">请选择<b style="color:#fff;">主动弃权</b>的一方。对手将直接获得全胜比分并结束本场比赛。</p>
+        
+        <div style="margin-bottom:25px;">
+            <select id="walkover-select" style="width:100%; padding:15px; font-size:16px; background:#333; color:white; border:1px solid #555; border-radius:8px; appearance:none; text-align:center;">
+                </select>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button onclick="document.getElementById('walkover-modal').style.display='none'" style="flex:1; background:#444; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; font-size:16px;">取消</button>
+            <button onclick="confirmWalkover()" style="flex:1; background:#dc2626; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; font-size:16px;">确认判决</button>
+        </div>
+    </div>
+</div>
+</div>
+    </div>
+</div>
+</div>
+                           <div id="break-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:rgba(0,0,0,0.9); z-index:400; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+    <div style="background:#1a1a1a; padding:30px; border-radius:15px; border:2px solid #ffeb3b; width:80%; max-width:400px;">
+        <h2 id="break-title" style="color:#ffeb3b; margin-bottom:10px;">🏸 技术间歇</h2>
+        <div id="break-msg" style="color:white; font-size:18px; margin-bottom:20px;">11分间歇</div>
+        <div id="break-timer" style="font-size:80px; font-weight:900; color:white; font-family:monospace; margin-bottom:30px;">60</div>
+        <button onclick="closeBreak()" style="width:100%; background:var(--badminton-green); color:white; border:none; padding:15px; border-radius:8px; font-size:20px; font-weight:bold;">继续比赛</button>
+    </div>
+</div>
+
+
+<div id="module-basketball" class="sport-module">
+    <div class="bb-header-professional">
+        <div class="bb-period-box">第 <span id="bb-period-text">1</span> 节</div>
+        <div class="bb-timer-group">
+            <div id="bb-game-clock" class="bb-clock-main">10:00</div>
+            <div id="bb-shot-clock" class="bb-shot-main">24</div>
+        </div>
+        <div class="bb-status-icons">
+            <span id="bb-timer-status" style="color:#27ae60">● READY</span>
+        </div>
+    </div>
+
+    <div class="bb-body-landscape">
+        <div class="bb-team-panel home">
+            <div class="bb-team-info">
+                <div class="bb-name-label" id="bb-name-p1">主队</div>
+                <div class="bb-score-display" id="bb-score-p1">0</div>
+                <div class="bb-mini-stats">
+                    犯规:<span id="bb-foul-p1">0</span> | 暂停:<span id="bb-to-p1">3</span>
+                </div>
+            </div>
+            <div class="bb-action-grid">
+                <button class="bb-act-btn p3" onclick="bbAdd(1, 3)">+3</button>
+                <button class="bb-act-btn p2" onclick="bbAdd(1, 2)">+2</button>
+                <button class="bb-act-btn p1" onclick="bbAdd(1, 1)">+1</button>
+                <button class="bb-act-btn foul" onclick="bbFoul(1)">犯规</button>
+                <button class="bb-act-btn timeout" onclick="bbTimeout(1)">暂停</button>
+            </div>
+        </div>
+
+        <div class="bb-team-panel away">
+            <div class="bb-team-info">
+                <div class="bb-name-label" id="bb-name-p2">客队</div>
+                <div class="bb-score-display" id="bb-score-p2">0</div>
+                <div class="bb-mini-stats">
+                    犯规:<span id="bb-foul-p2">0</span> | 暂停:<span id="bb-to-p2">3</span>
+                </div>
+            </div>
+            <div class="bb-action-grid">
+                <button class="bb-act-btn p3" onclick="bbAdd(2, 3)">+3</button>
+                <button class="bb-act-btn p2" onclick="bbAdd(2, 2)">+2</button>
+                <button class="bb-act-btn p1" onclick="bbAdd(2, 1)">+1</button>
+                <button class="bb-act-btn foul" onclick="bbFoul(2)">犯规</button>
+                <button class="bb-act-btn timeout" onclick="bbTimeout(2)">暂停</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bb-timer-controls">
+        <button class="bb-ctrl-btn timer-toggle" onclick="bbToggleTimer()">开始/暂停</button>
+        <button class="bb-ctrl-btn reset24" onclick="bbResetShot(24)">24秒</button>
+        <button class="bb-ctrl-btn reset14" onclick="bbResetShot(14)">14秒</button>
+        <button class="bb-ctrl-btn next-pd" onclick="bbNextPeriod()">下一节</button>
+    </div>
+</div>
+        <div id="module-football" class="sport-module"></div>
+        <div id="module-volleyball" class="sport-module"></div>
+
+        <div class="score-container" id="generic-score-container" style="display:none;">
+            <div class="score-card red" onclick="addPoint(1)"><div class="score-val" id="score-p1">0</div></div>
+            <div class="score-card blue" onclick="addPoint(2)"><div class="score-val" id="score-p2">0</div></div>
+        </div>
+    </div>
+
+    <div class="match-info-bar" id="generic-info-bar">
+        <span id="match-title" style="font-weight:bold;">载入中...</span>
+        <span>第 <span id="current-set-num">1</span> 局 | 比分 <span id="set-score-p1">0</span>:<span id="set-score-p2">0</span></span>
+    </div>
+
+    <div class="footer-controls" style="grid-template-columns: repeat(6, 1fr);"> <button class="btn-ctrl" onclick="showSetup()" style="background:#444;">🔙 返回</button>
+    <button class="btn-ctrl" onclick="undo()">撤销</button>
+    <button class="btn-ctrl" onclick="swapSides()">换边</button>
+    <button class="btn-ctrl" onclick="manualToggleServer()">换发</button>
+    <button class="btn-ctrl" onclick="finishSet()" style="color:#ff9800;">结束局</button>
+    <button id="submit-btn" class="btn-ctrl" style="background:var(--badminton-green)" onclick="finishMatch()">🏆 提交</button>
+</div>
+    </div>
+</div>
+<div id="match-list-screen" style="display:none; flex-direction:column; align-items:center; height:100dvh; background:#1a1a1a; padding:20px;">
+    <h2 style="color:white; margin-bottom:20px;"><span id="display-court-num"></span> 待赛列表</h2>
+    <div id="match-queue-container" style="width:100%; display:flex; flex-direction:column; gap:12px; overflow-y:auto;">
+        </div>
+    <button onclick="showSetup()" style="margin-top:20px; background:#444; color:white; border:none; padding:12px; border-radius:8px; width:100%;">返回选择场地</button>
+</div>
+<script>
+    const socket = io(window.location.origin);
+    let state = {
+        court: 0, matchId: null, sportType: 'badminton', format: 3,
+        isLive: false, isStarted: false,isSwapped: false,
+        p1: { players: [], score: 0, sets: 0, pos: 0 },
+        p2: { players: [], score: 0, sets: 0, pos: 0 },
+        server: 1, currentSet: 1, history: [], setHistory: [],
+        breakTriggered: false
+    };
+    
+    let activeModule = null;
+     // 网络状态提示
+    socket.on('disconnect', () => { document.getElementById('match-title').innerHTML = "<span style='color:var(--red)'>⚠️网络已断开</span>"; });
+    socket.on('connect', () => { if(state.court > 0) socket.emit('join_court', state.court); });
+
+ // ==========================================
+// 🌟 修正后的运动规则注册中心
+// ==========================================
+const SportModules = {
+    badminton: {
+        init: () => {
+            state.isStarted = false; 
+            state.breakTriggered = false; // 初始化间歇标记
+            document.getElementById('generic-score-container').style.display = 'flex';
+            document.getElementById('prep-overlay').style.display = 'flex';
+            document.getElementById('generic-info-bar').style.display = 'flex';
+        },
+        addPoint: (n) => {
+            state['p'+n].score++;
+            if (n !== state.server) state.server = n;
+            else if (state.isDoubles) state['p'+n].pos = 1 - state['p'+n].pos;
+
+            // 🌟 修复这里的参数传递
+            if ((state.p1.score === 11 || state.p2.score === 11) && !state.breakTriggered) {
+                state.breakTriggered = true; 
+                
+                let breakTitle = "🏸 技术间歇"; // 传给第一个参数 title
+                let breakMsg = "请运动员擦汗、喝水"; // 传给第二个参数 msg
+                
+                if (state.currentSet === 3) {
+                    swapSides(); 
+                    breakMsg = "11分交换场地 & 间歇";
+                }
+                
+                // 确保传入了 3 个参数：标题，消息，秒数
+                startBreakTimer(breakTitle, breakMsg, 60); 
+            }
+        },
+        renderUI: () => {
+            // 1. 顶部单位和局分根据换边状态交换
+            document.getElementById('unit-left').innerText = (state.isSwapped ? state.p2.unit : state.p1.unit) || "";
+            document.getElementById('unit-right').innerText = (state.isSwapped ? state.p1.unit : state.p2.unit) || "";
+            document.getElementById('court-score-left').innerText = state.isSwapped ? state.p2.sets : state.p1.sets;
+            document.getElementById('court-score-right').innerText = state.isSwapped ? state.p1.sets : state.p2.sets;
+            
+            document.querySelectorAll('.player-slot').forEach(s => s.innerHTML = '');
+
+            const isEven = (state['p' + state.server].score % 2 === 0);
+            
+            const renderTeam = (n) => {
+                const team = state['p'+n];
+                const isSrv = (state.server === n);
+                // 逻辑上的发球区始终保持不变
+                let activeZone = (n === 1) ? (isEven ? 0 : 1) : (isEven ? 1 : 0);
+
+                const draw = (logicZone, name) => {
+                    // 🌟 核心修复1：计算视觉所在的左右半场
+                    let visualSide = state.isSwapped ? (n === 1 ? 2 : 1) : n;
+                    // 🌟 核心修复2：180度翻转！换边后，逻辑上的下半区(0)将变成视觉上的上半区(1)
+                    let visualZone = state.isSwapped ? (1 - logicZone) : logicZone;
+                    
+                    const slot = document.getElementById(`slot-${visualSide}-${visualZone}`);
+                    if(slot && name) {
+                        const isActive = (logicZone === activeZone);
+                        const isServing = (isSrv && isActive);
+                        let directionClass = (visualSide === 1) ? 'icon-placement-right' : 'icon-placement-left';
+                        let servingTagClass = isServing ? 'serving-now' : '';
+                        let serverShuttleHtml = isServing ? '<div class="serve-shuttle"></div>' : '';
+
+                        slot.innerHTML = `
+                            <div class="player-serving-wrapper ${directionClass}">
+                                <div class="player-tag ${servingTagClass}">${name}</div>
+                                ${serverShuttleHtml}
+                            </div>`;
+                    }
+                };
+
+                if (state.isDoubles) {
+                    let p0 = (team.pos === 0 ? team.players[0] : team.players[1]);
+                    let p1 = (team.pos === 0 ? team.players[1] : team.players[0]);
+                    draw(0, p0); draw(1, p1);
+                } else {
+                    draw(activeZone, team.players[0]);
+                }
+            };
+            
+            renderTeam(1); 
+            renderTeam(2);
+        }
+    },
+
+    table_tennis: {
+        init: () => {
+            state.isStarted = true; 
+            const genericContainer = document.getElementById('generic-score-container');
+            if (genericContainer) {
+                genericContainer.style.setProperty('display', 'none', 'important');
+            }
+            document.getElementById('generic-info-bar').style.display = 'none';
+        },
+        addPoint: (n) => {
+            state['p'+n].score++;
+            let total = state.p1.score + state.p2.score;
+           let servesPerTurn = (state.p1.score >= 10 && state.p2.score >= 10) ? 1 : 2;
+
+        // 只要达到换发球的节点，就直接翻转当前发球权
+        if (total > 0 && total % servesPerTurn === 0) {
+            state.server = 3 - state.server; 
+        }
+},
+        renderUI: () => {
+            const renderTTName = (elementId, team) => {
+                const names = team.players.filter(p => p && p.trim() !== '').join(' / ');
+                const unitHtml = team.unit ? `<div style="font-size: 0.65em; opacity: 0.9; font-weight: normal; margin-top: 4px;">${team.unit}</div>` : '';
+                document.getElementById(elementId).innerHTML = `
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <div style="font-size: 1.1em;">${names || '选手待定'}</div>
+                        ${unitHtml}
+                    </div>`;
+            };
+            renderTTName('tt-name-p1', state.p1);
+            renderTTName('tt-name-p2', state.p2);
+            document.getElementById('tt-set-p1').innerText = state.p1.sets;
+            document.getElementById('tt-set-p2').innerText = state.p2.sets;
+            document.getElementById('tt-point-p1').innerText = state.p1.score;
+            document.getElementById('tt-point-p2').innerText = state.p2.score;
+            document.getElementById('tt-dot-p1').style.display = state.server === 1 ? 'block' : 'none';
+            document.getElementById('tt-dot-p2').style.display = state.server === 2 ? 'block' : 'none';
+
+            const renderRow = (team, rowId) => {
+                const row = document.getElementById(rowId);
+                let html = `<td>${rowId.includes('p1') ? 'P1':'P2'}</td>`;
+                for(let i=1; i<=5; i++) {
+                    let val = "-";
+                    if(state.setHistory[i-1]) {
+                        const scores = state.setHistory[i-1].split(':');
+                        val = rowId.includes('p1') ? scores[0] : scores[1];
+                    }
+                    if(i === state.currentSet) val = team.score;
+                    html += `<td class="${i===state.currentSet ? 'active-set':''}">${val}</td>`;
+                }
+                row.innerHTML = html;
+            };
+            renderRow(state.p1, 'tt-table-p1'); renderRow(state.p2, 'tt-table-p2');
+        }
+    },
+
+    basketball: {
+        init: () => {
+            state.isStarted = true;
+            state.bb = state.bb || {
+                p1Fouls: 0, p2Fouls: 0,
+                p1TO: 3, p2TO: 3,
+                gameTime: 600,
+                shotTime: 24,
+                timerRunning: false,
+                period: 1
+            };
+            document.getElementById('generic-score-container').style.setProperty('display', 'none', 'important');
+            document.getElementById('prep-overlay').style.display = 'none';
+            if(window.bbTimerId) clearInterval(window.bbTimerId);
+            window.bbTimerId = setInterval(bbTick, 1000);
+        },
+        addPoint: (n) => { /* 篮球使用专用按钮 bbAdd */ },
+        renderUI: () => {
+            document.getElementById('bb-name-p1').innerText = state.p1.players[0] || "主队";
+            document.getElementById('bb-name-p2').innerText = state.p2.players[0] || "客队";
+            document.getElementById('bb-score-p1').innerText = state.p1.score;
+            document.getElementById('bb-score-p2').innerText = state.p2.score;
+            document.getElementById('bb-foul-p1').innerText = state.bb.p1Fouls;
+            document.getElementById('bb-foul-p2').innerText = state.bb.p2Fouls;
+            document.getElementById('bb-to-p1').innerText = state.bb.p1TO;
+            document.getElementById('bb-to-p2').innerText = state.bb.p2TO;
+            document.getElementById('bb-period-text').innerText = state.bb.period;
+            const m = Math.floor(state.bb.gameTime / 60), s = state.bb.gameTime % 60;
+            document.getElementById('bb-game-clock').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+            document.getElementById('bb-shot-clock').innerText = state.bb.shotTime;
+        }
+    },
+generic: {
+        init: () => {
+            state.isStarted = true; // 🌟 自定义比赛跳过复杂的赛前挑边，直接开始
+            document.getElementById('prep-overlay').style.display = 'none';
+            document.getElementById('generic-score-container').style.setProperty('display', 'flex', 'important');
+            document.getElementById('generic-info-bar').style.display = 'flex';
+        },
+        addPoint: (n) => {
+            state['p'+n].score++; // 直接加分
+        },
+        renderUI: () => {
+            // 🌟 自动把当前选手的名字和单位渲染到红蓝背景板上
+            const p1Names = state.p1.players.join(' / ');
+            const p2Names = state.p2.players.join(' / ');
+            const p1Unit = state.p1.unit ? `<br><small style="color:#ddd; font-size:0.6em;">${state.p1.unit}</small>` : '';
+            const p2Unit = state.p2.unit ? `<br><small style="color:#ddd; font-size:0.6em;">${state.p2.unit}</small>` : '';
+            
+            document.getElementById('generic-name-p1').innerHTML = `${p1Names}${p1Unit}`;
+            document.getElementById('generic-name-p2').innerHTML = `${p2Names}${p2Unit}`;
+        }
+    },
+    football: { init:()=>{}, addPoint:(n)=>{}, renderUI:()=>{} },
+    volleyball: { init:()=>{}, addPoint:(n)=>{}, renderUI:()=>{} }
+};
+// ==========================================
+// 🏀 篮球专用全局函数 (修复计时卡死逻辑)
+// ==========================================
+
+function bbTimeout(n) {
+    if (state.bb['p' + n + 'TO'] > 0) {
+        if (confirm(`确认使用一次暂停？`)) {
+            state.bb['p' + n + 'TO']--;
+            // 暂停时自动停止比赛计时器
+            state.bb.timerRunning = false;
+            syncBbTimerBtn();
+            updateUI();
+        }
+    } else {
+        alert("该队暂停次数已用完");
+    }
+}
+
+function syncBbTimerBtn() {
+    const btn = document.querySelector('.bb-ctrl-btn.timer-toggle');
+    const statusEl = document.getElementById('bb-timer-status');
+    if (!btn) return;
+
+    if (state.bb.timerRunning) {
+        btn.innerText = "暂停计时";
+        btn.style.background = "#d97706"; // 橙色
+        if(statusEl) { statusEl.innerText = "● RUNNING"; statusEl.style.color = "#ff9800"; }
+    } else {
+        btn.innerText = "开始计时";
+        btn.style.background = "#059669"; // 绿色
+        if(statusEl) { statusEl.innerText = "● READY"; statusEl.style.color = "#27ae60"; }
+    }
+}
+function bbAdd(n, pts) {
+    const backup = structuredClone(state);
+    backup.history = []; // 防止内存爆炸
+    state.history.push(backup);
+
+    state['p'+n].score += pts;
+    
+    // 🌟 核心新增：只要是加分（pts > 0），就自动重置 24 秒计时器
+    if (pts > 0) {
+        bbResetShot(24);
+    }
+    
+    socket.emit('update_score', { 
+        id: state.matchId, court: state.court, 
+        s1: state.p1.score, s2: state.p2.score,
+        p1Sets: 0, p2Sets: 0 
+    });
+    updateUI();
+}
+function bbFoul(n) {
+    state.bb['p'+n+'Fouls']++;
+    updateUI();
+}
+
+function bbToggleTimer() {
+    // 切换状态
+    state.bb.timerRunning = !state.bb.timerRunning;
+    // 同步按钮 UI
+    syncBbTimerBtn();
+}
+
+function bbResetShot(sec) {
+    state.bb.shotTime = sec;
+    // 如果 24 秒违例后重置，保持当前计时状态或手动点开始
+    updateUI();
+}
+
+function bbNextPeriod() {
+    if(confirm("进入下一节？全队犯规将重置。")) {
+        state.bb.period++;
+        state.bb.p1Fouls = 0;
+        state.bb.p2Fouls = 0;
+        state.bb.gameTime = 600;
+        state.bb.shotTime = 24;
+        state.bb.timerRunning = false; // 换节强制停止
+        syncBbTimerBtn();
+        updateUI();
+    }
+}
+
+function bbTick() {
+    if (state.sportType === 'basketball' && state.bb && state.bb.timerRunning) {
+        // 游戏时间计时
+        if (state.bb.gameTime > 0) {
+            state.bb.gameTime--;
+        } else {
+            state.bb.timerRunning = false;
+            syncBbTimerBtn(); // 🌟 关键：时间到，同步按钮
+        }
+
+        // 24秒计时
+        if (state.bb.shotTime > 0) {
+            state.bb.shotTime--;
+        } else {
+            state.bb.timerRunning = false;
+            syncBbTimerBtn(); // 🌟 关键：违例停止，同步按钮
+            console.warn("24秒违例"); 
+            // 如果需要弹窗提醒，可以用下面的方式，但 alert 会阻塞代码执行
+            // setTimeout(() => { alert("24秒违例！"); }, 10);
+        }
+        
+        // 局部更新时钟文字，不触发完整的 updateUI 以防卡顿
+        const m = Math.floor(state.bb.gameTime / 60);
+        const s = state.bb.gameTime % 60;
+        const clockEl = document.getElementById('bb-game-clock');
+        const shotEl = document.getElementById('bb-shot-clock');
+        if(clockEl) clockEl.innerText = `${m}:${s < 10 ? '0'+s : s}`;
+        if(shotEl) shotEl.innerText = state.bb.shotTime;
+    }
+}
+    // ==========================================
+    // 主控台公共逻辑
+    // ==========================================
+
+    socket.on('update_config', (data) => {
+    console.log("收到场地配置更新:", data);
+    const container = document.getElementById('court-buttons-container');
+    if (!container) return;
+    
+    // [核心修复] 强制清空容器后再生成
+    container.innerHTML = '';
+    const max = data.maxCourts || 6; 
+    for (let i = 1; i <= max; i++) {
+        const btn = document.createElement('button');
+        btn.className = "court-btn"; 
+        btn.innerText = i + "号场地";
+        btn.onclick = () => initCourt(i);
+        container.appendChild(btn);
+    }
+});
+
+   function initCourt(num) {
+        state.court = num;
+        document.getElementById('display-court-num').innerText = num + "号场地";
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('match-list-screen').style.display = 'flex';
+        
+        socket.emit('join_court', num);
+        // 监听该场地的完整队列
+        socket.off(`court_${num}_match`); // 移除旧监听
+        socket.on(`court_${num}_match`, (data) => {
+            // 如果收到的是数组，渲染列表；如果是单场（兼容旧逻辑）或空，更新列表
+            renderMatchList(data);
+        });
+    }
+
+   function renderMatchList(queue) {
+    const container = document.getElementById('match-queue-container');
+    container.innerHTML = '';
+    
+    if (!queue || queue.length === 0) {
+        container.innerHTML = '<div style="color:#888; text-align:center; padding:20px;">暂无待办比赛</div>';
+        return;
+    }
+
+    // 1. 对比赛队列按时间进行升序排序
+    const sortedQueue = [...queue].sort((a, b) => {
+        const timeA = (a.time && a.time !== "待定") ? a.time : "99:99";
+        const timeB = (b.time && b.time !== "待定") ? b.time : "99:99";
+        return timeA.localeCompare(timeB);
+    });
+
+    // 2. 渲染列表
+    // 将 renderMatchList 中的 forEach 替换为如下逻辑：
+    sortedQueue.forEach(match => {
+        const div = document.createElement('div');
+        
+        // 核心修改：如果是已完赛，改变样式并显示结果
+        let statusHtml = '';
+        if (match.isFinished) {
+            div.style = "background:#222; opacity:0.7; padding:15px; border-radius:10px; border-left:5px solid #555; color:white; cursor:pointer; position:relative; margin-bottom:10px;";
+            statusHtml = `<div style="background:#27ae60; color:white; font-size:13px; padding:2px 8px; border-radius:4px;">✅ 已完赛 ${match.finalScore || ''}</div>`;
+        } else {
+            div.style = "background:#333; padding:15px; border-radius:10px; border-left:5px solid #27ae60; color:white; cursor:pointer; position:relative; margin-bottom:10px;";
+            statusHtml = `<div style="color:#ffcc00; font-weight:bold; font-size:14px; background:rgba(0,0,0,0.3); padding:2px 8px; border-radius:4px;">🕒 ${match.time || '待定'}</div>`;
+        }
+
+        const totalSets = parseInt(match.format) || 3;
+        const winThreshold = Math.ceil(totalSets / 2);
+
+        div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="font-weight:bold; font-size:16px;">${match.title}</div>
+                ${statusHtml}
+            </div>
+            <div style="color:#aaa; font-size:14px; margin-top:5px;">${match.p1} VS ${match.p2}</div>
+            <div style="font-size:12px; color:var(--badminton-green); margin-top:8px; opacity:0.8;">
+                赛制: ${totalSets}局${winThreshold}胜 | 项目: ${match.sportType === 'badminton' ? '羽毛球' : match.sportType === 'table_tennis' ? '乒乓球' : match.sportType === 'basketball' ? '篮球' : '自定义对抗'}
+            </div>
+        `;
+        
+        div.onclick = () => {
+            if (match.isFinished) {
+                // 自动过滤掉名字中的单位信息（括号内的内容）
+                const cleanP1 = match.p1.replace(/[\(（].*?[\)）]/g, "").trim();
+                const cleanP2 = match.p2.replace(/[\(（].*?[\)）]/g, "").trim();
+
+                // 按照图片样式显示
+                alert(`🏅 本场比赛已结束\n\n${cleanP1}  ${match.finalScore}  ${cleanP2}\n\n详情：${match.details}`);
+                return; 
+            }
+            document.getElementById('match-list-screen').style.display = 'none';
+            document.getElementById('umpire-screen').style.display = 'flex';
+            loadMatch(match);
+        };
+        container.appendChild(div);
+    });
+}
+    function startOfficiating(matchData) {
+        document.getElementById('match-list-screen').style.display = 'none';
+        document.getElementById('umpire-screen').style.display = 'flex';
+        loadMatch(matchData);
+    }
+
+function loadMatch(data) {
+    console.log("裁判端收到推送:", data);
+    if (!data) return;
+
+    // [核心修复] 只要收到推送，就强制标记为直播中
+    state.isLive = true; 
+
+    // [核心修复] 无论 ID 是否相同，都强制更新关键信息，防止待定名单不刷新
+    const unitRegex = /[\(（](.*?)[\)）]/;
+    state.p1.unit = data.u1 || (data.p1.match(unitRegex) ? data.p1.match(unitRegex)[1] : "");
+    state.p2.unit = data.u2 || (data.p2.match(unitRegex) ? data.p2.match(unitRegex)[1] : "");
+    
+    // 如果是同一场比赛，更新名单后直接返回渲染，不重置比分
+    if (state.matchId === data.id) {
+        state.p1.players = state.isDoubles ? data.p1.replace(unitRegex,"").split('/').map(s=>s.trim()) : [data.p1.replace(unitRegex,""), ""];
+        state.p2.players = state.isDoubles ? data.p2.replace(unitRegex,"").split('/').map(s=>s.trim()) : [data.p2.replace(unitRegex,""), ""];
+        updateUI();
+        return; 
+    }
+
+    // [核心修复] 如果是新比赛或强制覆盖：彻底清空旧缓存
+    state.matchId = data.id;
+    state.format = data.format || 3; 
+    state.sportType = data.sportType || 'badminton';
+    state.isStarted = false; // 必须重新确认站位
+    state.isDoubles = data.p1.includes('/') || data.p2.includes('/');
+    
+    state.p1.score = 0; state.p2.score = 0; state.p1.sets = 0; state.p2.sets = 0;
+    state.server = 1; state.currentSet = 1; state.history = []; state.setHistory = [];
+
+    state.p1.players = state.isDoubles ? data.p1.replace(unitRegex,"").split('/').map(s=>s.trim()) : [data.p1.replace(unitRegex,""), ""];
+    state.p2.players = state.isDoubles ? data.p2.replace(unitRegex,"").split('/').map(s=>s.trim()) : [data.p2.replace(unitRegex,""), ""];
+
+    document.getElementById('match-title').innerText = data.title || "比赛中";
+
+    // 强制切换 UI 模块并显示
+    document.querySelectorAll('.sport-module').forEach(el => {
+        el.classList.remove('active'); 
+        el.style.setProperty('display', 'none', 'important');
+    });
+
+    activeModule = SportModules[state.sportType];
+    const moduleContainer = document.getElementById(`module-${state.sportType}`);
+    if (moduleContainer) {
+        moduleContainer.classList.add('active');
+        moduleContainer.style.setProperty('display', 'flex', 'important');
+    }
+    
+    if (activeModule && activeModule.init) activeModule.init();
+    
+    updateUI();
+    document.getElementById('prep-overlay').style.display = 'flex';
+    
+    // 🌟 新增：强制恢复提交按钮，隐藏“下一场”按钮
+    const submitBtn = document.getElementById('submit-btn');
+    if(submitBtn) {
+        submitBtn.style.display = 'inline-block';
+        submitBtn.style.border = "none";
+    }
+    const nextBtn = document.getElementById('next-match-btn');
+    if(nextBtn) nextBtn.style.display = 'none';
+}
+   function addPoint(n) {
+    if (!state.isLive || !state.isStarted) return;
+    
+    // 记录历史用于撤回
+    state.history.push(structuredClone({p1:state.p1, p2:state.p2, server:state.server}));
+    
+    // 分发给对应的模块处理加分逻辑
+    if (activeModule && activeModule.addPoint) {
+        activeModule.addPoint(n);
+    }
+
+    // 调用 updateUI，它会自动执行 socket.emit
+    updateUI();
+}
+
+    function updateUI() {
+    // 1. 更新通用大分牌本地显示
+    document.getElementById('score-p1').innerText = state.p1.score;
+    document.getElementById('score-p2').innerText = state.p2.score;
+    document.getElementById('set-score-p1').innerText = state.p1.sets;
+    document.getElementById('set-score-p2').innerText = state.p2.sets;
+    document.getElementById('current-set-num').innerText = state.currentSet;
+
+    // 2. 分发给对应模块渲染专有UI（球场、发球点等）
+    if (activeModule && activeModule.renderUI) {
+        activeModule.renderUI();
+    }
+
+  if (state.matchId) {
+            socket.emit('update_score', { 
+                id: state.matchId, court: state.court, 
+                s1: state.p1.score, 
+                s2: state.p2.score,
+                p1Sets: state.p1.sets,
+                p2Sets: state.p2.sets,
+                isSwapped: state.isSwapped // <--- 关键：把换边状态告诉服务器
+            });
+    }
+}
+
+function finishMatch() {
+    let history = [...state.setHistory];
+    const winThreshold = Math.ceil(state.format / 2);
+
+    if (history.length < (state.p1.sets + state.p2.sets)) {
+        history.push(`${state.p1.score}:${state.p2.score}`);
+    } else if (state.p1.sets < winThreshold && state.p2.sets < winThreshold) {
+        if (state.p1.score > 0 || state.p2.score > 0) {
+            history.push(`${state.p1.score}:${state.p2.score}`);
+            if (state.p1.score > state.p2.score) state.p1.sets++; else state.p2.sets++;
+        }
+    }
+
+    const p1Name = state.p1.players.filter(p => p).map(p => p.trim()).join('/');
+    const p2Name = state.p2.players.filter(p => p).map(p => p.trim()).join('/');
+    
+    // 判定最终赢家
+    const isP1Win = state.p1.sets > state.p2.sets;
+    const finalWinner = isP1Win ? p1Name : p2Name;
+
+    // 🌟 核心逻辑：重新排列所有小分，让获胜者的分数始终在左边
+    const finalDetails = history.filter(s => s !== "0:0").map(s => {
+        const pts = s.split(':');
+        return isP1Win ? `${pts[0]}:${pts[1]}` : `${pts[1]}:${pts[0]}`;
+    }).join('  ');
+    
+    const confirmMsg = `📢 请核对播报数据：\n\n${finalWinner} 胜 ${finalDetails}\n\n确认上传至记录台吗？`;
+    
+    if (!confirm(confirmMsg)) return;
+
+    socket.emit('finish_match', { 
+        id: state.matchId, 
+        court: state.court,
+        details: finalDetails, 
+        setScore1: state.p1.sets,
+        setScore2: state.p2.sets 
+    });
+
+    showSetup(); 
+}
+    function requestNextMatch() { socket.emit('join_court', state.court); }
+   // 1. 修改开始比赛函数
+function startMatchNow() {
+    // 锁定比赛后，先弹出 120 秒赛前练习
+    socket.emit('lock_match', state.matchId);
+}
+
+socket.on('lock_status', (res) => {
+    if (res.success) {
+        state.isStarted = true;
+        document.getElementById('prep-overlay').style.display = 'none';
+        
+        // 🌟 新增：锁定成功后进入赛前练习
+        startBreakTimer("🏸 赛前练习", "运动员热身中", 120);
+    } else {
+        alert(res.message);
+    }
+});
+// 3. 监听其他裁判的锁定动作
+socket.on('match_occupied', (data) => {
+    // 如果当前选中的比赛被别人锁定了
+    if (data.matchId === state.matchId && data.locked) {
+        // 如果我还没开始（还处在准备界面），则显示遮罩屏蔽操作
+        if (!state.isStarted) {
+            document.getElementById('occupied-overlay').style.display = 'flex';
+        }
+    } else if (data.matchId === state.matchId && !data.locked) {
+        // 比赛释放锁定时，隐藏遮罩
+        document.getElementById('occupied-overlay').style.display = 'none';
+    }
+});
+
+// 4. 修改原有 showSetup 函数，确保重置状态
+function showSetup() {
+    state.isLive = false;
+    state.isStarted = false; // 重置开始状态
+    state.matchId = null;
+    document.getElementById('occupied-overlay').style.display = 'none'; // 隐藏遮罩
+    document.getElementById('umpire-screen').style.display = 'none';
+    document.getElementById('match-list-screen').style.display = 'none';
+    document.getElementById('setup-screen').style.display = 'flex';
+}
+    // 修改后的换边逻辑：实现 180 度物理旋转效果
+function swapSides() {
+        state.isSwapped = !state.isSwapped;
+        const dir = state.isSwapped ? 'row-reverse' : 'row';
+        
+        const genericScore = document.getElementById('generic-score-container');
+        if (genericScore) genericScore.style.setProperty('flex-direction', dir, 'important');
+        
+        const ttMain = document.querySelector('.tt-main');
+        if (ttMain) ttMain.style.setProperty('flex-direction', dir, 'important');
+        
+        const ttHeader = document.querySelector('.tt-header');
+        if (ttHeader) ttHeader.style.setProperty('flex-direction', dir, 'important');
+
+        updateUI(); 
+    }    function manualToggleServer() { state.server = 3 - state.server; updateUI(); }
+   function manualSwapPos(visualSide) { 
+        // 🌟 核心修复4：面板控制也走视觉映射
+        let n = state.isSwapped ? (visualSide === 1 ? 2 : 1) : visualSide;
+        state['p'+n].pos = 1 - state['p'+n].pos; 
+        updateUI(); 
+    }
+    function manualSetPos(visualSide, visualZone) { 
+        if (!state.isStarted) { 
+            // 🌟 核心修复3：将点击的视觉坐标，反向还原为真实的队伍和逻辑坐标
+            let n = state.isSwapped ? (visualSide === 1 ? 2 : 1) : visualSide;
+            let logicZone = state.isSwapped ? (1 - visualZone) : visualZone;
+
+            state.server = n; 
+            const tZ = (n === 1 ? 0 : 1); 
+            if(logicZone !== tZ) {
+                state['p'+n].pos = 1 - state['p'+n].pos; 
+            }
+            updateUI(); 
+        } 
+    }
+    
+    function undo() { 
+        if(state.history.length > 0) { 
+            const h = state.history.pop(); 
+            state.p1=h.p1; state.p2=h.p2; state.server=h.server; 
+            updateUI(); 
+        } 
+    }
+  // 记录硬币当前的旋转总角度，保证多次点击都能顺畅连转
+    let coinRotation = 0;
+    let isTossing = false;
+
+    function runToss() {
+        if (isTossing) return; // 防止动画期间重复点击
+        isTossing = true;
+        
+        const resDiv = document.getElementById('toss-result');
+        const coin = document.getElementById('coin');
+        
+        resDiv.innerHTML = `<span style="color:#aaa; font-size:14px;">硬币抛空中...</span>`;
+        
+        // 随机决定结果：0 为正面，1 为反面
+        const result = Math.floor(Math.random() * 2); 
+        
+        // 每次点击至少转 5 圈 (1800度)
+        const baseSpins = 5 * 360; 
+        coinRotation += baseSpins;
+        
+        // 修正最终落点的角度
+        if (result === 0) {
+            // 正面：必须是 360 的整数倍
+            coinRotation = Math.ceil(coinRotation / 360) * 360;
+        } else {
+            // 反面：必须是 360 的整数倍 + 180度
+            coinRotation = Math.ceil(coinRotation / 360) * 360 + 180;
+        }
+        
+        // 执行物理翻转动画
+        coin.style.transform = `rotateY(${coinRotation}deg)`;
+        
+        // 2秒动画结束后，公布结果
+        setTimeout(() => {
+            const faceName = result === 0 ? "正面" : "反面";
+            const faceColor = result === 0 ? "#f1c40f" : "#bdc3c7";
+            
+            resDiv.innerHTML = `Toss 结果: <span style="color:${faceColor}; font-size:20px; margin-left:8px;">${faceName}</span>`;
+            isTossing = false; // 解除锁定，允许下一次 TOSS
+        }, 2000); 
+    }
+function finishSet() { 
+    const winThreshold = Math.ceil(state.format / 2);
+    
+    if (state.p1.sets >= winThreshold || state.p2.sets >= winThreshold) {
+        alert("比赛已达到获胜局数，请点击下方“🏆 提交”确认播报成绩。");
+        return;
+    }
+
+    const s1 = state.p1.score;
+    const s2 = state.p2.score;
+    const p1Name = state.p1.players.filter(p => p).map(p => p.trim()).join('/');
+    const p2Name = state.p2.players.filter(p => p).map(p => p.trim()).join('/');
+    
+    // 1. 判定本局赢家并确保本局比分赢家在前
+    const isP1SetWin = s1 > s2;
+    const setWinnerName = isP1SetWin ? p1Name : p2Name;
+    const setScoreText = isP1SetWin ? `${s1}:${s2}` : `${s2}:${s1}`;
+    
+    alert(`第 ${state.currentSet} 局比赛结束\n${setWinnerName} 胜 ${setScoreText}`);
+
+    state.setHistory.push(`${s1}:${s2}`); 
+    let setWinner = 1;
+    if(isP1SetWin) {
+        state.p1.sets++; 
+        setWinner = 1;
+    } else {
+        state.p2.sets++; 
+        setWinner = 2;
+    }
+
+    if (state.p1.sets >= winThreshold || state.p2.sets >= winThreshold) {
+        updateUI();
+        setTimeout(() => {
+            const isP1MatchWin = state.p1.sets > state.p2.sets;
+            const finalWinner = isP1MatchWin ? p1Name : p2Name;
+            
+            // 🌟 核心逻辑：处理历史小分，确保每一局都是赢家分数在前
+            const finalDetails = state.setHistory.map(s => {
+                const pts = s.split(':');
+                return isP1MatchWin ? `${pts[0]}:${pts[1]}` : `${pts[1]}:${pts[0]}`;
+            }).join('  ');
+            
+            // 按照图片要求的简洁格式显示
+            alert(`比赛结束\n${finalWinner} 胜 ${finalDetails}\n\n📢 请点击底部“🏆 提交”按钮！`);
+            
+            const submitBtn = document.getElementById('submit-btn');
+            if(submitBtn) {
+                submitBtn.style.border = "4px solid #ffeb3b";
+                submitBtn.style.transform = "scale(1.05)";
+            }
+        }, 100);
+    } else {
+        // 进入下一局逻辑不变...
+        state.server = setWinner;
+        state.p1.score = 0; state.p2.score = 0; state.currentSet++; state.breakTriggered = false;
+        startBreakTimer("☕ 局间休息", `第 ${state.currentSet-1} 局已结束，请稍作休息`, 120);
+        state.isSwapped = !state.isSwapped;
+        const dir = state.isSwapped ? 'row-reverse' : 'row';
+        const genericScore = document.getElementById('generic-score-container');
+        if (genericScore) genericScore.style.setProperty('flex-direction', dir, 'important');
+        updateUI(); 
+    }
+}
+// 🌟 功能 1：返回待赛列表
+    function cancelPrep() {
+        state.isLive = false;
+        state.isStarted = false;
+        state.matchId = null;
+        document.getElementById('prep-overlay').style.display = 'none';
+        document.getElementById('umpire-screen').style.display = 'none';
+        document.getElementById('match-list-screen').style.display = 'flex';
+    }
+
+    // 🌟 功能 2：呼出弃权选择面板
+    function handleWalkover() {
+        const p1Name = state.p1.players.filter(p => p).join('/');
+        const p2Name = state.p2.players.filter(p => p).join('/');
+        
+        // 动态生成下拉选项
+        const selectEl = document.getElementById('walkover-select');
+        selectEl.innerHTML = `
+            <option value="" disabled selected>-- 请点击选择弃权方 --</option>
+            <option value="1">${p1Name}</option>
+            <option value="2">${p2Name}</option>
+        `;
+        
+        // 显示弹窗
+        document.getElementById('walkover-modal').style.display = 'flex';
+    }
+
+    // 🌟 功能 3：自动结算比分并提交给管理端
+function confirmWalkover() {
+    const selectEl = document.getElementById('walkover-select');
+    const loserNum = parseInt(selectEl.value);
+    
+    if (!loserNum) {
+        alert("⚠️ 请先从列表中选择弃权的选手！");
+        return;
+    }
+
+    const winnerNum = (loserNum === 1) ? 2 : 1;
+    
+    // 🌟 核心优化 1：使用 .trim() 彻底清理名字前后的换行符和空格
+    const loserName = state['p'+loserNum].players.filter(p => p).map(p => p.trim()).join('/');
+    const winnerName = state['p'+winnerNum].players.filter(p => p).map(p => p.trim()).join('/');
+    
+    // 🌟 核心优化 2：去掉中间所有的 \n 换行符，让文字在一行内显示
+    const confirmMsg = `⚠️ 最后确认：您确定判决【${loserName}】弃权吗？操作后无法撤销，【${winnerName}】将获胜。`;
+    
+    if (confirm(confirmMsg)) {
+        // 隐藏弃权弹窗
+        document.getElementById('walkover-modal').style.display = 'none';
+
+        // 自动计算获胜所需的最大局数
+        const winThreshold = Math.ceil(state.format / 2);
+        const isPointsBased = (state.sportType === 'basketball' || state.sportType === 'football');
+        
+        let finalSets1 = 0, finalSets2 = 0;
+        if (isPointsBased) {
+            finalSets1 = (winnerNum === 1) ? 20 : 0; 
+            finalSets2 = (winnerNum === 2) ? 20 : 0;
+        } else {
+            finalSets1 = (winnerNum === 1) ? winThreshold : 0;
+            finalSets2 = (winnerNum === 2) ? winThreshold : 0;
+        }
+        
+        // 提交结果
+        socket.emit('finish_match', { 
+            id: state.matchId, 
+            court: state.court,
+            details: "弃权(W/O)", 
+            setScore1: finalSets1,
+            setScore2: finalSets2 
+        });
+        
+        alert("✅ 弃权判决已生效！");
+        cancelPrep(); 
+    }
+}
+let breakInterval = null;
+
+function startBreakTimer(title, msg, seconds) {
+    const overlay = document.getElementById('break-overlay');
+    const titleEl = document.getElementById('break-title');
+    const timerEl = document.getElementById('break-timer');
+    const msgEl = document.getElementById('break-msg');
+    
+    titleEl.innerText = title;
+    msgEl.innerText = msg;
+    let timeLeft = seconds;
+    timerEl.innerText = timeLeft;
+    overlay.style.display = 'flex';
+
+    if(breakInterval) clearInterval(breakInterval);
+    
+    breakInterval = setInterval(() => {
+        timeLeft--;
+        timerEl.innerText = timeLeft;
+        if (timeLeft <= 0) closeBreak();
+    }, 1000);
+}
+function closeBreak() {
+    if(breakInterval) clearInterval(breakInterval);
+    document.getElementById('break-overlay').style.display = 'none';
+}
+</script>
+</body>
+</html>
