@@ -266,11 +266,19 @@
     }
 
     /* 5. 分页逻辑：第二阶段（淘汰赛）强制从新一页开始 */
-    .bracket-container { 
-        page-break-before: always !important; 
-        display: block !important;
-        padding-top: 30px !important;
-    }
+   .bracket-container { 
+    /* 默认不强制分页，防止第一页空白 */
+    page-break-before: auto !important; 
+    display: block !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* 只有当淘汰赛前面紧跟着小组赛（混合赛制）时，才强制分页 */
+.group-container + .bracket-container {
+    page-break-before: always !important;
+    margin-top: 50px !important;
+}
 
    .group-container, .crosstable, .schedule-table { 
         page-break-inside: avoid !important;
@@ -695,7 +703,8 @@ async function generateTournament() {
     activeId = id; 
 
     // 3. 生成对阵图
-    let html = `<h2 style="text-align:center">${name}</h2>`;
+    let html = ""; 
+
     if (type === 'knockout') {
         html += getBracketHTML(arrangePlayersWithSeeding(players), name);
     } else {
@@ -1594,7 +1603,7 @@ function getBracketHTML(playerList, title) {
     // --- 3. 5-8名排名赛生成 ---
     if (n >= 8) {
         html += `
-        <div class="placement-block container" style="margin-top:50px;">
+            <div class="placement-block" style="margin-top:50px; border-top: 1px solid #eee; padding-top: 30px;">
             <div class="placement-section-title" style="color: #d48806; margin-bottom:20px;">5-8 名排名赛</div>
             <div class="bracket-wrapper">
                 <div class="bracket" id="bracket-58">
