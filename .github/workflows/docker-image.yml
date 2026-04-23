@@ -23,4 +23,4 @@ jobs:
           context: .
           push: true
           # 替换下面两个词：用户名/仓库名
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/sports-system:latest
+          tags: ${{ secrets.tianjiao14 }}/sports-system:latest
