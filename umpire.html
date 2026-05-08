@@ -712,6 +712,16 @@
     </div>
 </div>
 </div>
+<div id="result-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:rgba(0,0,0,0.9); z-index:500; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+    <div style="background:#1a1a1a; padding:25px; border-radius:15px; border-top:6px solid var(--badminton-green); width:85%; max-width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+        <h3 id="result-title" style="color:#ffeb3b; margin-top:0;">📢 播报确认</h3>
+        <div id="result-content" style="color:white; font-size:18px; line-height:1.6; margin:20px 0; white-space:pre-wrap;"></div>
+        <div style="display:flex; gap:12px;">
+            <button id="result-cancel" onclick="closeResultModal()" style="flex:1; background:#444; color:white; border:none; padding:15px; border-radius:8px; font-weight:bold;">取消</button>
+            <button id="result-confirm" style="flex:1; background:var(--badminton-green); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px;">确认</button>
+        </div>
+    </div>
+</div>
                            <div id="break-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:rgba(0,0,0,0.9); z-index:400; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
     <div style="background:#1a1a1a; padding:30px; border-radius:15px; border:2px solid #ffeb3b; width:80%; max-width:400px;">
         <h2 id="break-title" style="color:#ffeb3b; margin-bottom:10px;">🏸 技术间歇</h2>
@@ -1365,19 +1375,18 @@ function finishMatch() {
         return isP1Win ? `${pts[0]}:${pts[1]}` : `${pts[1]}:${pts[0]}`;
     }).join('  ');
     
-    const confirmMsg = `📢 请核对播报数据：\n\n${finalWinner} 胜 ${finalDetails}\n\n确认上传至记录台吗？`;
+   const confirmMsg = `${finalWinner} 胜 ${finalDetails}\n\n确认上传至记录台吗？`;
     
-    if (!confirm(confirmMsg)) return;
-
-    socket.emit('finish_match', { 
-        id: state.matchId, 
-        court: state.court,
-        details: finalDetails, 
-        setScore1: state.p1.sets,
-        setScore2: state.p2.sets 
+    showResultModal("🏆 最终成绩确认", confirmMsg, () => {
+        socket.emit('finish_match', { 
+            id: state.matchId, 
+            court: state.court,
+            details: finalDetails, 
+            setScore1: state.p1.sets,
+            setScore2: state.p2.sets 
+        });
+        showSetup(); 
     });
-
-    showSetup(); 
 }
     function requestNextMatch() { socket.emit('join_court', state.court); }
    // 1. 修改开始比赛函数
@@ -1524,7 +1533,7 @@ function finishSet() {
     const setWinnerName = isP1SetWin ? p1Name : p2Name;
     const setScoreText = isP1SetWin ? `${s1}:${s2}` : `${s2}:${s1}`;
     
-    alert(`第 ${state.currentSet} 局比赛结束\n${setWinnerName} 胜 ${setScoreText}`);
+    showResultModal("🏸 比赛结束", `${setWinnerName} 胜 ${setScoreText}`, null, false);
 
     state.setHistory.push(`${s1}:${s2}`); 
     let setWinner = 1;
@@ -1549,15 +1558,19 @@ function finishSet() {
             }).join('  ');
             
             // 按照图片要求的简洁格式显示
-            alert(`比赛结束\n${finalWinner} 胜 ${finalDetails}\n\n📢 请点击底部“🏆 提交”按钮！`);
-            
-            const submitBtn = document.getElementById('submit-btn');
-            if(submitBtn) {
-                submitBtn.style.border = "4px solid #ffeb3b";
-                submitBtn.style.transform = "scale(1.05)";
-            }
-        }, 100);
-    } else {
+            const msg = `${finalWinner} 胜 ${finalDetails}\n\n📢 请点击底部“🏆 提交”按钮完成上传！`;
+                showResultModal("🏆 比赛结束", msg, null, false);
+                
+                // 高亮提交按钮，提醒裁判点击
+                const submitBtn = document.getElementById('submit-btn');
+                if(submitBtn) {
+                    submitBtn.style.border = "4px solid #ffeb3b";
+                    submitBtn.style.transform = "scale(1.05)";
+                    submitBtn.style.transition = "all 0.3s ease";
+                }
+            }, 100);
+        }
+else {
         // 进入下一局逻辑不变...
         state.server = setWinner;
         state.p1.score = 0; state.p2.score = 0; state.currentSet++; state.breakTriggered = false;
@@ -1670,6 +1683,23 @@ function startBreakTimer(title, msg, seconds) {
 function closeBreak() {
     if(breakInterval) clearInterval(breakInterval);
     document.getElementById('break-overlay').style.display = 'none';
+}
+function showResultModal(title, content, onConfirm, showCancel = true) {
+    document.getElementById('result-title').innerText = title;
+    document.getElementById('result-content').innerText = content;
+    document.getElementById('result-overlay').style.display = 'flex';
+    document.getElementById('result-cancel').style.display = showCancel ? 'block' : 'none';
+    
+    // 绑定点击事件
+    const confirmBtn = document.getElementById('result-confirm');
+    confirmBtn.onclick = () => {
+        closeResultModal();
+        if(onConfirm) onConfirm();
+    };
+}
+
+function closeResultModal() {
+    document.getElementById('result-overlay').style.display = 'none';
 }
 </script>
 </body>
