@@ -17,7 +17,7 @@
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
+      
         body { 
             font-family: -apple-system, "PingFang SC", sans-serif; 
             background: #000; margin: 0; color: var(--text); 
@@ -692,7 +692,21 @@
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
             <button onclick="cancelPrep()" style="background:#4b5563; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold;">🔙 返回待赛列表</button>
             <button onclick="handleWalkover()" style="background:#dc2626; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold;">🏳️ 选手弃权</button>
-        <div id="walkover-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:rgba(0,0,0,0.85); z-index:300; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+</div>
+    </div>
+</div>
+</div>
+<div id="result-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:rgba(0,0,0,0.9); z-index:500; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+    <div style="background:#1a1a1a; padding:25px; border-radius:15px; border-top:6px solid var(--badminton-green); width:85%; max-width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+        <h3 id="result-title" style="color:#ffeb3b; margin-top:0;">📢 播报确认</h3>
+        <div id="result-content" style="color:white; font-size:18px; line-height:1.6; margin:20px 0; white-space:pre-wrap;"></div>
+        <div style="display:flex; gap:12px;">
+            <button id="result-cancel" onclick="closeResultModal()" style="flex:1; background:#444; color:white; border:none; padding:15px; border-radius:8px; font-weight:bold;">取消</button>
+            <button id="result-confirm" style="flex:1; background:var(--badminton-green); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px;">确认</button>
+        </div>
+    </div>
+</div>
+  <div id="walkover-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:rgba(0,0,0,0.85); z-index:300; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
     <div style="background:#1e1e1e; padding:25px; border-radius:12px; width:100%; max-width:400px; border-top:6px solid #dc2626; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
         <h3 style="color:#ff5252; margin-top:0; text-align:center; font-size:22px;">🚨 选手弃权处理</h3>
         <p style="color:#aaa; font-size:14px; text-align:center; margin-bottom:20px;">请选择<b style="color:#fff;">主动弃权</b>的一方。对手将直接获得全胜比分并结束本场比赛。</p>
@@ -705,20 +719,6 @@
         <div style="display:flex; gap:10px;">
             <button onclick="document.getElementById('walkover-modal').style.display='none'" style="flex:1; background:#444; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; font-size:16px;">取消</button>
             <button onclick="confirmWalkover()" style="flex:1; background:#dc2626; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; font-size:16px;">确认判决</button>
-        </div>
-    </div>
-</div>
-</div>
-    </div>
-</div>
-</div>
-<div id="result-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:rgba(0,0,0,0.9); z-index:500; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
-    <div style="background:#1a1a1a; padding:25px; border-radius:15px; border-top:6px solid var(--badminton-green); width:85%; max-width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-        <h3 id="result-title" style="color:#ffeb3b; margin-top:0;">📢 播报确认</h3>
-        <div id="result-content" style="color:white; font-size:18px; line-height:1.6; margin:20px 0; white-space:pre-wrap;"></div>
-        <div style="display:flex; gap:12px;">
-            <button id="result-cancel" onclick="closeResultModal()" style="flex:1; background:#444; color:white; border:none; padding:15px; border-radius:8px; font-weight:bold;">取消</button>
-            <button id="result-confirm" style="flex:1; background:var(--badminton-green); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px;">确认</button>
         </div>
     </div>
 </div>
@@ -801,10 +801,12 @@
         <span>第 <span id="current-set-num">1</span> 局 | 比分 <span id="set-score-p1">0</span>:<span id="set-score-p2">0</span></span>
     </div>
 
-    <div class="footer-controls" style="grid-template-columns: repeat(6, 1fr);"> <button class="btn-ctrl" onclick="showSetup()" style="background:#444;">🔙 返回</button>
+    <div class="footer-controls" style="grid-template-columns: repeat(7, 1fr);"> 
+    <button class="btn-ctrl" onclick="showSetup()" style="background:#444;">🔙 返回</button>
     <button class="btn-ctrl" onclick="undo()">撤销</button>
     <button class="btn-ctrl" onclick="swapSides()">换边</button>
     <button class="btn-ctrl" onclick="manualToggleServer()">换发</button>
+    <button class="btn-ctrl" onclick="handleWalkover()" style="color:#ff5252;">弃权</button>
     <button class="btn-ctrl" onclick="finishSet()" style="color:#ff9800;">结束局</button>
     <button id="submit-btn" class="btn-ctrl" style="background:var(--badminton-green)" onclick="finishMatch()">🏆 提交</button>
 </div>
@@ -1337,21 +1339,42 @@ function loadMatch(data) {
         activeModule.renderUI();
     }
 
-  if (state.matchId) {
-            socket.emit('update_score', { 
-                id: state.matchId, court: state.court, 
-                s1: state.p1.score, 
-                s2: state.p2.score,
-                p1Sets: state.p1.sets,
-                p2Sets: state.p2.sets,
-                isSwapped: state.isSwapped // <--- 关键：把换边状态告诉服务器
-            });
-    }
+ if (state.matchId) {
+    localStorage.setItem('umpire_current_match', JSON.stringify({
+        matchId: state.matchId,
+        court: state.court,
+        sportType: state.sportType, // 🌟 新增：保存运动类型
+        title: document.getElementById('match-title').innerText, // 🌟 新增：保存标题
+        p1: state.p1, // 🌟 新增：保存完整的 p1 对象（含姓名、单位、分、局）
+        p2: state.p2, // 🌟 新增：保存完整的 p2 对象
+        server: state.server,
+        isSwapped: state.isSwapped,
+        isDoubles: state.isDoubles, // 🌟 新增：保存单双打状态
+        currentSet: state.currentSet,
+        setHistory: state.setHistory,
+        format: state.format // 🌟 新增：保存赛制
+    }));
+
+    // 原有的发送给服务器的逻辑保持不变
+    socket.emit('update_score', { 
+        id: state.matchId, court: state.court, 
+        s1: state.p1.score, s2: state.p2.score,
+        p1Sets: state.p1.sets, p2Sets: state.p2.sets,
+        isSwapped: state.isSwapped 
+    });
+}
 }
 
 function finishMatch() {
-    let history = [...state.setHistory];
     const winThreshold = Math.ceil(state.format / 2);
+
+    // 🌟 新增：强制校验比分，防止第一局结束就提交
+    if (state.p1.sets < winThreshold && state.p2.sets < winThreshold) {
+        showResultModal("⚠️ 提示", `比赛尚未结束！\n当前赛制为 ${state.format} 局 ${winThreshold} 胜制，目前大比分为 ${state.p1.sets}:${state.p2.sets}，请继续比赛或点击“结束局”。`, null, false);
+        return;
+    }
+
+    let history = [...state.setHistory];
 
     if (history.length < (state.p1.sets + state.p2.sets)) {
         history.push(`${state.p1.score}:${state.p2.score}`);
@@ -1385,6 +1408,7 @@ function finishMatch() {
             setScore1: state.p1.sets,
             setScore2: state.p2.sets 
         });
+localStorage.removeItem('umpire_current_match');
         showSetup(); 
     });
 }
@@ -1587,76 +1611,103 @@ else {
         state.isLive = false;
         state.isStarted = false;
         state.matchId = null;
+localStorage.removeItem('umpire_current_match');
         document.getElementById('prep-overlay').style.display = 'none';
         document.getElementById('umpire-screen').style.display = 'none';
         document.getElementById('match-list-screen').style.display = 'flex';
     }
 
     // 🌟 功能 2：呼出弃权选择面板
-    function handleWalkover() {
-        const p1Name = state.p1.players.filter(p => p).join('/');
-        const p2Name = state.p2.players.filter(p => p).join('/');
-        
-        // 动态生成下拉选项
-        const selectEl = document.getElementById('walkover-select');
-        selectEl.innerHTML = `
-            <option value="" disabled selected>-- 请点击选择弃权方 --</option>
-            <option value="1">${p1Name}</option>
-            <option value="2">${p2Name}</option>
-        `;
-        
-        // 显示弹窗
-        document.getElementById('walkover-modal').style.display = 'flex';
-    }
+   function handleWalkover() {
+    // 检查是否已载入比赛
+    if (!state.matchId) return;
+
+    const p1Name = state.p1.players.filter(p => p).join('/');
+    const p2Name = state.p2.players.filter(p => p).join('/');
+    
+    const selectEl = document.getElementById('walkover-select');
+    selectEl.innerHTML = `
+        <option value="" disabled selected>-- 请选择弃权类型 --</option>
+        <optgroup label="直接弃权 (比分清零)">
+            <option value="1_wo">${p1Name} 弃权</option>
+            <option value="2_wo">${p2Name} 弃权</option>
+        </optgroup>
+        <optgroup label="因伤弃权 (保留当前比分)">
+            <option value="1_injury">${p1Name} 因伤弃权</option>
+            <option value="2_injury">${p2Name} 因伤弃权</option>
+        </optgroup>
+        <option value="both">❌ 双方弃权 (无胜者)</option>
+    `;
+    
+    // 🌟 现在这个 modal 已经不在 prep-overlay 里面了，可以正常显示
+    document.getElementById('walkover-modal').style.display = 'flex';
+}
 
     // 🌟 功能 3：自动结算比分并提交给管理端
 function confirmWalkover() {
     const selectEl = document.getElementById('walkover-select');
-    const loserNum = parseInt(selectEl.value);
+    const val = selectEl.value;
     
-    if (!loserNum) {
-        alert("⚠️ 请先从列表中选择弃权的选手！");
+    if (!val) {
+        showResultModal("⚠️ 提示", "请先选择弃权方和类型", null, false);
         return;
     }
 
-    const winnerNum = (loserNum === 1) ? 2 : 1;
-    
-    // 🌟 核心优化 1：使用 .trim() 彻底清理名字前后的换行符和空格
-    const loserName = state['p'+loserNum].players.filter(p => p).map(p => p.trim()).join('/');
-    const winnerName = state['p'+winnerNum].players.filter(p => p).map(p => p.trim()).join('/');
-    
-    // 🌟 核心优化 2：去掉中间所有的 \n 换行符，让文字在一行内显示
-    const confirmMsg = `⚠️ 最后确认：您确定判决【${loserName}】弃权吗？操作后无法撤销，【${winnerName}】将获胜。`;
-    
-    if (confirm(confirmMsg)) {
-        // 隐藏弃权弹窗
-        document.getElementById('walkover-modal').style.display = 'none';
+    let finalSets1 = 0, finalSets2 = 0;
+    let details = "";
+    let confirmMsg = "";
+    const winThreshold = Math.ceil(state.format / 2);
 
-        // 自动计算获胜所需的最大局数
-        const winThreshold = Math.ceil(state.format / 2);
-        const isPointsBased = (state.sportType === 'basketball' || state.sportType === 'football');
-        
-        let finalSets1 = 0, finalSets2 = 0;
-        if (isPointsBased) {
-            finalSets1 = (winnerNum === 1) ? 20 : 0; 
-            finalSets2 = (winnerNum === 2) ? 20 : 0;
-        } else {
-            finalSets1 = (winnerNum === 1) ? winThreshold : 0;
-            finalSets2 = (winnerNum === 2) ? winThreshold : 0;
+    // 1. 获取名字并清理空格
+    const p1Name = state.p1.players.filter(p => p).map(p => p.trim()).join('/');
+    const p2Name = state.p2.players.filter(p => p).map(p => p.trim()).join('/');
+
+    if (val === "both") {
+        confirmMsg = "确定判决【双方弃权】吗？";
+        details = "双方弃权(Double W/O)";
+    } 
+    else {
+        const [loserNum, type] = val.split('_');
+        const isLoserP1 = (loserNum === '1');
+        const loserName = isLoserP1 ? p1Name : p2Name;
+        const winnerName = isLoserP1 ? p2Name : p1Name;
+
+        if (type === 'injury') {
+            // 🌟 因伤弃权逻辑：保留已打完的局分 + 当前进行中的比分
+            let historyStr = state.setHistory.join('  ');
+            let currentScore = `${state.p1.score}:${state.p2.score}`;
+            details = (historyStr ? historyStr + '  ' : '') + currentScore + " (因伤)";
+            
+            // 获胜方拿到足够胜出的局数，失败方保留已赢局数
+            finalSets1 = isLoserP1 ? state.p1.sets : winThreshold;
+            finalSets2 = isLoserP1 ? winThreshold : state.p2.sets;
+            confirmMsg = `确定判决【${loserName}】因伤弃权吗？\n当前比分 [${currentScore}] 将被保留。`;
+        } 
+        else {
+            // 直接弃权逻辑：比分通常判为全负（0:2 或 0:3）
+            details = "弃权(W/O)";
+            finalSets1 = isLoserP1 ? 0 : winThreshold;
+            finalSets2 = isLoserP1 ? winThreshold : 0;
+            confirmMsg = `确定判决【${loserName}】直接弃权吗？比分将按全负处理。`;
         }
+    }
+
+    // 使用自定义弹窗避免微信关闭网页
+    showResultModal("🏳️ 弃权确认", confirmMsg, () => {
+        document.getElementById('walkover-modal').style.display = 'none';
         
-        // 提交结果
         socket.emit('finish_match', { 
             id: state.matchId, 
             court: state.court,
-            details: "弃权(W/O)", 
+            details: details, 
             setScore1: finalSets1,
             setScore2: finalSets2 
         });
-        
-        alert("✅ 弃权判决已生效！");
-        cancelPrep(); 
-    }
+
+        showResultModal("✅ 判决成功", "比分已成功上传至记录台。", () => {
+            cancelPrep(); // 返回列表
+        }, false);
+    });
 }
 let breakInterval = null;
 
@@ -1701,6 +1752,75 @@ function showResultModal(title, content, onConfirm, showCancel = true) {
 function closeResultModal() {
     document.getElementById('result-overlay').style.display = 'none';
 }
+socket.on('manager_revoke_result', (data) => {
+    if (state.matchId === data.id) {
+        showResultModal("↩️ 撤销通知", "管理员已撤销本场比赛结果，该场次已重新回到待赛列表，您可以重新加载并提交正确的成绩。", () => {
+            showSetup(); // 返回场地选择/列表页重新进入
+        }, false);
+    }
+});
+window.addEventListener('load', () => {
+    const savedStateStr = localStorage.getItem('umpire_current_match');
+    if (savedStateStr) {
+        try {
+            const savedData = JSON.parse(savedStateStr);
+            if (confirm(`检测到你有未完成的执裁 (场地 ${savedData.court})，是否恢复？`)) {
+                // 1. 完整恢复 state 核心数据
+                state.matchId = savedData.matchId;
+                state.court = savedData.court;
+                state.sportType = savedData.sportType;
+                state.format = savedData.format;
+                state.isDoubles = savedData.isDoubles;
+                state.p1 = savedData.p1;
+                state.p2 = savedData.p2;
+                state.server = savedData.server;
+                state.isSwapped = savedData.isSwapped;
+                state.currentSet = savedData.currentSet;
+                state.setHistory = savedData.setHistory;
+                state.isStarted = true;
+                state.isLive = true;
+
+                // 2. 重新激活对应的运动模块 (🌟 关键修复)
+                document.querySelectorAll('.sport-module').forEach(el => {
+                    el.classList.remove('active');
+                    el.style.setProperty('display', 'none', 'important');
+                });
+                
+                activeModule = SportModules[state.sportType]; // 重新绑定逻辑模块
+                const moduleContainer = document.getElementById(`module-${state.sportType}`);
+                if (moduleContainer) {
+                    moduleContainer.classList.add('active');
+                    moduleContainer.style.setProperty('display', 'flex', 'important');
+                }
+
+                // 3. 恢复 UI 显示
+                document.getElementById('match-title').innerText = savedData.title || "比赛恢复中";
+                document.getElementById('setup-screen').style.display = 'none';
+                document.getElementById('match-list-screen').style.display = 'none';
+                document.getElementById('umpire-screen').style.display = 'flex';
+                document.getElementById('prep-overlay').style.display = 'none';
+
+                // 4. 网络重连与同步
+                socket.emit('join_court', state.court);
+                socket.emit('lock_match', state.matchId);
+
+                // 5. 强制执行一次换边视觉同步
+                if (state.isSwapped) {
+                    const dir = 'row-reverse';
+                    document.getElementById('generic-score-container').style.setProperty('flex-direction', dir, 'important');
+                    const ttMain = document.querySelector('.tt-main');
+                    if (ttMain) ttMain.style.setProperty('flex-direction', dir, 'important');
+                }
+
+                updateUI(); // 触发最终渲染
+            } else {
+                localStorage.removeItem('umpire_current_match');
+            }
+        } catch (e) {
+            console.error("恢复状态失败", e);
+        }
+    }
+});
 </script>
 </body>
 </html>

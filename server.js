@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const os = require('os');
+const fs = require('fs'); // 新增：文件系统模块用于持久化
 
 const app = express();
 const server = http.createServer(app);
@@ -12,19 +13,64 @@ const io = new Server(server, {
 
 app.use(express.static(__dirname));
 
-// --- 全局状态管理 (移出连接监听器以提高性能) ---
+// --- 持久化配置 ---
+const DATA_PATH = path.join(__dirname, 'server_state.json');
+
+// --- 全局状态管理 ---
 let courtQueues = {};    
 let maxCourts = 6;       
-let activeMatches = {};  
+let activeMatches = {};  // 重启后锁定状态通常会失效，因为设备连接已重置
 let allMatches = {};  
 let globalTournamentName = "2026年体育赛事";   
+
 /**
- * 🌟 核心函数：大屏幕动态排程逻辑 (已优化)
+ * 💾 持久化：将当前状态保存到磁盘
+ */
+function saveStateToDisk() {
+    try {
+        const dataToSave = {
+            courtQueues,
+            maxCourts,
+            allMatches,
+            globalTournamentName
+        };
+        fs.writeFileSync(DATA_PATH, JSON.stringify(dataToSave, null, 2), 'utf8');
+    } catch (err) {
+        console.error("数据存档失败:", err);
+    }
+}
+
+/**
+ * 📂 持久化：从磁盘加载状态
+ */
+function loadStateFromDisk() {
+    try {
+        if (fs.existsSync(DATA_PATH)) {
+            const rawData = fs.readFileSync(DATA_PATH, 'utf8');
+            const importedData = JSON.parse(rawData);
+            
+            courtQueues = importedData.courtQueues || {};
+            maxCourts = importedData.maxCourts || 6;
+            allMatches = importedData.allMatches || {};
+            globalTournamentName = importedData.globalTournamentName || "2026年体育赛事";
+            
+            console.log("✅ 历史数据已成功恢复");
+        }
+    } catch (err) {
+        console.error("读取历史数据失败或文件格式错误:", err);
+    }
+}
+
+// 启动服务器时尝试加载数据
+loadStateFromDisk();
+
+/**
+ * 🌟 核心函数：大屏幕动态排程逻辑 (保留原逻辑)
  */
 function sendScoreboardUpdate() {
     const matches = Object.values(allMatches);
 
-    // 1. 获取所有的完赛场次（按完成时间倒序：最近完赛的排前面）
+    // 1. 获取所有的完赛场次（按完成时间倒序）
     const allFinished = matches
         .filter(m => m.status === 'finished')
         .sort((a, b) => b.finishTime - a.finishTime);
@@ -38,7 +84,7 @@ function sendScoreboardUpdate() {
             return parseInt(a.court) - parseInt(b.court);
         });
 
-    // 3. 🌟 核心动态分配逻辑：
+    // 3. 核心动态分配逻辑
     let finishedCount = 4;
     if (otherMatches.length < 8) {
         finishedCount = 12 - otherMatches.length; 
@@ -47,7 +93,6 @@ function sendScoreboardUpdate() {
     const displayFinished = allFinished.slice(0, finishedCount);
     const displayOther = otherMatches.slice(0, 12 - displayFinished.length);
 
-    // 4. 拼接并发送给大屏幕
     const displayList = [...displayFinished, ...displayOther];
     io.emit('scoreboard_data', displayList);
 }
@@ -57,19 +102,21 @@ io.on('connection', (socket) => {
 
     // 1. 初始化配置发送
     socket.emit('update_config', { maxCourts });
+    socket.emit('update_tournament_name', globalTournamentName);
 
     // 2. 接收管理端场地数更新
     socket.on('update_max_courts', (num) => {
         maxCourts = num;
         io.emit('update_config', { maxCourts }); 
+        saveStateToDisk(); // 存档
     });
-socket.emit('update_tournament_name', globalTournamentName);
 
-    // 🌟 2. 接收管理端修改名称的指令并广播
+    // 🌟 接收管理端修改名称的指令并广播
     socket.on('set_tournament_name', (name) => {
         globalTournamentName = name;
         io.emit('update_tournament_name', name);
         console.log("赛事名称已更新为:", name);
+        saveStateToDisk(); // 存档
     });
 
     // 3. 清空队列
@@ -86,7 +133,8 @@ socket.emit('update_tournament_name', globalTournamentName);
             }
         }
         io.emit('court_queues_cleared', courtNum);
-        sendScoreboardUpdate(); // 统一调用
+        sendScoreboardUpdate();
+        saveStateToDisk(); // 存档
     });
 
     // 4. 裁判选择负责场地
@@ -120,9 +168,10 @@ socket.emit('update_tournament_name', globalTournamentName);
 
         io.to(`court_room_${courtNum}`).emit(`court_${courtNum}_match`, courtQueues[courtNum]);
         sendScoreboardUpdate(); 
+        saveStateToDisk(); // 存档
     });
 
-    // 6. 锁定机制
+    // 6. 锁定机制 (不需要持久化锁定 ID，因为重启后 Socket 会重新连接)
     socket.on('lock_match', (matchId) => {
         if (activeMatches[matchId] && activeMatches[matchId] !== socket.id) {
             socket.emit('lock_status', { success: false, message: "该场比赛已有其他裁判正在执裁！" });
@@ -134,6 +183,7 @@ socket.emit('update_tournament_name', globalTournamentName);
             io.emit('match_occupied', { matchId: matchId, locked: true });
             socket.emit('lock_status', { success: true });
             sendScoreboardUpdate();
+            saveStateToDisk(); // 状态变为 playing，保存
         }
     });
 
@@ -146,8 +196,9 @@ socket.emit('update_tournament_name', globalTournamentName);
             allMatches[data.id].p2Score = data.s2;
             allMatches[data.id].p1Sets = data.p1Sets || 0;
             allMatches[data.id].p2Sets = data.p2Sets || 0;
-            allMatches[data.id].isSwapped = data.isSwapped || false; // 🌟 接收并保存裁判的换边状态
+            allMatches[data.id].isSwapped = data.isSwapped || false; 
             sendScoreboardUpdate();
+            saveStateToDisk(); // 关键：实时记录比分，防止崩溃丢失进度
         }
     });
 
@@ -163,21 +214,20 @@ socket.emit('update_tournament_name', globalTournamentName);
             allMatches[data.id].finishTime = Date.now();
         }
 
-      // 在 server.js 中找到这里，替换掉原来的 filter 逻辑：
         if (courtQueues[data.court]) {
-            // 不要删除，而是找到它并打上完赛标记和比分
             let qMatch = courtQueues[data.court].find(m => m.id === data.id);
             if (qMatch) {
                 qMatch.isFinished = true;
                 qMatch.finalScore = `${data.setScore1}:${data.setScore2}`;
                 qMatch.details = data.details;
             }
-            io.to(`court_room_${data.court}`).emit(`court_${data.court}_match`, courtQueues[data.court]);
+            io.to(`court_room_${data.court}`).emit(`court_${courtNum}_match`, courtQueues[data.court]);
         }
 
         io.emit('match_occupied', { matchId: data.id, locked: false });
         io.emit('result_to_manager', data);
         sendScoreboardUpdate();
+        saveStateToDisk(); // 记录完赛结果
     });
 
     // 9. 大屏幕初始化请求
@@ -209,9 +259,10 @@ server.listen(PORT, '0.0.0.0', () => {
         });
     }
     console.log('--------------------------------------');
-    console.log(`🚀 赛事系统已启动！`);
+    console.log(`🚀 赛事系统已启动并已开启数据持久化！`);
     console.log(`💻 管理端: http://${localIP}:${PORT}/index.html`);
     console.log(`🏸 裁判端: http://${localIP}:${PORT}/umpire.html`);
     console.log(`📺 大屏幕: http://${localIP}:${PORT}/scoreboard.html`);
+    console.log(`📁 存档文件: ${DATA_PATH}`);
     console.log('--------------------------------------');
 });

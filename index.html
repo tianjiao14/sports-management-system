@@ -25,6 +25,12 @@
         body { font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
 
         /* --- 侧边栏布局 --- */
+    .tournament-list-item {
+    cursor: grab; /* 提示可以抓取 */
+}
+.tournament-list-item:active {
+    cursor: grabbing;
+}
         .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
         .sidebar-header { padding: 25px 20px; font-size: 20px; font-weight: bold; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--sidebar-active); }
         .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
@@ -77,21 +83,31 @@
         .data-table th { background-color: #f8f9fa; }
         .crosstable .diagonal { background: linear-gradient(to top right, transparent calc(50% - 1px), #ccc, transparent calc(50% + 1px)); background-color: #f2f2f2; }
         /* 🌟 修复积分表列宽不均的问题，强制等宽分配 */
-        .crosstable { 
-            table-layout: fixed; 
-        }
+       .crosstable { 
+    table-layout: fixed; 
+    width: 100% !important; /* 核心：必须指定 100% 宽度，固定布局才会生效 */
+}
+.crosstable thead th:first-child { 
+    width: 140px; 
+    text-align: center !important;   /* 水平居中 */
+    vertical-align: middle !important; /* 垂直居中 */
+    font-size: 16px; 
+    font-weight: bold;
+}
         /* 固定左侧第一列（名字列）的宽度 */
-        .crosstable th:first-child { 
-            width: 140px; 
-        } 
-        /* 压缩最后三列（积分、净胜、名次）的宽度，把空间留给中间的选手对阵格 */
-        .crosstable th:nth-last-child(1), 
-        .crosstable th:nth-last-child(2), 
-        .crosstable th:nth-last-child(3) { 
-            width: 50px; 
-            padding: 4px; 
-        }
-        /* 保证超长单位名称会自动换行，不会撑破格子 */
+.crosstable th:first-child,
+.crosstable td:first-child { 
+    width: 140px !important; 
+    text-align:center;
+}
+
+/* 2. 管理端：最后三列（积分、净胜、名次）固定为 50px */
+.crosstable th:nth-last-child(1), .crosstable td:nth-last-child(1),
+.crosstable th:nth-last-child(2), .crosstable td:nth-last-child(2),
+.crosstable th:nth-last-child(3), .crosstable td:nth-last-child(3) { 
+    width: 50px !important; 
+    padding: 4px; 
+}        /* 保证超长单位名称会自动换行，不会撑破格子 */
         .crosstable th, .crosstable td {
             word-wrap: break-word;
             word-break: break-all;
@@ -239,26 +255,30 @@
 .mobile-nav-bar { display: none; }
 
 @media print {
-    /* 1. 结构重置：确保多页可见 */
-    html, body {
+      html, body {
         height: auto !important;
         overflow: visible !important;
         display: block !important;
     }
-
+.scoring-rules-text { display: none !important; }
+.final-score { 
+        display: none !important; 
+    }
+.match-status-text { 
+        display: none !important; 
+    }
     /* 2. 隐藏页眉页脚网址和时间 */
     @page { 
         size: auto; 
         margin: 5mm 10mm; 
     }
 
-    .sidebar, #setup-view, #step1-view, #step2-view, #name-entry-view, 
+    .sidebar, .mobile-nav-bar,#setup-view, #step1-view, #step2-view, #name-entry-view, 
     #controls-container, .button-group, button, select, .score-inputs, .delete-btn,
     .qualification-box { /* 🌟 加上 .qualification-box 把它在打印时彻底隐藏 */
         display: none !important; 
     }
-
-    /* 4. ⭐ 核心过滤：当处于“仅赛程模式”时，隐藏所有积分表和出线确认框 */
+      /* 4. ⭐ 核心过滤：当处于“仅赛程模式”时，隐藏所有积分表和出线确认框 */
     .print-schedule-only .crosstable, 
     .print-schedule-only .qualification-box,
     .print-schedule-only #final-standings-container {
@@ -275,11 +295,17 @@
 }
 
 /* 只有当淘汰赛前面紧跟着小组赛（混合赛制）时，才强制分页 */
-.group-container + .bracket-container {
-    page-break-before: always !important;
-    margin-top: 50px !important;
-}
-
+#mixed-ko-section, .bracket-container, .placement-block {
+        display: block !important;
+        break-before: page !important;
+        page-break-before: always !important;
+        margin-top: 0 !important;
+        padding-top: 30px !important;
+    }
+#mixed-ko-section .result-title {
+        display: block !important;
+        margin-top: 20px !important;
+    }
    .group-container, .crosstable, .schedule-table { 
         page-break-inside: avoid !important;
         break-inside: avoid !important;
@@ -293,13 +319,22 @@
     /* 7. 隐藏“推送”等操作文字 */
     .court-tag span, .court-tag i { display: none !important; }
     .court-tag { border: 1px solid #333 !important; display: inline-block !important; padding: 2px 5px !important; }
-}  
+ 
 .placement-block {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        display: block !important;
-    }
+    background-color: transparent !important; /* 去掉背景色 */
+    padding: 0 !important;
+    margin-top: 60px !important;            /* 保持大间距，防止看起来像套在一起 */
+    page-break-before: auto !important;
+    break-before: auto !important;
+    page-break-inside: auto !important; /* 确保不被切断 */
+    break-inside: avoid !important;
+overflow: visible !important;
+}
 
+/* 确保内部对阵图依然居中 */
+#bracket-58 {
+    margin: 0 auto;
+}
     /* 2. 防止对阵的小方块或连线被切断 */
     .match, .round {
         page-break-inside: avoid !important;
@@ -314,6 +349,62 @@
     .bracket-wrapper::-webkit-scrollbar {
         display: none !important;
     }
+.p-name, .participant, .player-header {
+        white-space: nowrap !important; /* 强制姓名不换行 */
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    .p-name small, .participant small, .player-header small {
+        white-space: normal !important; /* 允许单位换行 */
+        display: block !important;
+        font-size: 0.85em !important;
+        line-height: 1.1 !important;
+        margin-top: 2px !important;
+    }
+
+    /* 🌟 2. 对阵日程表（小组赛赛程）缩放优化，防止溢出 */
+    .schedule-table {
+        width: 100% !important;
+        table-layout: fixed !important; /* 强制固定总宽，由单元格平分 */
+        font-size: 10pt !important;      /* 显著缩小字体以适应多轮次显示 */
+        border-collapse: collapse !important;
+    }
+    
+    .schedule-table th, .schedule-table td {
+        padding: 4px 1px !important;    /* 极度压缩内边距 */
+        word-wrap: break-word !important;
+        border: 0.5pt solid #000 !important;
+    }
+.crosstable {
+        table-layout: fixed !important;
+        width: 100% !important;
+    }
+
+    /* 🌟 2. 打印时：第一列（名字）宽度微调，既适应名字也节省空间 */
+    .crosstable th:first-child, 
+    .crosstable td:first-child {
+        width: 110px !important; 
+        white-space: normal !important; /* 允许单位换行 */
+    }
+
+    /* 🌟 3. 打印时：极度压缩最后三列（积分、净胜、名次） */
+    .crosstable th:nth-last-child(1), .crosstable td:nth-last-child(1), /* 名次 */
+    .crosstable th:nth-last-child(2), .crosstable td:nth-last-child(2), /* 净胜 */
+    .crosstable th:nth-last-child(3), .crosstable td:nth-last-child(3) { /* 积分 */
+        width: 40px !important; /* 打印时极其紧凑，仅预留数字空间 */
+        padding: 6px 0 !important;
+        text-align: center !important;
+    }
+
+    /* 🌟 4. 打印时：中间选手对阵格不设宽度，自动平分剩余的 A4 宽度 */
+    .crosstable th:not(:first-child):not(:nth-last-child(-n+3)),
+    .crosstable td:not(:first-child):not(:nth-last-child(-n+3)) {
+        width: auto !important;
+    }
+ }
 </style>
 </head>
 <body>
@@ -574,7 +665,7 @@ socket.on('result_to_manager', async (data) => { // ⚠️ 注意这里加了 as
                                 const courtInfo = hiddenNode.querySelector('.court-info');
                                 if (courtInfo) {
                                     courtInfo.style.color = '#999';
-                                    courtInfo.innerText = `[已完赛 ${set1}:${set2}]`;
+                                    courtInfo.innerHTML = `<span class="match-status-text">[已完赛 ${set1}:${set2}]</span>`;
                                 }
                                 hiddenNode.style.backgroundColor = '#f9fafc';
                             }
@@ -1016,17 +1107,90 @@ function showStep(step) {
     }
 }
 
+let draggedItem = null;
+
 function renderSidebarList() {
     ui.tournamentList.innerHTML = '';
-    Object.values(allTournaments).forEach(t => {
+    
+    // 从本地读取保存的顺序，如果没有则按原始顺序
+    let order = JSON.parse(localStorage.getItem('tournament_order') || "[]");
+    let sortedIds = Object.keys(allTournaments);
+    
+    // 如果有保存的顺序，按顺序排列；新加入的项目排在最后
+    if (order.length > 0) {
+        sortedIds.sort((a, b) => {
+            let indexA = order.indexOf(a);
+            let indexB = order.indexOf(b);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+        });
+    }
+
+    sortedIds.forEach(id => {
+        const t = allTournaments[id];
+        if (!t) return;
         const div = document.createElement('div');
         div.className = `menu-item tournament-list-item ${t.id === activeId ? 'active' : ''}`;
-        div.innerHTML = `<span>🏆</span><div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${t.sportName}</div><span class="delete-btn" onclick="deleteTournament(event, '${t.id}')" title="删除">×</span>`;
+        div.setAttribute('data-id', t.id);
+        div.draggable = true; // 开启拖拽
+        
+        div.innerHTML = `
+            <span>🏆</span>
+            <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${t.sportName}</div>
+            <span class="delete-btn" onclick="deleteTournament(event, '${t.id}')" title="删除">×</span>
+        `;
+        
         div.onclick = () => setActive(t.id);
+
+        // --- 拖拽事件监听 ---
+        div.addEventListener('dragstart', (e) => {
+            draggedItem = div;
+            div.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        div.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            div.style.borderTop = "2px solid var(--sidebar-active)";
+        });
+
+        div.addEventListener('dragleave', () => {
+            div.style.borderTop = "none";
+        });
+
+        div.addEventListener('drop', (e) => {
+            e.preventDefault();
+            div.style.borderTop = "none";
+            if (draggedItem !== div) {
+                const list = ui.tournamentList;
+                const allNodes = Array.from(list.children);
+                const draggedIdx = allNodes.indexOf(draggedItem);
+                const targetIdx = allNodes.indexOf(div);
+
+                if (draggedIdx < targetIdx) {
+                    list.insertBefore(draggedItem, div.nextSibling);
+                } else {
+                    list.insertBefore(draggedItem, div);
+                }
+                saveNewOrder(); // 保存新顺序
+            }
+        });
+
+        div.addEventListener('dragend', () => {
+            div.style.opacity = '1';
+            draggedItem = null;
+        });
+
         ui.tournamentList.appendChild(div);
     });
 }
 
+// 保存当前侧边栏的顺序到 localStorage
+function saveNewOrder() {
+    const currentOrder = Array.from(ui.tournamentList.children).map(node => node.getAttribute('data-id'));
+    localStorage.setItem('tournament_order', JSON.stringify(currentOrder));
+}
 function setActive(id) {
     if (!allTournaments[id]) return showStep(1);
     activeId = id;
@@ -1589,10 +1753,10 @@ function getBracketHTML(playerList, title) {
 
     // --- 2. 3-4名决赛生成 ---
     if (n >= 4) {
-        html += `<div class="placement-block">
-        <div class="placement-section-title">3-4名决赛</div>
-        <div class="bronze-container">
-            <div class="match bronze-match" id="${prefix}match-bronze" data-type="bronze">
+        html += `<div class="placement-block" style="margin-top:50px; border-top: 1px dashed #ffd666; padding-top: 30px;">
+    <div class="placement-section-title" style="color: #f39c12;">3-4名决赛</div>
+    <div class="bronze-container">
+                 <div class="match bronze-match" id="${prefix}match-bronze" data-type="bronze">
                 <div class="participant placement unplayed" data-slot="top">半决赛负者1</div>
                 <div class="score-inputs"><input type="text" class="score-input s-top"><input type="text" class="score-input s-bottom"></div>
                 <div class="participant placement unplayed" data-slot="bottom">半决赛负者2</div>
@@ -1601,10 +1765,10 @@ function getBracketHTML(playerList, title) {
     }
     
     // --- 3. 5-8名排名赛生成 ---
-    if (n >= 8) {
-        html += `
-            <div class="placement-block" style="margin-top:50px; border-top: 1px solid #eee; padding-top: 30px;">
-            <div class="placement-section-title" style="color: #d48806; margin-bottom:20px;">5-8 名排名赛</div>
+   if (n >= 8) {
+    html += `
+        <div class="placement-block" style="margin-top:120px; border-top: 1px dashed #ffd666; padding-top: 30px;">
+        <div class="placement-section-title" style="color: #d48806; margin-bottom:20px;">5-8 名排名赛</div>
             <div class="bracket-wrapper">
                 <div class="bracket" id="bracket-58">
                     <div class="round" data-round="0">
@@ -1926,26 +2090,31 @@ function handlePlacementReset(r, m, totalRounds, match) {
 }
 
 function autoAdvanceByes() {
-    const round0 = ui.results.querySelector('.round[data-round="0"]');
-    if(!round0) return;
-    setTimeout(() => {
-        round0.querySelectorAll('.match').forEach(m => {
-            if (m.classList.contains('decided')) return;
-            const top = m.querySelector('[data-slot="top"]');
-            const bottom = m.querySelector('[data-slot="bottom"]');
-            if (top.textContent === "轮空" && bottom.textContent !== "轮空") {
-                bottom.click();
-                const inputs = m.querySelector('.score-inputs');
-                if(inputs) inputs.style.visibility = 'hidden';
-            } else if (bottom.textContent === "轮空" && top.textContent !== "轮空") {
-                top.click();
-                const inputs = m.querySelector('.score-inputs');
-                if(inputs) inputs.style.visibility = 'hidden';
-            }
-        });
-    }, 100);
-}
+    // 🌟 核心修改：选择所有轮次的所有对阵场次
+    const allMatches = ui.results.querySelectorAll('.match');
+    
+    allMatches.forEach(m => {
+        if (m.classList.contains('decided')) return;
+        
+        const top = m.querySelector('[data-slot="top"]');
+        const bottom = m.querySelector('[data-slot="bottom"]');
+        if (!top || !bottom) return;
 
+        const tText = top.textContent.trim();
+        const bText = bottom.textContent.trim();
+
+        // 判定逻辑：如果其中一方是轮空，且另一方不是轮空或待定
+        if (tText === "轮空" && bText !== "轮空" && bText !== "待定") {
+            bottom.click(); // 自动点击另一方获胜
+            const inputs = m.querySelector('.score-inputs');
+            if(inputs) inputs.style.visibility = 'hidden';
+        } else if (bText === "轮空" && tText !== "轮空" && tText !== "待定") {
+            top.click();    // 自动点击另一方获胜
+            const inputs = m.querySelector('.score-inputs');
+            if(inputs) inputs.style.visibility = 'hidden';
+        }
+    });
+}
 function updateStandings() {
     const t = allTournaments[activeId];
     if (!t) return;
@@ -1999,6 +2168,13 @@ function updateStandings() {
             });
         });
     }
+
+    standingsData = standingsData.filter(item => 
+        item.name && 
+        item.name !== "轮空" && 
+        item.name !== "--待定--" && 
+        item.name !== "待定"
+    );
 
     let cont = document.getElementById('final-standings-container');
     if (standingsData.length === 0) { if (cont) cont.style.display = 'none'; return; }
@@ -2081,7 +2257,7 @@ function renderGroupStage(players, title, isMixed) {
 
    let html = `<div class="container">
         <h2 class="result-title">${title} - ${isMixed ? '第一阶段：小组赛' : '循环赛积分表'}</h2>
-        <p style="text-align:center; color:#666; font-size:13px; margin-top:-20px; margin-bottom:20px;">
+        <p class="scoring-rules-text" style="text-align:center; color:#666; font-size:13px; margin-top:-20px; margin-bottom:20px;">
             计分规则：胜 ${winPts} / 平 ${drawPts} / 负 ${lossPts}
         </p>
     </div>`;
@@ -2105,7 +2281,9 @@ function renderGroupStage(players, title, isMixed) {
             const advanceCount = parseInt(document.getElementById('num-advance-per-group')?.value) || 2;
             let selectHtml = '';
             for (let i = 1; i <= advanceCount; i++) {
-                let options = `<option value="">--待定--</option>` + group.map(p => `<option value="${p}">${p}</option>`).join('');
+                let options = `<option value="">--待定--</option>` + 
+                              `<option value="轮空">轮空</option>` + 
+                              group.map(p => `<option value="${p}">${p}</option>`).join('');
                 selectHtml += `<div style="flex:1;"><label>第 ${i} 名</label><select class="rank-select rank-${i}" onchange="syncMixedBracket()">${options}</select></div>`;
             }
             groupHtml += `<div class="qualification-box" style="background:#fdf6ec; padding:15px; margin-top:15px; border-radius:4px; border:1px solid #faecd8;">
@@ -2210,19 +2388,29 @@ function syncMixedBracket() {
         const groupLetter = String.fromCharCode(65 + gIdx);
         for (let r = 1; r <= 8; r++) {
             const sel = container.querySelector(`.rank-${r}`);
+            // 🌟 核心：即使是空值也记录，确保能同步到对阵图
             if (sel) nameMap[`[${groupLetter}组第${r}]`] = sel.value;
         }
     });
 
     document.querySelectorAll('#mixed-ko-content .participant').forEach(slot => {
         const placeholder = slot.getAttribute('data-placeholder');
-       if (placeholder && nameMap[placeholder] !== undefined) {
+        if (placeholder && nameMap[placeholder] !== undefined) {
             const realName = nameMap[placeholder];
-            const oldHtml = slot.innerHTML; // 记录更新前的名字
+            const oldHtml = slot.innerHTML;
             
             if (realName) {
                 slot.innerHTML = formatDisplayName(realName);
                 slot.classList.remove('unplayed');
+                
+                // 🌟 关键：如果替换后的名字是“轮空”，立即删除该场次的编排标签
+                if (realName === "轮空") {
+                    const matchNode = slot.closest('.match');
+                    if (matchNode) {
+                        const tag = matchNode.querySelector('.court-tag');
+                        if (tag) tag.remove(); // 直接删除“10:00 | 5号场”这类标签
+                    }
+                }
             } else {
                 slot.innerHTML = placeholder; 
                 slot.classList.add('unplayed');
@@ -2315,31 +2503,22 @@ function minsToTime(mins) {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-/**
- * 提取当前页面中所有待办比赛场次
- * 包含：小组循环赛、淘汰赛主赛程、排名赛
- * 核心：为每场比赛注入 totalRounds 以支持“长路径优先”编排
- */
 function collectMatchesFromElement(root) {
     let queue = [];
     
-    // 1. 提取小组循环赛 (Round Robin)
+    // 1. 提取小组循环赛 (保持不变，小组赛最早打)
     root.querySelectorAll('.group-container').forEach(container => {
         const table = container.querySelector('.schedule-table');
         const crosstable = container.querySelector('.crosstable');
         if (!table || !crosstable) return;
 
-        // 获取该小组的所有选手列表（用于匹配积分表中的完赛状态）
-       const players = Array.from(crosstable.querySelectorAll('th.player-header')).map(getRealName);
-        
-        // 获取该小组赛的总轮次
+        const players = Array.from(crosstable.querySelectorAll('th.player-header')).map(getRealName);
         const maxRounds = table.querySelectorAll('thead th').length;
 
         for (let r = 0; r < maxRounds; r++) {
             table.querySelectorAll('tbody tr').forEach(row => {
                 const cell = row.cells[r];
-                // 排除空单元格、轮空场次
-                    if (cell && cell.textContent.trim() !== "" && !cell.textContent.includes('轮空')) {
+                if (cell && cell.textContent.trim() !== "" && !cell.textContent.includes('轮空')) {
                     let p1Name, p2Name;
                     const pNames = cell.querySelectorAll('.p-name');
                     if (pNames.length >= 2) {
@@ -2352,7 +2531,6 @@ function collectMatchesFromElement(root) {
                     const idxA = players.indexOf(p1Name);
                     const idxB = players.indexOf(p2Name);
                     
-                    // 检查积分表中对应单元格是否有 <strong> 标签（代表已录入比分/已完赛）
                     let isPlayed = (idxA !== -1 && idxB !== -1 && crosstable.rows[idxA + 1]?.cells[idxB + 1]?.querySelector('strong'));
                     
                     if (!isPlayed) {
@@ -2360,7 +2538,7 @@ function collectMatchesFromElement(root) {
                             node: cell, 
                             type: 'rr', 
                             round: r, 
-                            totalRounds: maxRounds // 注入总轮次用于优先级排序
+                            totalRounds: maxRounds 
                         });
                     }
                 }
@@ -2368,98 +2546,72 @@ function collectMatchesFromElement(root) {
         }
     });
 
-    // 2. 提取淘汰赛主赛程 (Main Bracket)
-    // 排除掉 ID 包含 "58" 的排名赛容器，避免重复提取
+    // 2. 提取淘汰赛主赛程
     const mainBracket = root.querySelector('.bracket:not([id*="58"])');
     if (mainBracket) {
         const koRounds = mainBracket.querySelectorAll('.round');
-        const totalKoRounds = koRounds.length;
-        
         koRounds.forEach((round, rIdx) => {
             round.querySelectorAll('.match').forEach(m => {
-                // 排除已决定胜负的场次
                 if (m.classList.contains('decided')) return; 
 
-                // 决赛 (最后一轮) 给予特殊的 999 权重，确保最后进行
-                let weight = (rIdx === totalKoRounds - 1) ? 999 : rIdx;
+                const tText = m.querySelector('[data-slot="top"]')?.innerText.trim();
+                const bText = m.querySelector('[data-slot="bottom"]')?.innerText.trim();
+                if (tText === "轮空" || bText === "轮空") return;
+
+                // --- 核心修正：决赛赋予最高优先级 ---
+                const isFinal = (rIdx === koRounds.length - 1);
+                const priority = isFinal ? 999 : rIdx; 
                 
-                queue.push({ 
-                    node: m, 
-                    type: 'ko', 
-                    round: weight, 
-                    totalRounds: totalKoRounds // 注入总轮次
-                });
+                queue.push({ node: m, type: 'ko', round: priority, totalRounds: koRounds.length });
             });
         });
     }
 
-    // 3. 提取 3-4 名及 5-8 名排名赛
+    // 3. 提取排名赛
     root.querySelectorAll('.placement-block .match').forEach(m => {
         if (m.classList.contains('decided')) return;
         
-        const type = m.getAttribute('data-type');
-        let weight = 300; // 排名赛基础轮次权重
-        let projectTotalRounds = 3; // 排名赛通常视为较短路径
+        const tText = m.querySelector('[data-slot="top"]')?.innerText.trim();
+        const bText = m.querySelector('[data-slot="bottom"]')?.innerText.trim();
+        if (tText === "轮空" || bText === "轮空") return;
 
-        // 精细化权重：决赛类场次稍后排
-        if (type === '56_final' || type === '78_final') {
-            weight = 310;
-        } else if (type === 'bronze') {
-            weight = 400; // 3-4名决赛通常较晚
-        }
+        const type = m.getAttribute('data-type');
         
-        queue.push({ 
-            node: m, 
-            type: 'ko', 
-            round: weight, 
-            totalRounds: projectTotalRounds 
-        });
+        // --- 核心修正：排名赛权重应介于半决赛和决赛之间 ---
+        let weight = 100; // 5-8名半决赛
+        if (type === '56_final' || type === '78_final') weight = 110; // 5-8名决赛
+        else if (type === 'bronze') weight = 120; // 3-4名决赛
+        
+        queue.push({ node: m, type: 'ko', round: weight, totalRounds: 3 });
     });
 
     return queue;
 }
-/**
- * 完整版赛事智能编排逻辑（硬性隔离版）
- * 逻辑：所有小组赛(RR)执行完 -> 整体停顿 -> 开启淘汰赛(KO)
- */
 function applySchedulingLogic(matchQueue, inputId) {
     const numCourts = parseInt(document.getElementById(inputId).value) || 5;
     const duration = parseInt(document.getElementById('global-duration').value) || 20;
-    
-    // 1. 读取时间配置（支持不限时设置）
+    const restTime = 10; // 强制休息时间（分钟）
+
+    // 获取时间配置
     const morningStartStr = document.getElementById('global-start-time').value;
     const morningStart = morningStartStr ? timeToMins(morningStartStr) : timeToMins("09:00");
     const morningEnd = document.getElementById('morning-end-time').value ? timeToMins(document.getElementById('morning-end-time').value) : Infinity;
     const afternoonStart = document.getElementById('afternoon-start-time').value ? timeToMins(document.getElementById('afternoon-start-time').value) : Infinity;
     const afternoonEnd = document.getElementById('afternoon-end-time').value ? timeToMins(document.getElementById('afternoon-end-time').value) : Infinity;
 
-    // 2. 核心排序：类型第一（RR在前，KO在后），压力值（长路径）第二
+    // 1. 核心排序：依然保持 RR 在前 KO 在后，但仅作为入队顺序
     matchQueue.sort((a, b) => {
-        // 第一优先级：类型 (rr 永远在 ko 之前)
-        if (a.type === 'rr' && b.type === 'ko') return -1;
-        if (a.type === 'ko' && b.type === 'rr') return 1;
-
-        // 第二优先级：决赛 (round 999) 必须最后
-        if (a.round === 999 && b.round !== 999) return 1;
-        if (a.round !== 999 && b.round === 999) return -1;
-
-        // 第三优先级：长路径优先（剩余轮次多的项目先插空）
-        const weightA = (a.totalRounds || 0) - a.round;
-        const weightB = (b.totalRounds || 0) - b.round;
-        if (weightA !== weightB) return weightB - weightA;
-
+        if (a.type !== b.type) return a.type === 'rr' ? -1 : 1;
         return a.round - b.round;
     });
-    
-    // 3. 状态初始化
-    let currentDay = 0;
-    let courtUsage = new Array(numCourts).fill(morningStart);
-    let playerBusyUntil = {}; 
-    let maxRRFinishTime = 0; // 🌟 关键：记录所有小组赛的全局最晚结束时间
 
-    matchQueue.forEach((match) => {
-        // 4. 提取球员名单以检查冲突
+    let currentDay = 0;
+    let courtUsage = new Array(numCourts).fill(morningStart); // 每个场地的下一次空闲时间
+    let playerBusyUntil = {}; // 记录每个选手的下一次空闲时间
+
+    matchQueue.forEach((match, index) => {
         let p1 = "", p2 = "";
+        // 提取选手名以检查休息时间
         if (match.type === 'ko') {
             const t = match.node.querySelector('[data-slot="top"]');
             const b = match.node.querySelector('[data-slot="bottom"]');
@@ -2473,51 +2625,32 @@ function applySchedulingLogic(matchQueue, inputId) {
             }
         }
 
+        // 计算选手准备好的时间 (上一场结束时间 + 10分钟休息)
         const getReadyTime = (name) => {
-            if (!name || name === "待定" || name === "轮空") return 0;
-            return playerBusyUntil[name] || 0;
+            if (!name || name === "待定" || name === "轮空" || name.includes("负者") || name.includes("胜者")) return 0;
+            return playerBusyUntil[name] ? (playerBusyUntil[name] + restTime) : 0;
         };
         const playersReadyAt = Math.max(getReadyTime(p1), getReadyTime(p2));
 
-        // 5. 计算开始时间
-        let bestCourtIdx = 0;
-        let earliestStartPossible = Infinity;
+        // 🌟 核心修改 1：场地按顺序循环 (1, 2, 3, 4, 5, 6, 1, 2...)
+        let bestCourtIdx = index % numCourts;
+        
+        // 🌟 核心修改 2：移除全局决赛锁 (maxRRFinishTime) 和 (max courtUsage)
+        // 该场比赛的开始时间仅取决于：该场地的空闲时间 vs 选手的准备时间
+        let startTime = Math.max(courtUsage[bestCourtIdx], playersReadyAt);
 
-        for (let i = 0; i < numCourts; i++) {
-            // 🌟 核心修改点：
-            // 如果是淘汰赛(ko)，它的开始时间必须 >= 场馆空闲, >= 球员打完, 且必须 >= 所有小组赛结束的时间
-            let possibleStart = Math.max(courtUsage[i], playersReadyAt);
-            if (match.type === 'ko') {
-                possibleStart = Math.max(possibleStart, maxRRFinishTime);
-            }
-
-            if (possibleStart < earliestStartPossible) {
-                earliestStartPossible = possibleStart;
-                bestCourtIdx = i;
-            }
-        }
-
-        let startTime = earliestStartPossible;
-
-        // 决赛逻辑
-        if (match.round === 999) startTime = Math.max(startTime, ...courtUsage);
-
-        // 6. 拦截器：午休与跨天
-        if (morningEnd !== Infinity && afternoonStart !== Infinity) {
-            if (startTime + duration > morningEnd && startTime < afternoonStart) {
-                startTime = afternoonStart;
-            }
+        // 午休/跨天逻辑处理
+        if (morningEnd !== Infinity && startTime + duration > morningEnd && startTime < afternoonStart) {
+            startTime = afternoonStart;
         }
         if (afternoonEnd !== Infinity && startTime + duration > afternoonEnd) {
             currentDay++;
             courtUsage = new Array(numCourts).fill(morningStart);
-            playerBusyUntil = {};
-            startTime = morningStart; 
-            maxRRFinishTime = 0; // 新的一天，重置标记
-            bestCourtIdx = 0;
+            playerBusyUntil = {}; // 跨天重置休息状态
+            startTime = morningStart;
         }
 
-        // 7. 渲染结果
+        // 渲染与显示
         const timeStr = minsToTime(startTime);
         const dayPrefix = currentDay > 0 ? `D${currentDay + 1} ` : ""; 
         const courtNum = bestCourtIdx + 1;
@@ -2537,15 +2670,9 @@ function applySchedulingLogic(matchQueue, inputId) {
             match.node.appendChild(info);
         }
 
-        // 8. 更新全局状态
+        // 更新状态：场地占用时间及选手占用时间
         const finishTime = startTime + duration;
         courtUsage[bestCourtIdx] = finishTime;
-        
-        // 🌟 关键：如果是小组赛，更新全局最晚结束时间
-        if (match.type === 'rr') {
-            maxRRFinishTime = Math.max(maxRRFinishTime, finishTime);
-        }
-
         if (p1 && p1 !== "待定" && p1 !== "轮空") playerBusyUntil[p1] = finishTime;
         if (p2 && p2 !== "待定" && p2 !== "轮空") playerBusyUntil[p2] = finishTime;
     });
@@ -2690,6 +2817,9 @@ function handleTableBlur(e) {
 }
 function calculateGroupStandings(table) {
     const rows = Array.from(table.querySelectorAll('tbody tr'));
+    const groupContainer = table.closest('.group-container');
+    const scheduleTable = groupContainer.querySelector('.schedule-table');
+    
     const winPts = document.getElementById('pts-win') ? parseInt(document.getElementById('pts-win').value) : 3;
     const drawPts = document.getElementById('pts-draw') ? parseInt(document.getElementById('pts-draw').value) : 1;
     const lossPts = document.getElementById('pts-loss') ? parseInt(document.getElementById('pts-loss').value) : 0;
@@ -2697,10 +2827,12 @@ function calculateGroupStandings(table) {
     let stats = [];
     let anyMatchPlayed = false; 
 
+    const players = rows.map(row => getRealName(row.cells[0]));
+
     rows.forEach((row, rowIndex) => {
         let totalPts = 0, totalNet = 0;
-        const playerName = getRealName(row.cells[0]);
-        let hasPlayed = false; // 新增：标记该选手是否有已完成的比赛
+        let hasPlayed = false;
+        let isInvalidRanking = false; 
 
         for (let j = 1; j < row.cells.length - 3; j++) {
             const cellText = row.cells[j].innerText.trim();
@@ -2709,59 +2841,73 @@ function calculateGroupStandings(table) {
                 anyMatchPlayed = true; 
                 hasPlayed = true; 
                 const s1 = parseInt(scoreMatch[1]), s2 = parseInt(scoreMatch[2]);
-                if (s1 > s2) totalPts += winPts;
-                else if (s1 === s2) totalPts += drawPts;
-                else totalPts += lossPts;
+                
+                // --- 积分计算核心修正 ---
+                if (s1 > s2) {
+                    totalPts += winPts;
+                } else if (s1 === s2) {
+                    // 如果是双方弃权(0:0)，不给平局分，按负场计分
+                    if (s1 === 0 && (cellText.includes("弃权") || cellText.includes("W/O"))) {
+                        totalPts += lossPts;
+                    } else {
+                        totalPts += drawPts;
+                    }
+                } else {
+                    totalPts += lossPts;
+                }
                 totalNet += (s1 - s2);
+
+                // 标记：只要有弃权负（含双方弃权），该选手在当前组的名次判定为“无效”
+                if ((cellText.includes("弃权") || cellText.includes("W/O")) && s1 <= s2) {
+                    isInvalidRanking = true;
+                }
             }
         }
-
-        // 修改点：如果未参赛，积分和净胜球显示为空字符串而不是 0
         row.cells[row.cells.length - 3].innerText = hasPlayed ? totalPts : "";
         row.cells[row.cells.length - 2].innerText = hasPlayed ? totalNet : "";
-        
-        stats.push({ row: row, name: playerName, pts: totalPts, net: totalNet, hasPlayed: hasPlayed });
+        stats.push({ 
+            row: row, 
+            name: players[rowIndex], 
+            pts: totalPts, 
+            net: totalNet, 
+            hasPlayed: hasPlayed, 
+            isInvalidRanking: isInvalidRanking 
+        });
     });
 
-    const groupContainer = table.closest('.group-container');
+    // 日程表同步逻辑保持不变...
+    if (scheduleTable) { /* ... 原有代码 ... */ }
 
-    // 修改点：如果全组都没有比赛，名次显示为空
     if (!anyMatchPlayed) {
-        stats.forEach(item => {
-            item.row.cells[item.row.cells.length - 1].innerText = ""; 
-        });
-        if (groupContainer) {
-            groupContainer.querySelectorAll('.rank-select').forEach(sel => sel.value = "");
-        }
+        stats.forEach(item => item.row.cells[item.row.cells.length - 1].innerText = "");
+        if (groupContainer) groupContainer.querySelectorAll('.rank-select').forEach(sel => sel.value = "");
         syncMixedBracket();
-        saveData(false);
         return; 
     }
 
-    // 仅对已录入成绩的选手进行排名
     const sorted = stats.filter(s => s.hasPlayed).sort((a, b) => { 
         if (b.pts !== a.pts) return b.pts - a.pts; 
         return b.net - a.net; 
     });
     
-    // 初始化名次列为空
     stats.forEach(s => s.row.cells[s.row.cells.length - 1].innerText = "");
-
     let currentRank = 1;
+    
     sorted.forEach((item, index) => {
-        if (index > 0 && item.pts === sorted[index - 1].pts && item.net === sorted[index - 1].net) {
-            // 并列逻辑保持不变
-        } else {
+        if (!(index > 0 && item.pts === sorted[index - 1].pts && item.net === sorted[index - 1].net)) {
             currentRank = index + 1;
         }
-        
         item.row.cells[item.row.cells.length - 1].innerText = currentRank;
-        
+      
         if (groupContainer) {
             const select = groupContainer.querySelector(`.rank-${index + 1}`);
             if (select) {
-                for (let option of select.options) {
-                    if (option.value === item.name) { select.value = option.value; break; }
+                // --- 出线判定核心修正 ---
+                // 如果选手有弃权记录且积分过低（比如只有 0 分），自动设为轮空
+                if (item.isInvalidRanking && item.pts <= lossPts) {
+                    select.value = "轮空"; 
+                } else {
+                    select.value = item.name;
                 }
             }
         }
@@ -2855,7 +3001,10 @@ function refreshQualificationSelects() {
         const selects = group.querySelectorAll('select.rank-select');
         selects.forEach(sel => {
             const currentVal = sel.value;
-            sel.innerHTML = `<option value="">--请选择--</option>` + latestNames.map(name => `<option value="${name}">${name}</option>`).join('');
+            // 🌟 必须加上“轮空”选项
+            sel.innerHTML = `<option value="">--待定--</option>` + 
+                            `<option value="轮空">轮空</option>` + 
+                            latestNames.map(name => `<option value="${name}">${name}</option>`).join('');
             sel.value = currentVal; 
         });
     });
@@ -3019,8 +3168,8 @@ ids.forEach(id => {
         const brackets = doc.querySelectorAll('.bracket-container');
         brackets.forEach(bracket => {
             bracket.querySelectorAll('.score-inputs, .court-tag, .court-info').forEach(el => el.remove());
-            bookHtml += `<div style="margin-top:20px;">${bracket.outerHTML}</div>`;
-        });
+            bookHtml += `<div style="margin-top:30px; page-break-before: always;">${bracket.outerHTML}</div>`;
+});
 
         bookHtml += `</div>`;
     });
