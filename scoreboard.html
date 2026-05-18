@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>直播看板 - 场地顺序优化版</title>
+    <title>直播看板 - 高动态全自动调度版</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         :root {
@@ -14,119 +14,241 @@
         }
 
         body {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* 禁止全身滚动 */
-}
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #000221;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
 
- /* 找到这段代码并替换 */
-.global-header {
-    flex: 0 0 auto;
-    padding: 8px 0;
-    text-align: center; /* 🌟 新增：让标题居中 */
-}
-    .global-title { font-size: 26px; letter-spacing: 4px; margin: 0; }
+        .global-header {
+            flex: 0 0 auto;
+            padding: 10px 0;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(0,11,94,1) 0%, rgba(0,2,33,1) 100%);
+            border-bottom: 2px solid var(--border-blue);
+        }
+        .global-title { font-size: 26px; letter-spacing: 4px; margin: 0; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
-  .scoreboard-grid {
-    flex: 1; 
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(3, 1fr); 
-    gap: 8px;
-    padding: 8px;
-    overflow: hidden; 
-}
+        /* 统一大网格：4列 × 3排 */
+        .scoreboard-grid {
+            flex: 1; 
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(3, 1fr); 
+            gap: 10px;
+            padding: 10px;
+            overflow: hidden; 
+        }
 
         .match-card {
             background-color: var(--bg-navy);
             border: 1px solid var(--border-blue);
-            display: flex; flex-direction: column;
+            display: flex; 
+            flex-direction: column;
             position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border-radius: 6px;
+            overflow: hidden;
         }
 
         .match-card.finished { background-color: var(--bg-finished); border-color: #27ae60; }
 
         .card-row-top {
-            display: flex; justify-content: space-between;
-            font-size: 14px; padding: 4px 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 13px; padding: 6px 10px;
             background: rgba(0,0,0,0.4);
         }
 
-        /* 🌟 选手信息区：名字加大，单位换行 */
+        .match-type-title {
+            font-size: 14px; font-weight: bold; padding: 4px 12px 2px 12px; color: #ccc;
+        }
+
+        /* 个人赛 */
         .card-row-players {
-            display: flex; justify-content: space-between; padding: 8px 12px;
+            display: flex; justify-content: space-between; padding: 6px 12px;
             align-items: flex-start;
         }
         .player-info { display: flex; flex-direction: column; flex: 1; }
         .p-left { align-items: flex-start; text-align: left; }
         .p-right { align-items: flex-end; text-align: right; }
 
-        .name-txt { 
-            font-size: 28px; /* 名字显著加大 */
-            font-weight: 900; 
-            color: #fff;
-            margin-bottom: 4px;
-            line-height: 1.2;
-        }
-        .unit-txt { 
-            font-size: 16px; /* 单位小字 */
-            color: rgba(255,255,255,0.7); 
-            font-weight: normal;
-        }
+        .name-txt { font-size: 26px; font-weight: 900; color: #fff; margin-bottom: 2px; line-height: 1.2; }
+        .unit-txt { font-size: 14px; color: rgba(255,255,255,0.7); font-weight: normal; }
 
-        .card-row-points {
-            display: flex; justify-content: center; align-items: center;
-            flex: 1;
-        }
-
+        .card-row-points { display: flex; justify-content: center; align-items: center; flex: 1; }
         .point-display {
-            font-size: 70px;
+            font-size: 65px; font-family: "Arial Black", sans-serif; color: var(--text-yellow);
+            display: flex; align-items: center; gap: 20px; line-height: 1;
+        }
+        .finished .point-display { font-size: 75px; color: #fff; }
+        .set-history-row { text-align: center; font-size: 16px; color: var(--text-yellow); padding-bottom: 8px; letter-spacing: 2px; font-weight: bold; }
+
+        /* 团体赛 */
+        .team-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.25);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .team-title-name {
+            font-size: 22px;
+            font-weight: 900;
+            color: #ffffff;
+            max-width: 38%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .team-title-name.t-left { text-align: left; }
+        .team-title-name.t-right { text-align: right; }
+        
+        .team-big-score {
+            font-size: 36px;
             font-family: "Arial Black", sans-serif;
             color: var(--text-yellow);
-            display: flex; align-items: center; gap: 20px;
+            font-weight: bold;
+            text-shadow: 0 0 8px rgba(255, 235, 59, 0.6);
         }
+        .finished .team-big-score { color: #27ae60; text-shadow: 0 0 8px rgba(39,174,96,0.6); }
 
-        .finished .point-display { font-size: 110px; color: #fff; }
-
-        .set-history-row {
-            text-align: center; font-size: 18px;
-            color: var(--text-yellow); padding-bottom: 12px;
-            letter-spacing: 2px; font-weight: bold;
+        .team-sub-matches-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 4px 8px;
+            overflow-y: auto;
+            -ms-overflow-style: none;  
+            scrollbar-width: none;
         }
+         .team-sub-matches-box::-webkit-scrollbar {
+                display: none;            
+        }
+        .sub-match-line {
+            display: grid;
+            grid-template-columns: 60px 1fr 85px 1fr;
+            align-items: center;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #fff;
+        }
+        .sub-match-line.playing {
+            background: rgba(255, 82, 82, 0.18);
+            border-left: 3px solid #ff5252;
+            animation: sub-playing-blink 1.5s infinite ease-in-out;
+        }
+        @keyframes sub-playing-blink {
+            0% { background: rgba(255, 82, 82, 0.15); }
+            50% { background: rgba(255, 82, 82, 0.32); }
+            100% { background: rgba(255, 82, 82, 0.15); }
+        }
+        .sub-match-line.finished { background: rgba(39, 174, 96, 0.06); }
 
-        .empty { opacity: 0.15; border-style: dashed; }
-.status-tag {
-        padding: 4px 12px;
-        border-radius: 4px;
-        font-size: 14px;
-        font-weight: bold;
-        text-transform: uppercase;
-    }
-    /* 待进行：蓝色 */
-    .waiting-tag { background: #2196f3; color: white; }
-    /* 正在进行：红色闪烁 */
-    .playing-tag { 
-        background: #ff5252; color: white; 
-        animation: status-blink 1s infinite; 
-    }
-    /* 已完赛：绿色 */
-    .finished-tag { background: #27ae60; color: white; }
+        .sub-item-name { color: #ffeb3b; font-weight: bold; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+        
+        .sub-player-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+        }
+        .sub-player-container.p-left { justify-content: flex-end; text-align: right; }
+        .sub-player-container.p-right { justify-content: flex-start; text-align: left; }
 
-    @keyframes status-blink {
-        0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; }
+        .sub-player-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: #fff; }
+        
+        .sub-player-set-score {
+            background: var(--text-yellow);
+            color: #000;
+            font-weight: bold;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-family: "Arial", sans-serif;
+            line-height: 1.2;
+            flex-shrink: 0;
+        }
+        .sub-match-line.finished .sub-player-set-score {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ccc;
+        }
+        
+        .sub-item-score {
+            text-align: center;
+            font-family: "Arial", sans-serif;
+            font-weight: bold;
+            color: var(--text-yellow);
+            font-size: 13px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 4px;
+            border-radius: 3px;
+            letter-spacing: 0.5px;
+        }
+        .sub-match-line.finished .sub-item-score { color: #b0b0b0; background: rgba(0,0,0,0.2); }
+
+        .empty { opacity: 0.12; border-style: dashed; background: transparent; }
+        .status-tag { padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .waiting-tag { background: #2196f3; color: white; }
+        .playing-tag { background: #ff5252; color: white; animation: status-blink 1s infinite; }
+        .finished-tag { background: #27ae60; color: white; }
+
+        @keyframes status-blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .court-label {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            font-size: 18px; font-weight: 900; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+/* 2. 移动端/手机视图全新响应式兼容 */
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto;       /* 手机端允许上下滑动查看全场比赛 */
+        height: auto;
+    }
+    
+    .scoreboard-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 屏幕变小时自动调整列数，变为1列或2列 */
+        grid-template-rows: auto;
+        overflow-y: auto;
+        padding: 6px;
+        gap: 8px;
     }
 
-    /* 🌟 场地号样式：置于顶部中央，加大加粗 */
-    .court-label {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 20px;
-        font-weight: 900;
-        color: #fff;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    .match-card {
+        height: auto;
+        min-height: 240px;      /* 保证卡片有足够的基本高度撑开 */
     }
+
+    .global-title {
+        font-size: 18px !important; /* 缩小手机端顶部大标题 */
+        letter-spacing: 1px;
+    }
+
+    /* 团体赛手机端字体与间距微调 */
+    .team-title-name {
+        font-size: 18px !important; /* 缩小学校/单位名字体，防止手机端名字过长被切断 */
+    }
+    
+    .team-big-score {
+        font-size: 28px !important; /* 适度缩小大比分 */
+    }
+
+    .sub-match-line {
+        font-size: 11px !important; /* 适度缩小单项对阵小字 */
+        grid-template-columns: 55px 1fr 75px 1fr !important; /* 手机端缩窄中间小场比分条的宽度 */
+        padding: 3px 6px !important;
+    }
+    
+    .sub-player-name {
+        font-size: 12px !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -141,96 +263,305 @@
     const socket = io();
     const grid = document.getElementById('grid');
 
+    // 内存池数据流
+    let finishedMatches = [];
+    let playingMatches = [];
+    let waitingMatches = [];
+
+    // 各项独立滚动游标
+    let finishedPage = 0;
+    let playingPage = 0;
+    let waitingPage = 0;
+    
+    let masterTimer = null;
+    let tickCount = 0; // 秒级主时钟心跳
+
     socket.on('connect', () => { socket.emit('request_all_scores'); });
 
-   socket.on('scoreboard_data', (displayList) => {
-        grid.innerHTML = '';
+    socket.on('scoreboard_data', (displayList) => {
+        // 1. 精准三向分类
+        finishedMatches = displayList.filter(m => m.status === 'finished');
+        playingMatches = displayList.filter(m => m.status === 'playing');
+        waitingMatches = displayList.filter(m => m.status === 'waiting');
+
+        // 2. 规避切页溢出崩溃
+        if (finishedPage * 4 >= finishedMatches.length) finishedPage = 0;
         
-        displayList.forEach(m => {
-            const p1Data = parsePlayer(m.p1); 
-            const p2Data = parsePlayer(m.p2);
-            const isFinished = (m.status === 'finished');
-            const isPlaying = (m.status === 'playing');
-            const isWaiting = (m.status === 'waiting');
+        let limit = finishedMatches.length > 0 ? 8 : 12;
+        if (playingPage * limit >= playingMatches.length) playingPage = 0;
 
-            const card = document.createElement('div');
-            card.className = `match-card ${m.status}`;
-            
-            // 状态文字映射
-            let statusText = "待进行";
-            let statusClass = "waiting-tag";
-            if (isPlaying) { statusText = "正在进行"; statusClass = "playing-tag"; }
-            if (isFinished) { statusText = "已完赛"; statusClass = "finished-tag"; }
+        let remain = limit - playingMatches.length;
+        if (remain > 0 && waitingPage * remain >= waitingMatches.length) waitingPage = 0;
 
-           const isSwapped = m.isSwapped;
-            const pLeftData = isSwapped ? parsePlayer(m.p2) : parsePlayer(m.p1);
-            const pRightData = isSwapped ? parsePlayer(m.p1) : parsePlayer(m.p2);
+        // 3. 立即重绘
+        renderDisplay();
 
-            // 🌟 核心：同时翻转左右的分数显示，让视觉完美对齐
-            let leftScore, rightScore, leftSets, rightSets;
-            if (isSwapped) {
-                leftScore = m.p2Score; rightScore = m.p1Score;
-                leftSets = m.p2Sets; rightSets = m.p1Sets;
+        // 4. 织入双模复合主时钟驱动器 (秒级心跳探针)
+        if (!masterTimer) {
+            masterTimer = setInterval(() => {
+                tickCount++;
+                let needRender = false;
+
+                // ⏰ 驱动 A：标准速（5秒一跳）控制 [已完赛栏] 与 [待赛补充栏]
+                if (tickCount % 5 === 0) {
+                    if (finishedMatches.length > 4) {
+                        finishedPage = (finishedPage + 1) % Math.ceil(finishedMatches.length / 4);
+                        needRender = true;
+                    }
+                    let currentLimit = finishedMatches.length > 0 ? 8 : 12;
+                    let currentRemain = currentLimit - playingMatches.length;
+                    if (currentRemain > 0 && waitingMatches.length > currentRemain) {
+                        waitingPage = (waitingPage + 1) % Math.ceil(waitingMatches.length / currentRemain);
+                        needRender = true;
+                    }
+                }
+
+                // ⏰ 驱动 B：慢速（10秒一跳）控制 [超载在赛栏滚动] 
+                if (tickCount % 10 === 0) {
+                    let currentLimit = finishedMatches.length > 0 ? 8 : 12;
+                    if (playingMatches.length > currentLimit) {
+                        playingPage = (playingPage + 1) % Math.ceil(playingMatches.length / currentLimit);
+                        needRender = true;
+                    } else {
+                        playingPage = 0;
+                    }
+                }
+
+                if (needRender) renderDisplay();
+            }, 1000);
+        }
+    });
+
+    // 🌟 全自动动态卡片排产算法
+    function renderDisplay() {
+        grid.innerHTML = '';
+        let slots = new Array(12).fill(null); // 建立12网格虚拟映射池
+
+        // 【情景 A】：现场有已完赛的比赛 -> 第一排强锁完赛项
+        if (finishedMatches.length > 0) {
+            let visibleFinished = finishedMatches.slice(finishedPage * 4, (finishedPage + 1) * 4);
+            for (let i = 0; i < visibleFinished.length; i++) {
+                slots[i] = visibleFinished[i];
+            }
+
+            // 下方后两排（剩余 8 个格）动态调度
+            if (playingMatches.length > 8) {
+                // [极端大客流] 在赛超载超过8个 -> 全面接管下两排并触发【慢速10秒滚动】
+                let visiblePlaying = playingMatches.slice(playingPage * 8, (playingPage + 1) * 8);
+                for (let i = 0; i < visiblePlaying.length; i++) {
+                    slots[4 + i] = visiblePlaying[i];
+                }
             } else {
-                leftScore = m.p1Score; rightScore = m.p2Score;
-                leftSets = m.p1Sets; rightSets = m.p2Sets;
+                // [普通客流] 在赛不多 (<=8) -> 锁定在最前方不滚动！
+                for (let i = 0; i < playingMatches.length; i++) {
+                    slots[4 + i] = playingMatches[i];
+                }
+                // 剩余格子开放给待赛项，并触发【5秒常速翻页滚动】
+                let remainingCount = 8 - playingMatches.length;
+                if (remainingCount > 0 && waitingMatches.length > 0) {
+                    let visibleWaiting = waitingMatches.slice(waitingPage * remainingCount, (waitingPage + 1) * remainingCount);
+                    for (let i = 0; i < visibleWaiting.length; i++) {
+                        slots[4 + playingMatches.length + i] = visibleWaiting[i];
+                    }
+                }
             }
-           let historyStr = m.setHistory || "";
-            if (isSwapped && historyStr) {
-                // 利用正则表达式，把字符串里所有的 "数字:数字" 替换为翻转后的顺序
-                historyStr = historyStr.replace(/(\d+)\s*:\s*(\d+)/g, '$2:$1');
+        } 
+        // 【情景 B】：现场没有已完赛的比赛（如刚开赛） -> 🌟 释放第一排！全盘扩容给活动场地
+        else {
+            if (playingMatches.length > 12) {
+                // [极端大客流] 全场12个格全塞满在赛 -> 触发全盘【慢速10秒滚动】
+                let visiblePlaying = playingMatches.slice(playingPage * 12, (playingPage + 1) * 12);
+                for (let i = 0; i < visiblePlaying.length; i++) {
+                    slots[i] = visiblePlaying[i];
+                }
+            } else {
+                // [普通客流] 在赛不多 (<=12) -> 从第0个格子开始锁死展示，绝不滚动！
+                for (let i = 0; i < playingMatches.length; i++) {
+                    slots[i] = playingMatches[i];
+                }
+                // 剩余全盘开放给待赛项进行【5秒滚动】
+                let remainingCount = 12 - playingMatches.length;
+                if (remainingCount > 0 && waitingMatches.length > 0) {
+                    let visibleWaiting = waitingMatches.slice(waitingPage * remainingCount, (waitingPage + 1) * remainingCount);
+                    for (let i = 0; i < visibleWaiting.length; i++) {
+                        slots[playingMatches.length + i] = visibleWaiting[i];
+                    }
+                }
             }
+        }
+
+        // 虚拟网格实体落纸渲染
+        slots.forEach(m => {
+            if (m) {
+                grid.appendChild(buildMatchCard(m));
+            } else {
+                grid.appendChild(buildEmptyCard());
+            }
+        });
+    }
+
+    function cleanTeamName(str) {
+        if (!str) return "待定";
+        let clean = str.split(/[\(（]/)[0].trim();
+        return clean || "待定";
+    }
+
+    function buildMatchCard(m) {
+        const card = document.createElement('div');
+        card.className = `match-card ${m.status}`;
+
+        const isFinished = (m.status === 'finished');
+        const isPlaying = (m.status === 'playing');
+        
+        let statusText = "待进行"; let statusClass = "waiting-tag";
+        if (isPlaying) { statusText = "正在进行"; statusClass = "playing-tag"; }
+        if (isFinished) { statusText = "已完赛"; statusClass = "finished-tag"; }
+
+        const isSwapped = m.isSwapped;
+        const pLeftData = isSwapped ? parsePlayer(m.p2) : parsePlayer(m.p1);
+        const pRightData = isSwapped ? parsePlayer(m.p1) : parsePlayer(m.p2);
+
+        let leftScore = isSwapped ? m.p2Score : m.p1Score;
+        let rightScore = isSwapped ? m.p1Score : m.p2Score;
+        let leftSets = isSwapped ? m.p2Sets : m.p1Sets;
+        let rightSets = isSwapped ? m.p1Sets : m.p2Sets;
+
+        let historyStr = m.setHistory || "";
+        if (isSwapped && historyStr) {
+            historyStr = historyStr.replace(/(\d+)\s*:\s*(\d+)/g, '$2:$1');
+        }
+
+        let htmlContext = `
+            <div class="card-row-top">
+                <span style="color:#ffeb3b; font-weight:bold;">🕒 ${m.startTime}</span>
+                <span class="court-label">${m.court} 号场</span> 
+                <span class="status-tag ${statusClass}">${statusText}</span>
+            </div>
+            <div class="match-type-title">${m.matchType || "羽毛球比赛"}</div>
+        `;
+
+        const isTeamMatchDetected = m.isTeamMatch || m.isTeamEvent || (m.matchType && m.matchType.includes("团体"));
+
+        if (isTeamMatchDetected) {
+            const leftTeamClean = cleanTeamName(isSwapped ? m.p2 : m.p1);
+            const rightTeamClean = cleanTeamName(isSwapped ? m.p1 : m.p2);
+
+            let displayLeftBigScore = leftScore;
+            let displayRightBigScore = rightScore;
+            if (!isFinished && (leftScore > 5 || rightScore > 5)) {
+                displayLeftBigScore = 0;
+                displayRightBigScore = 0;
+            }
+
+            htmlContext += `
+                <div class="team-header-row">
+                    <div class="team-title-name t-left">${leftTeamClean}</div>
+                    <div class="team-big-score">${displayLeftBigScore} : ${displayRightBigScore}</div>
+                    <div class="team-title-name t-right">${rightTeamClean}</div>
+                </div>
+                <div class="team-sub-matches-box">
+            `;
+            
+            if (m.subMatches && m.subMatches.length > 0) {
+                m.subMatches.forEach((sm, idx) => {
+                    let smP1 = isSwapped ? sm.p2 : sm.p1;
+                    let smP2 = isSwapped ? sm.p1 : sm.p2;
+                    let smP1Sets = sm.p1Sets !== undefined ? sm.p1Sets : 0;
+                    let smP2Sets = sm.p2Sets !== undefined ? sm.p2Sets : 0;
+                    if (isSwapped) {
+                        let tmp = smP1Sets; smP1Sets = smP2Sets; smP2Sets = tmp;
+                    }
+
+                    let smScore = sm.score || "0:0";
+                    if (isSwapped && smScore) {
+                        smScore = smScore.replace(/(\d+)\s*:\s*(\d+)/g, '$2:$1');
+                    }
+                    
+                    let lineClass = "sub-match-line";
+                    if (sm.status === 'playing') lineClass += " playing";
+                    if (sm.status === 'finished') lineClass += " finished";
+                    
+                    htmlContext += `
+                        <div class="${lineClass}">
+                            <span class="sub-item-name">${sm.name || "单打"}</span>
+                            <div class="sub-player-container p-left">
+                                <span class="sub-player-name">${smP1 || "待定"}</span>
+                                <span class="sub-player-set-score">${smP1Sets}</span>
+                            </div>
+                            <span class="sub-item-score">${smScore}</span>
+                            <div class="sub-player-container p-right">
+                                <span class="sub-player-set-score">${smP2Sets}</span>
+                                <span class="sub-player-name">${smP2 || "待定"}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                const fallbackOrders = (m.teamOrder && m.teamOrder.length > 0) ? m.teamOrder : ["第一场", "第二场", "第三场"];
+                fallbackOrders.forEach((title, idx) => {
+                    htmlContext += `
+                        <div class="sub-match-line ${idx===0 && isPlaying ? 'playing' : ''}">
+                            <span class="sub-item-name">${title}</span>
+                            <div class="sub-player-container p-left">
+                                <span class="sub-player-name">待定</span>
+                                <span class="sub-player-set-score">0</span>
+                            </div>
+                            <span class="sub-item-score">0:0</span>
+                            <div class="sub-player-container p-right">
+                                <span class="sub-player-set-score">0</span>
+                                <span class="sub-player-name">待定</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            htmlContext += '</div>';
+
+        } else {
             const mainScore = isFinished ? `${leftSets}:${rightSets}` : `${leftScore}:${rightScore}`;
             const subScore = isFinished ? historyStr : `当前局分 ${leftSets}:${rightSets}`;
-            card.innerHTML = `
-                <div class="card-row-top">
-                    <span style="color:#ffeb3b; font-weight:bold;">🕒 ${m.startTime}</span>
-                    <span class="court-label">${m.court} 号场</span> <span class="status-tag ${statusClass}">${statusText}</span>
-                </div>
-                <div style="font-size:18px; font-weight:bold; padding:4px 15px; color:#ccc;">${m.matchType || "比赛项目"}</div>
+            htmlContext += `
                 <div class="card-row-players">
                     <div class="player-info p-left">
-                        <span class="name-txt">${pLeftData.name}</span>   <span class="unit-txt">${pLeftData.unit}</span>   </div>
+                        <span class="name-txt">${pLeftData.name}</span>
+                        <span class="unit-txt">${pLeftData.unit}</span>
+                    </div>
                     <div class="player-info p-right">
-                        <span class="name-txt">${pRightData.name}</span>  <span class="unit-txt">${pRightData.unit}</span>  </div>
-                </div>
+                        <span class="name-txt">${pRightData.name}</span>
+                        <span class="unit-txt">${pRightData.unit}</span>
+                    </div>
                 </div>
                 <div class="card-row-points">
                     <div class="point-display">${mainScore}</div>
                 </div>
                 <div class="set-history-row">${subScore}</div>
             `;
-            grid.appendChild(card);
-        });
-
-        for(let i = displayList.length; i < 12; i++) {
-            const empty = document.createElement('div');
-            empty.className = 'match-card empty';
-            grid.appendChild(empty);
         }
-    });
-// 🌟 监听管理端推过来的赛事名称
-socket.on('update_tournament_name', (name) => {
-    const titleEl = document.querySelector('.global-title');
-    if (titleEl) {
-        titleEl.innerText = name + " - 实时看板";
+
+        card.innerHTML = htmlContext;
+        return card;
     }
-});
-   function parsePlayer(str) {
+
+    function buildEmptyCard() {
+        const empty = document.createElement('div');
+        empty.className = 'match-card empty';
+        return empty;
+    }
+
+    socket.on('update_tournament_name', (name) => {
+        const titleEl = document.querySelector('.global-title');
+        if (titleEl) titleEl.innerText = name + " - 实时看板";
+    });
+
+    function parsePlayer(str) {
         if(!str) return { name: "待定", unit: "" };
-        
-        // 🌟 核心修复 1：强行抹除所有隐藏的换行符和回车符
         const cleanStr = str.replace(/[\r\n]+/g, ' ').trim();
-        
-        // 🌟 核心修复 2：增强型正则，精准提取第一个括号里的文字作单位，无视括号前后的杂乱空格
         const parts = cleanStr.match(/^(.*?)[\(（]([^()（）]+)[\)）](.*)$/);
-        
         if (parts) {
             let name = parts[1].trim();
             let unit = parts[2].trim();
-            let extra = parts[3].trim(); // 获取括号后面的可能存在的种子号 (如 1)
-            
-            if (extra) name += " " + extra; // 把种子号拼回到名字后面
+            let extra = parts[3].trim();
+            if (extra) name += " " + extra;
             return { name: name, unit: unit };
         } else {
             return { name: cleanStr, unit: "" };
