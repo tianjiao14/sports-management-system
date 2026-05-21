@@ -1,7 +1,7 @@
-# 1. 使用较完整的镜像版本，包含必要的编译工具依赖
+# 使用较完整的 Debian 基础镜像，提供更好的兼容性 
 FROM node:18-bookworm
 
-# 2. 安装编译 SQLite3 所需的构建工具
+# 安装编译所需的工具链 
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
@@ -10,15 +10,15 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# 3. 复制依赖文件
+# 复制配置文件
 COPY package*.json ./
 
-# 4. 强制在容器内部根据当前系统环境重新编译依赖
+# 安装依赖并强制在当前环境中从源码重新编译 sqlite3 
 RUN npm install --production && \
     npm rebuild sqlite3 --build-from-source
 
-# 5. 复制源代码
+# 复制项目代码
 COPY . .
 
-EXPOSE 3000 [cite: 2]
+EXPOSE 3000
 CMD ["npm", "start"]
