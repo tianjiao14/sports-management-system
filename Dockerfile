@@ -1,7 +1,7 @@
-# 使用较新的 Debian 版本，通常对 GLIBC 支持更好
+# 必须使用基于 Debian 的镜像以保证编译工具链的完整性
 FROM node:18-bookworm
 
-# 安装编译所需的底层工具（必须）
+# 安装构建工具链，确保有足够的能力在模拟环境下编译 native 模块
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
@@ -10,11 +10,11 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# 复制配置文件
+# 复制依赖定义
 COPY package*.json ./
 
-# 关键步骤：安装依赖后，强制在该环境下重新编译 sqlite3
-# 这会根据当前容器的 glibc 版本生成兼容的二进制文件
+# 🌟 关键：安装依赖并强制在该架构下从源码重建所有原生模块
+# --build-from-source 会确保 sqlite3 不会去下载预编译包，而是直接编译
 RUN npm install --production && \
     npm rebuild sqlite3 --build-from-source
 
