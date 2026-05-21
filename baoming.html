@@ -116,7 +116,11 @@
 <div id="form-section" class="card hidden">
     <div class="header-panel" style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
         <h2 id="display-unit-name" style="color:var(--primary); margin: 0;">单位报名表</h2>
-        <div class="header-btn-group">
+<div id="deadline-banner" class="hidden" style="background:#fff2e8; border:1px solid #ffbb96; padding:10px 15px; border-radius:6px; margin-bottom:15px; text-align:center; font-size:14px; color:#d46b08;">
+    ⏳ 报名截止剩余时间：<span id="countdown-text" style="font-weight:bold; font-size:16px;">计算中...</span>
+</div>
+        
+  </span><div class="header-btn-group">
             <button class="btn" style="background:#606266; color:white;" onclick="openPasswordModal()">🔐 修改密码</button>
             <button class="btn btn-primary" onclick="submitRegistration()">💾 保存并提交</button>
         </div>
@@ -155,7 +159,8 @@
         </div>
     </div>
 
-    <button class="btn btn-add" onclick="addAthleteRow()">＋ 添加新运动员</button>
+    <button class="btn btn-add" onclick="addAthleteRow()">＋ 添加新运动员</button>  <span style="color:#000; font-size:16px;">提示：参加双打队员注明本队的双打配对序号（字母/数字）。</span>
+
     
     <div class="table-responsive">
         <table>
@@ -182,16 +187,74 @@
     let currentPass = "";
     let authCredential = ""; 
 
-    socket.on('connect', () => {
-        socket.emit('get_tournament_name');
-    });
+    let deadlineTimer = null;
+ let targetDeadlineStr = "";
 
-    socket.on('send_tournament_name', (name) => {
-        if(name) {
-            document.getElementById('login-title').innerHTML = name + '<br><span style="font-size: 18px; color: #666; display: block; margin-top: 10px; font-weight: normal; letter-spacing: 1px;">报名登录</span>';
-            document.title = name + " - 远程报名系统";
-        }
-    });
+ // 页面连上时，除了要名字，顺便把截止时间也要过来
+ socket.on('connect', () => {
+     socket.emit('get_tournament_name');
+     socket.emit('get_registration_deadline'); // 🌟 新增
+ });
+
+ // 监听截止时间回传或变动
+ socket.on('send_registration_deadline', (dt) => { handleDeadlineSync(dt); });
+ socket.on('registration_deadline_changed', (dt) => { handleDeadlineSync(dt); });
+
+ function handleDeadlineSync(dt) {
+     targetDeadlineStr = dt;
+     const banner = document.getElementById('deadline-banner');
+     if (deadlineTimer) clearInterval(deadlineTimer);
+
+     if (!dt) {
+         if(banner) banner.classList.add('hidden');
+         // 解锁保存按钮
+         document.querySelector("button[onclick='submitRegistration()']").disabled = false;
+         document.querySelector("button[onclick='submitRegistration()']").style.opacity = "1";
+         return;
+     }
+
+     if(banner) banner.classList.remove('hidden');
+
+     // 启动动态高频倒计时
+     const updateCountdown = () => {
+         const now = new Date();
+         const end = new Date(targetDeadlineStr);
+         const diff = end - now;
+
+         const saveBtn = document.querySelector("button[onclick='submitRegistration()']");
+
+         if (diff <= 0) {
+             document.getElementById('countdown-text').innerHTML = "<b style='color:#f56c6c;'>⏰ 报名已截止（系统已锁死，无法提交）</b>";
+             if(saveBtn) {
+                 saveBtn.disabled = true;
+                 saveBtn.style.opacity = "0.4";
+                 saveBtn.innerText = "🔒 报名已截止";
+             }
+             clearInterval(deadlineTimer);
+             return;
+         }
+
+         // 计算天、时、分、秒
+         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+         const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+         const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+         let timeStr = "";
+         if(days > 0) timeStr += `${days}天 `;
+         timeStr += `${hours.toString().padStart(2,'0')}小时${mins.toString().padStart(2,'0')}分${secs.toString().padStart(2,'0')}秒`;
+
+         document.getElementById('countdown-text').innerText = timeStr;
+         if(saveBtn) {
+             saveBtn.disabled = false;
+             saveBtn.style.opacity = "1";
+             saveBtn.innerHTML = "💾 保存并提交";
+         }
+     };
+
+     updateCountdown();
+     deadlineTimer = setInterval(updateCountdown, 1000);
+ }
 
     function attemptLogin() {
         const unit = document.getElementById('login-unit').value.trim();

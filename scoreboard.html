@@ -462,40 +462,44 @@
                 <div class="team-sub-matches-box">
             `;
             
-            if (m.subMatches && m.subMatches.length > 0) {
-                m.subMatches.forEach((sm, idx) => {
-                    let smP1 = isSwapped ? sm.p2 : sm.p1;
-                    let smP2 = isSwapped ? sm.p1 : sm.p2;
-                    let smP1Sets = sm.p1Sets !== undefined ? sm.p1Sets : 0;
-                    let smP2Sets = sm.p2Sets !== undefined ? sm.p2Sets : 0;
-                    if (isSwapped) {
-                        let tmp = smP1Sets; smP1Sets = smP2Sets; smP2Sets = tmp;
-                    }
+           // scoreboard.html 核心修复线：强力屏蔽未赛小项比分
+if (m.subMatches && m.subMatches.length > 0) {
+    m.subMatches.forEach((sub, idx) => {
+        // 🌟【核心控制】：大屏幕端防污染最高防线
+        // 只有当前正在打(playing)或者已经打完(finished)的比赛，才允许读取其真实分数。其余待赛场次一律在画面上物理脱敏、强制清零！
+        const isCurrentPlaying = sub.status === 'playing';
+        const isCurrentFinished = sub.status === 'finished';
+        
+        let displayScore = "0 : 0";
+        let displayP1Sets = "0";
+        let displayP2Sets = "0";
 
-                    let smScore = sm.score || "0:0";
-                    if (isSwapped && smScore) {
-                        smScore = smScore.replace(/(\d+)\s*:\s*(\d+)/g, '$2:$1');
-                    }
-                    
-                    let lineClass = "sub-match-line";
-                    if (sm.status === 'playing') lineClass += " playing";
-                    if (sm.status === 'finished') lineClass += " finished";
-                    
-                    htmlContext += `
-                        <div class="${lineClass}">
-                            <span class="sub-item-name">${sm.name || "单打"}</span>
-                            <div class="sub-player-container p-left">
-                                <span class="sub-player-name">${smP1 || "待定"}</span>
-                                <span class="sub-player-set-score">${smP1Sets}</span>
-                            </div>
-                            <span class="sub-item-score">${smScore}</span>
-                            <div class="sub-player-container p-right">
-                                <span class="sub-player-set-score">${smP2Sets}</span>
-                                <span class="sub-player-name">${smP2 || "待定"}</span>
-                            </div>
-                        </div>
-                    `;
-                });
+        if (isCurrentPlaying || isCurrentFinished) {
+            displayScore = sub.score ? sub.score.split(':').join(' : ') : "0 : 0";
+            displayP1Sets = sub.p1Sets !== undefined ? sub.p1Sets : "0";
+            displayP2Sets = sub.p2Sets !== undefined ? sub.p2Sets : "0";
+        }
+
+        let lineClass = "sub-match-line";
+        if (isCurrentPlaying) lineClass += " playing";
+        if (isCurrentFinished) lineClass += " finished";
+        
+        htmlContext += `
+            <div class="${lineClass}">
+                <span class="sub-item-name">${sub.name || "单打"}</span>
+                <div class="sub-player-container p-left" style="opacity: ${isCurrentFinished || isCurrentPlaying ? 1 : 0.4};">
+                    <span class="sub-player-name">${sub.p1 || '待定'}</span>
+                    <span class="sub-player-set-score">${displayP1Sets}</span>
+                </div>
+                <span class="sub-item-score" style="visibility: ${isCurrentFinished || isCurrentPlaying ? 'visible' : 'hidden'};">${displayScore}</span>
+                <div class="sub-player-container p-right" style="opacity: ${isCurrentFinished || isCurrentPlaying ? 1 : 0.4};">
+                    <span class="sub-player-set-score">${displayP2Sets}</span>
+                    <span class="sub-player-name">${sub.p2 || '待定'}</span>
+                </div>
+            </div>
+        `;
+    });
+
             } else {
                 const fallbackOrders = (m.teamOrder && m.teamOrder.length > 0) ? m.teamOrder : ["第一场", "第二场", "第三场"];
                 fallbackOrders.forEach((title, idx) => {

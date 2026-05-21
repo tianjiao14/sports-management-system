@@ -275,6 +275,31 @@
     .crosstable th:nth-last-child(3), .crosstable td:nth-last-child(3) { width: 40px !important; padding: 6px 0 !important; text-align: center !important; }
     .crosstable th:not(:first-child):not(:nth-last-child(-n+3)), .crosstable td:not(:first-child):not(:nth-last-child(-n+3)) { width: auto !important; }
 }
+/* --- 新增：执裁冲突状态锁样式 --- */
+.lock-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: #e74c3c;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 20px;
+    z-index: 50;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4);
+    pointer-events: none; /* 防止遮挡点击 */
+    animation: lock-pulse 2s infinite;
+}
+@keyframes lock-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+}
+.match.locked-match {
+    border: 2px dashed #e74c3c !important;
+    background-color: #fff5f5 !important;
+}
 </style>
 </head>
 <body>
@@ -344,6 +369,12 @@
                 </div>
                 <p style="font-size:12px; color:#666; margin-top:8px;">提示：此处设置的组别将直接出现在领队的手机下拉菜单中。</p>
             </div>
+<div style="background: #fff8f2; padding: 12px 20px; border-radius: 8px; border: 1px solid #ffbb96; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+    <span style="font-weight: bold; color: #d46b08; font-size: 14px;">⏱️ 远程报名截止设置：</span>
+    <input type="datetime-local" id="admin-deadline-input" style="width: 220px; padding: 6px; border: 1px solid #d9d9d9; border-radius: 4px;">
+    <button class="main-button" style="background: #fa8c16; padding: 6px 15px; font-size: 13px;" onclick="saveRegistrationDeadline()">💾 锁定截止时间</button>
+    <span id="admin-deadline-status" style="color: #8c8c8c; font-size: 13px;">未设置（无限期开放）</span>
+</div>
             <h1 class="section-title" style="color:#1a73e8; border-left-color: #1a73e8;">第一步：名单导入</h1>
             <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
                 <b>📁 点击选择文件夹 或 拖入 Excel 报名表</b><br>
@@ -2857,6 +2888,59 @@ function toggleMobileSidebar() { document.querySelector('.sidebar').classList.to
 
 document.querySelectorAll('.menu-item').forEach(item => { item.addEventListener('click', () => { if (window.innerWidth <= 768) toggleMobileSidebar(); }); });
 init();
+// 🌟 发送截止时间给服务器
+function saveRegistrationDeadline() {
+    const dt = document.getElementById('admin-deadline-input').value;
+    if(!dt) {
+        if(confirm("确定要【取消】时间限制，向领队无限期开放报名吗？")) {
+            socket.emit('set_registration_deadline', "");
+            alert("已取消时间限制。");
+        }
+        return;
+    }
+    socket.emit('set_registration_deadline', dt);
+    alert("✅ 截止时间设置成功，系统已全网同步锁定！");
+}
+
+// 接收并同步更新管理中心自己的显示状态
+if (typeof socket !== 'undefined') {
+    socket.on('registration_deadline_changed', (dt) => {
+        const statusText = document.getElementById('admin-deadline-status');
+        const input = document.getElementById('admin-deadline-input');
+        if(statusText) {
+            if(dt) {
+                statusText.innerHTML = `系统将于 <b style="color:#e67e22;">${dt.replace('T', ' ')}</b> 自动切断远程提交。`;
+                if(input) input.value = dt;
+            } else {
+                statusText.innerText = "未设置（无限期开放）";
+            }
+        }
+    });
+}
+// --- 新增：裁判执裁状态雷达 ---
+if (typeof socket !== 'undefined') {
+    socket.on('match_occupied', (data) => {
+        // data.matchId 是比赛ID，data.locked 是 true(上锁) 或 false(解锁)
+        const matchNode = document.getElementById(data.matchId);
+        if (!matchNode) return; // 如果当前页面没渲染这场比赛，直接跳过
+
+        if (data.locked) {
+            // 裁判进场，上锁！
+            if (!matchNode.querySelector('.lock-badge')) {
+                const badge = document.createElement('div');
+                badge.className = 'lock-badge';
+                badge.innerHTML = '🔒 执裁中';
+                matchNode.appendChild(badge);
+                matchNode.classList.add('locked-match');
+            }
+        } else {
+            // 裁判退场或掉线，解锁！
+            const badge = matchNode.querySelector('.lock-badge');
+            if (badge) badge.remove();
+            matchNode.classList.remove('locked-match');
+        }
+    });
+}
 </script>
 </body>
 </html>

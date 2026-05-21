@@ -10,7 +10,7 @@
             --bg-dark: #0e0e0e; 
             --text: #ffffff;
             --badminton-green: #198964; 
-            --tt-green: #004d2c; /* 统一乒乓绿 */
+            --tt-green: #004d2c; 
             --tt-yellow: #ffff00; 
             --red: #ff5252; 
             --blue: #2196f3;
@@ -23,74 +23,70 @@
             background: #000; margin: 0; color: var(--text); 
             height: 100dvh; overflow: hidden; display: flex; flex-direction: column; 
         }
-@keyframes toss-spin {
-    0% { transform: rotateX(0deg); opacity: 0.5; }
-    50% { transform: rotateX(180deg); opacity: 1; }
-    100% { transform: rotateX(360deg); opacity: 0.5; }
-}
+        @keyframes toss-spin {
+            0% { transform: rotateX(0deg); opacity: 0.5; }
+            50% { transform: rotateX(180deg); opacity: 1; }
+            100% { transform: rotateX(360deg); opacity: 0.5; }
+        }
 
-.toss-animating {
-    animation: toss-spin 0.1s infinite linear;
-    color: #ffeb3b !important;
-}
+        .toss-animating {
+            animation: toss-spin 0.1s infinite linear;
+            color: #ffeb3b !important;
+        }
 
-.toss-winner {
-    color: #27ae60 !important;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
-}
+        .toss-winner {
+            color: #27ae60 !important;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+        }
         #umpire-screen { display: none; height: 100%; flex-direction: column; flex: 1; }
         .main-layout { 
             display: flex; flex-direction: column; flex: 1; 
             overflow: hidden; background: #000; 
-            min-height: 0; /* 🌟 关键修复 */
+            min-height: 0; 
         }
 
-        /* 🌟 模块化容器样式 */
        .sport-module { display: none !important; flex-direction: column; width: 100%; overflow: hidden; }
         .sport-module.active { display: flex !important; }
 
-     /* --- 1. 乒乓球专业界面样式 (全黑晶锐现代版) --- */
         #module-table_tennis { 
-            /* 彻底抛弃纯绿，改用电竞/转播级的深邃暗黑背景 */
             background: #0f1115; 
             color: #ffffff;
-            /* 确保填满整个可用空间，消灭底部黑边 */
             width: 100%; 
             height: 100%; 
         }
         
       .tt-header { 
-    flex: 0 0 auto; 
-    display: flex; 
-    background: #000; /* 底色背景 */
-    border-bottom: 2px solid #2a2d35; 
-    z-index: 10;
-    padding: 0; /* 移除内边距，让红蓝色彩铺满 */
-}
+            flex: 0 0 auto; 
+            display: flex; 
+            background: #000; 
+            border-bottom: 2px solid #2a2d35; 
+            z-index: 10;
+            padding: 0; 
+        }
 
-#tt-name-p1 { 
-    background: #b91c1c !important; /* 专业红 */
-    border-right: 1px solid rgba(255,255,255,0.2);
-}
+        #tt-name-p1 { 
+            background: #b91c1c !important; 
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
 
-#tt-name-p2 { 
-    background: #1d4ed8 !important; /* 专业蓝 */
-    border-right: none;
-}
+        #tt-name-p2 { 
+            background: #1d4ed8 !important; 
+            border-right: none;
+        }
 
-.tt-name {
-    flex: 1;
-    padding: 12px 0;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5); /* 增强文字识别度 */
-}
+        .tt-name {
+            flex: 1;
+            padding: 12px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5); 
+        }
         
         .tt-main { 
-            flex: 1; /* 强制撑满中间所有区域 */
+            flex: 1; 
             display: flex; 
             position: relative; 
             min-height: 0; 
-            overflow: hidden; /* 🌟 核心修复：绝对禁止任何字体溢出到下方的表格中 */
+            overflow: hidden; 
         }
         
         .tt-side { 
@@ -101,13 +97,11 @@
             justify-content: center; 
             cursor: pointer;
             padding: 10px;
-            /* 加入轻微的中心聚光灯渐变，提升立体感 */
             background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 70%);
             transition: background 0.1s ease;
         }
         .tt-side:active { background: rgba(255,255,255,0.08); } 
         
-        /* 中间的高级分割线 */
         .tt-main::after {
             content: '';
             position: absolute;
@@ -118,7 +112,6 @@
         }
 
         .tt-set-score { 
-            /* 局分使用亮金色 */
             font-size: clamp(24px, 6vh, 50px); 
             color: #fbbf24; 
             font-weight: 900; 
@@ -126,14 +119,14 @@
             text-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
         }
         .tt-score-serve-container {
-            position: relative; /* 🌟 建立定位基准，让发球点相对于容器定位 */
+            position: relative; 
             display: flex;
-            flex-direction: row; /* 水平排列 */
-            align-items: center; /* 垂直居中对齐 */
-            justify-content: center; /* 水平居中对齐比分 */
+            flex-direction: row; 
+            align-items: center; 
+            justify-content: center; 
         }
        .tt-point-score { 
-            font-size: clamp(60px, 30vw, 250px); /* 限制最大和最小字号 */
+            font-size: clamp(60px, 30vw, 250px); 
             color: #ffffff; 
             font-weight: 900; 
             font-family: "Arial Black", Impact, sans-serif; 
@@ -158,7 +151,7 @@
             flex: 0 0 auto; 
             background: #14161a; 
             border-top: 1px solid #2a2d35; 
-            padding-bottom: env(safe-area-inset-bottom); /* 适配全面屏底部小黑条 */
+            padding-bottom: env(safe-area-inset-bottom); 
             z-index: 10;
         }
         
@@ -171,18 +164,16 @@
         .tt-res-table td { background: transparent; padding: 10px 4px; border: 1px solid #2a2d35; font-weight: bold;}
         
         .tt-res-table td.active-set { 
-            /* 底部表格当前局：使用赛博朋克蓝进行高亮 */
             background: #1e293b; 
             color: #38bdf8; 
             font-size: 1.15em;
             box-shadow: inset 0 0 10px rgba(56, 189, 248, 0.15);
         }
 
-     /* --- 2. 羽毛球场样式 --- */
       .court-area { 
             background: #0e0e0e; 
             padding: 10px; 
-            flex: 0 0 auto; /* 🌟 核心修复1：禁止球场被红蓝计分板压缩 */
+            flex: 0 0 auto; 
             width: 100%;
             display: flex; 
             align-items: center; 
@@ -192,7 +183,7 @@
         .badminton-court { 
             width: 100%; 
             max-width: 800px; 
-            aspect-ratio: 13.4 / 6.1; /* 保持真实比例 */
+            aspect-ratio: 13.4 / 6.1; 
             background: var(--badminton-green); 
             border: 2px solid white; 
             position: relative; 
@@ -200,7 +191,7 @@
             grid-template-columns: 1fr 1fr; 
             grid-template-rows: 1fr 1fr; 
             overflow: hidden;
-            margin: auto; /* 🌟 核心修复2：确保在横屏的大空间里绝对居中 */
+            margin: auto; 
         }
         
       .court-line { position: absolute; background: white; pointer-events: none; z-index: 1; }
@@ -214,13 +205,11 @@
         .line-center-left { left: 0; width: 35.2%; top: 50%; height: 2px; transform: translateY(-50%); }
         .line-center-right { right: 0; width: 35.2%; top: 50%; height: 2px; transform: translateY(-50%); }
 
-        /* 🌟 核心修复3：动态缩放球员标签，防止撑破场地 */
         .player-slot { 
             position: relative; z-index: 10; 
             display: flex; align-items: center; justify-content: center; 
             padding: 2px; 
         }
-/* --- 增强版羽毛球发球图标 (SVG 实现) --- */
 .player-serving-wrapper {
     display: flex;
     align-items: center;
@@ -229,9 +218,7 @@
     width: 100%;
 }
 
-/* 左半场 (Team 1) -> 名字在左，图标在右 */
 .icon-placement-right { flex-direction: row !important; }
-/* 右半场 (Team 2) -> 图标在左，名字在右 */
 .icon-placement-left { flex-direction: row-reverse !important; }
 
 .player-tag {
@@ -249,7 +236,7 @@
 }
 
 .serve-shuttle {
-    width: 38px; /* 进一步加大 */
+    width: 38px; 
     height: 38px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23FFF' d='M20 12l4 32h16l4-32z'/%3E%3Cpath fill='%23DDD' d='M24 12l2 32h12l2-32z'/%3E%3Cpath fill='%23FFD700' d='M24 44a8 8 0 0016 0z'/%3E%3Cpath fill='%23C0C0C0' d='M20 15h24M21 22h22M22 29h20' stroke='%23999' stroke-width='1'/%3E%3C/svg%3E");
     background-size: contain;
@@ -257,55 +244,52 @@
     background-position: center;
     }
 
-    /* 羽毛球准备遮罩 */
        .court-half-label {
     position: absolute;
     top: 50%;
-    left: 25%; /* 左半场中心 */
+    left: 25%; 
     transform: translate(-50%, -50%);
     font-size: clamp(12px, 4vw, 22px);
-    color: rgba(255, 255, 255, 0.9); /* 淡淡的水印感 */
+    color: rgba(255, 255, 255, 0.9); 
     font-weight: 900;
     white-space: nowrap;
     pointer-events: none;
     z-index: 5;
     text-align: center;
 }
-.label-right { left: 75%; } /* 右半场中心 */
+.label-right { left: 75%; } 
 .court-score-digital {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    font-size: clamp(40px, 12vw, 85px); /* 字体很大，很有冲击力 */
+    font-size: clamp(40px, 12vw, 85px); 
     font-weight: 900;
-    color: rgba(255, 255, 255, 0.95); /* 几乎纯白，非常明显 */
+    color: rgba(255, 255, 255, 0.95); 
     font-family: "Arial Black", sans-serif;
     z-index: 6;
     pointer-events: none;
-    text-shadow: 0 0 20px rgba(0,0,0,0.8); /* 强阴影确保在绿地上清晰 */
+    text-shadow: 0 0 20px rgba(0,0,0,0.8); 
 }
 
 #court-score-left {
-    right: 52%; /* 位于中心线左侧，留出一点空隙 */
+    right: 52%; 
 }
 
 #court-score-right {
-    left: 52%; /* 位于中心线右侧，对称排列 */
+    left: 52%; 
 }
 
-/* 竖屏时稍微缩小一点，防止挤到名字 */
 @media (orientation: portrait) {
     .court-score-digital { font-size: 15vw; }
 }
-/* --- 优化：赛前准备界面 (覆盖比分，不遮挡名字) --- */
 #prep-overlay {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100dvh;
-    background: rgba(0, 0, 0, 0.3); /* 背景调淡，隐约可见球场 */
+    background: rgba(0, 0, 0, 0.3); 
     z-index: 200;
-    display: none; /* 由 JS 控制 */
-    pointer-events: none; /* 穿透到下方 */
+    display: none; 
+    pointer-events: none; 
 }
 
 .prep-box {
@@ -314,7 +298,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    pointer-events: auto; /* 恢复点击 */
+    pointer-events: auto; 
     padding: 20px;
     overflow-y: auto;
 }
@@ -333,22 +317,20 @@
     margin-top: 20px;
 }
 
-        /* 通用样式 */
         .score-container { 
             flex: 1; display: flex; flex-direction: row; 
             background: #000; gap: 2px; 
-            min-height: 0; /* 🌟 关键修复 */
+            min-height: 0; 
         }
-       .score-card { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; } /* 🌟 加上 relative 定位 */
+       .score-card { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; } 
         .score-card.red { background: var(--red); }
         .score-card.blue { background: var(--blue); }
         .score-val { 
-            /* 🌟 vmin 取屏幕宽高较小的那一边，clamp 限制最大最小字号 */
             font-size: clamp(60px, 25vmin, 250px); 
             font-weight: 900; 
             font-family: "Arial Black", sans-serif; 
             color: white; 
-            line-height: 1; /* 避免行高过大 */
+            line-height: 1; 
             margin: 0; 
         }
 .generic-name-label { 
@@ -357,29 +339,27 @@
             color: rgba(255,255,255,0.95); text-align: center; 
             width: 90%; line-height: 1.2; 
             text-shadow: 0 2px 8px rgba(0,0,0,0.8); 
-            pointer-events: none; /* 防止挡住点击加分 */
+            pointer-events: none; 
         }
         .match-info-bar { background:#222; color:#fff; padding: 5px 15px; font-size:12px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .footer-controls { 
-    /* 🌟 核心修改：增加总高度，并利用 padding 把按钮“顶”上去 */
     height: 85px; 
     display: grid; 
     grid-template-columns: repeat(6, 1fr); 
     gap: 6px; 
-    /* 重点：底部增加 20px 基础间距，并自动适配手机小黑条 (safe-area) */
     padding: 6px 6px calc(20px + env(safe-area-inset-bottom)); 
     background: #0e0e0e; 
     flex-shrink: 0; 
-    border-top: 1px solid #333; /* 增加一条分界线，更显专业 */
+    border-top: 1px solid #333; 
 }
        .btn-ctrl { 
     background: #333; 
     border: none; 
     color: white; 
     border-radius: 8px; 
-    font-size: 13px; /* 稍微调大一点字体更易读 */
+    font-size: 13px; 
     font-weight: bold; 
-    height: 45px; /* 🌟 固定按钮高度，不让它随父容器无限拉伸 */
+    height: 45px; 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -388,7 +368,7 @@
         #setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; background: #1a1a1a; }
         .court-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 90%; }
         .court-btn { background: #333; border: 1px solid #444; color: white; padding: 20px; border-radius: 12px; font-size: 18px; font-weight: bold; }
-/* 🏀 篮球横屏专业排版 */
+
 #module-basketball { height: 100%; display: flex; flex-direction: column; background: #000; }
 
 .bb-header-professional {
@@ -422,7 +402,6 @@
     padding: 10px;
 }
 
-/* 🌟 优化：让球队信息和比分区域撑开，占据主要空间 */
 .bb-team-info { 
     text-align: center; 
     margin-bottom: 10px; 
@@ -435,9 +414,7 @@
 .bb-name-label { font-size: clamp(20px, 4vh, 36px); font-weight: bold; color: #fff; }
 .bb-mini-stats { font-size: clamp(14px, 2.5vh, 20px); color: #aaa; margin-top: 10px; }
 
-/* 🌟 优化：比分字体极大化 */
 .bb-score-display { 
-    /* 核心修复：改用 vw (屏幕宽度) 作为自适应基准，防止竖屏溢出 */
     font-size: clamp(50px, 18vw, 160px); 
     font-weight: 900; 
     font-family: Impact, sans-serif; 
@@ -448,17 +425,15 @@
 .home .bb-score-display { color: #ff5252; }
 .away .bb-score-display { color: #2196f3; }
 
-/* 🌟 优化：取消按钮的无限拉伸，固定按钮高度并放在底部 */
 .bb-action-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
-    flex: 0 0 auto; /* 核心修复：不让它挤占屏幕 */
+    flex: 0 0 auto; 
     padding-top: 15px;
     border-top: 1px solid #333; 
 }
 
-/* 🌟 优化：规范按钮大小，增加按压动画 */
 .bb-act-btn {
     border: none;
     border-radius: 8px;
@@ -466,7 +441,7 @@
     font-weight: bold;
     font-size: 20px;
     cursor: pointer;
-    padding: 15px 0; /* 固定内边距，让按钮高度适中 */
+    padding: 15px 0; 
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     transition: transform 0.1s, box-shadow 0.1s;
 }
@@ -478,7 +453,7 @@
 .bb-act-btn.p2 { background: #dc2626; }
 .bb-act-btn.p1 { background: #ef4444; }
 .bb-act-btn.foul { background: #4b5563; }
-.bb-act-btn.timeout { background: #7c3aed; } /* 暂停按钮用紫色区分 */
+.bb-act-btn.timeout { background: #7c3aed; } 
 
 .bb-timer-controls {
     flex: 0 0 70px;
@@ -493,57 +468,50 @@
 .timer-toggle { background: #059669; }
 .reset24, .reset14 { background: #991b1b; }
 .next-pd { background: #374151; }
- /* ============================================================
-   🌟 极致优化：竖屏（手机垂直持握）适配方案
-   ============================================================ */
+
 @media (orientation: landscape) {
     .main-layout { flex-direction: row !important; }
    #module-badminton.active { flex: 0 0 55% !important; border-right: 2px solid #333; }
     #module-badminton.active ~ #generic-score-container { flex: 1 !important; display: flex !important; }
     
-    /* 🌟 核心修改：乒乓球模式占据 100% 宽度，并强行隐藏右侧红蓝牌 */
     #module-table_tennis.active { flex: 1 1 100% !important; }
     #module-table_tennis.active ~ #generic-score-container { display: none !important; }
     #generic-score-container { flex: 1 !important; display: flex !important; }
     
     .court-area { height: 100%; padding: 10px; }
-    .badminton-court { width: 100%; height: auto; max-height: 90%; } /* 适配高度 */
+    .badminton-court { width: 100%; height: auto; max-height: 90%; } 
 
     #prep-overlay { flex-direction: row; justify-content: flex-end; }
     .prep-box { width: 45%; height: 100%; border-left: 4px solid #ffeb3b; }
 }
 
-/* --- B. 竖屏模式：遮住下方比分，露出上方球场 (G1-14) --- */
 @media (orientation: portrait) {
     .main-layout { flex-direction: column !important; }
     #module-badminton.active { flex: 0 0 40% !important; height: 40dvh !important; }
     #generic-score-container { flex: 1 !important; display: flex !important; flex-direction: row !important;height: auto !important; }
     
     .court-area { height: 100%; padding: 5px; }
-    .badminton-court { width: 95%; height: auto; max-height: 95%; } /* 确保不溢出 */
+    .badminton-court { width: 95%; height: auto; max-height: 95%; } 
 
     #prep-overlay { flex-direction: column; justify-content: flex-end; }
     .prep-box { 
-        width: 100%; height: 65%; /* 遮住下半部分比分区 */
+        width: 100%; height: 65%; 
         border-radius: 20px 20px 0 0; 
         border-top: 6px solid #ffeb3b; 
     }
 
-    .score-card .score-val { font-size: 30vw !important; } /* 竖屏比分极大化 */
+    .score-card .score-val { font-size: 30vw !important; } 
 }
 
-/* 修正横屏高度较小时的球场比例，防止“被踩扁”的感觉 */
 @media (orientation: landscape) and (max-height: 500px) {
     .court-area {
         padding: 5px;
     }
     .badminton-court {
-        height: 90%; /* 强制球场撑开 */
+        height: 90%; 
     }
 }
-/* 🌟 2. 专门针对手机横屏的“极致高度适配” (已包含超大号发球指示灯优化) */
         @media (orientation: landscape) and (max-height: 500px) {
-            /* 极致压缩顶部空间 */
             .tt-header { padding: 2px 0; }
             .tt-name { 
                 flex-direction: row; 
@@ -551,34 +519,28 @@
                 font-size: clamp(12px, 4vh, 16px); 
             }
             
-            /* 极致压缩底部表格 */
             .tt-footer-table th, .tt-footer-table td { 
                 padding: 2px; 
                 font-size: 11px; 
             }
             
-            /* 压缩局分大小 */
             .tt-set-score { 
                 font-size: 16px; 
                 margin-bottom: 2px; 
             }
             
-            /* 核心修复：大幅调低比分比例，同时加入 vw 双重限制，配合更紧凑的行高 */
             .tt-point-score { 
                 font-size: min(20vw, 28vh) !important; 
                 line-height: 0.75 !important; 
             }
             
-            /* 🌟 核心优化：横屏时大幅放大发球指示灯 */
             .tt-serve-dot { 
-                margin-top: 4px; /* 稍微加大间距，避免和局分贴太近 */
-                width: 18px !important;  /* 🌟 从 8px 放大到 18px */
-                height: 18px !important; /* 🌟 从 8px 放大到 18px */
-                /* 强化发球红点的光晕效果，使其更醒目 */
+                margin-top: 4px; 
+                width: 18px !important;  
+                height: 18px !important; 
                 box-shadow: 0 0 15px #ff5252, inset 0 -2px 4px rgba(0, 0, 0, 0.4); 
             }
 
-            /* 横屏时强行压缩底部的裁判控制按钮栏 */
             .footer-controls { 
                 height: 45px; 
                 padding: 2px; 
@@ -600,7 +562,7 @@
     
     <div id="occupied-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; flex-direction:column; align-items:center; justify-content:center;">
         <h2 style="color:#ff5252;">⚠️ 执裁冲突</h2>
-        <p style="color:white;">另一名裁判正在处理此场比赛</p>
+        <p style="color:white;">另一名裁判正在处理此单项场次</p>
         <button onclick="showSetup()" style="padding:10px 20px; background:#444; color:white; border:none; border-radius:5px; cursor:pointer;">返回场地选择</button>
     </div>
 
@@ -842,15 +804,11 @@
     };
     let submittedSides = { 1: false, 2: false };
     let activeModule = null;
-     // 网络状态提示
+
     socket.on('disconnect', () => { document.getElementById('match-title').innerHTML = "<span style='color:var(--red)'>⚠️网络已断开</span>"; });
     socket.on('connect', () => { if(state.court > 0) socket.emit('join_court', state.court); });
 
- // ==========================================
-// 🌟 修正后的运动规则注册中心
-// ==========================================
 const SportModules = {
-    // 1. 羽毛球单项模块
     badminton: {
         init: () => {
             state.isStarted = false; 
@@ -858,6 +816,10 @@ const SportModules = {
             document.getElementById('generic-score-container').style.display = 'flex';
             document.getElementById('prep-overlay').style.display = 'flex';
             document.getElementById('generic-info-bar').style.display = 'flex';
+            
+            // 🌟 确保进入羽毛球单场计分板时，全局提交按钮可见
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) submitBtn.style.setProperty('display', 'inline-block', 'important');
         },
         addPoint: (n) => {
             state['p'+n].score++;
@@ -917,11 +879,15 @@ const SportModules = {
         }
     },
 
-    // 2. 羽毛球团体赛模块
     badminton_team: {
         init: () => {
             document.getElementById('generic-score-container').style.setProperty('display', 'none', 'important');
             document.getElementById('prep-overlay').style.display = 'none';
+            
+            // 🌟 核心更新：当切换进入团体赛对阵总界面时，必须隐藏底部全局提交按钮，防止误触
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) submitBtn.style.setProperty('display', 'none', 'important');
+            
             renderTeamTieUI();
         },
         renderUI: () => {
@@ -929,13 +895,15 @@ const SportModules = {
         }
     },
 
-    // 3. 乒乓球模块
     table_tennis: {
         init: () => {
             state.isStarted = true; 
             const genericContainer = document.getElementById('generic-score-container');
             if (genericContainer) genericContainer.style.setProperty('display', 'none', 'important');
             document.getElementById('generic-info-bar').style.display = 'none';
+            
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) submitBtn.style.setProperty('display', 'inline-block', 'important');
         },
         addPoint: (n) => {
             state['p'+n].score++;
@@ -982,7 +950,6 @@ const SportModules = {
         }
     },
 
-    // 4. 篮球模块
     basketball: {
         init: () => {
             state.isStarted = true;
@@ -991,6 +958,9 @@ const SportModules = {
             document.getElementById('prep-overlay').style.display = 'none';
             if(window.bbTimerId) clearInterval(window.bbTimerId);
             window.bbTimerId = setInterval(bbTick, 1000);
+            
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) submitBtn.style.setProperty('display', 'inline-block', 'important');
         },
         addPoint: (n) => { },
         renderUI: () => {
@@ -1009,35 +979,33 @@ const SportModules = {
         }
     },
 
-    // 5. 通用模块
     generic: {
         init: () => {
             state.isStarted = true; 
             document.getElementById('prep-overlay').style.display = 'none';
             document.getElementById('generic-score-container').style.setProperty('display', 'flex', 'important');
             document.getElementById('generic-info-bar').style.display = 'flex';
+            
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) submitBtn.style.setProperty('display', 'inline-block', 'important');
         },
         addPoint: (n) => { state['p'+n].score++; },
         renderUI: () => {
             const p1Names = state.p1.players.join(' / ');
             const p2Names = state.p2.players.join(' / ');
-            const p1Unit = state.p1.unit ? `<br><small style="color:#ddd; font-size:0.6em;">${state.p1.unit}</small>` : '';
-            const p2Unit = state.p2.unit ? `<br><small style="color:#ddd; font-size:0.6em;">${state.p2.unit}</small>` : '';
-            // 注意：通用模块需要在 UI 中定义 generic-name-p1/p2，或在此处根据需要修改
         }
     }
 };
+
 function startSubMatch(idx) {
     state.teamTie.currentSubIndex = idx;
     const subMatchName = state.teamTie.order[idx];
     state.isDoubles = subMatchName.includes("双");
 
-    // 设置弹窗标题和队伍名
     document.getElementById('lineup-title').innerText = `第 ${idx+1} 场：${subMatchName}`;
     document.getElementById('lineup-u1-name').innerText = state.p1.unit;
     document.getElementById('lineup-u2-name').innerText = state.p2.unit;
 
-    // 渲染名单池
     const render = (areaId, roster) => {
         const area = document.getElementById(areaId);
         area.innerHTML = roster.map(name => `
@@ -1051,7 +1019,6 @@ function startSubMatch(idx) {
     render('u1-roster-area', currentRosters.u1);
     render('u2-roster-area', currentRosters.u2);
 
-    // 重置按钮状态
     const b1 = document.getElementById('btn-submit-u1');
     const b2 = document.getElementById('btn-submit-u2');
     b1.disabled = false; b1.innerText = "确认 A 队名单"; b1.style.background = "#444";
@@ -1059,6 +1026,7 @@ function startSubMatch(idx) {
 
     document.getElementById('lineup-modal').style.display = 'flex';
 }
+
 function submitSideLineup(side) {
     const areaId = `u${side}-roster-area`;
     const checked = document.querySelectorAll(`input[name="${areaId}"]:checked`);
@@ -1082,19 +1050,15 @@ function submitSideLineup(side) {
     btn.style.background = "#27ae60";
 }
 
-// 4. 监听揭晓指令，正式进入比赛
 socket.on('lineups_revealed', (data) => {
     if (data.matchId === state.matchId) {
         document.getElementById('lineup-modal').style.display = 'none';
-        
-        // 写入揭晓的真实姓名
         state.p1.players = data.p1Name.split(' / ');
         state.p2.players = data.p2Name.split(' / ');
-
-        // 调用单项赛初始化逻辑进入计分界面
         enterSingleMatchScoring();
     }
 });
+
 socket.on('lineup_submitted_status', (data) => {
     if (data.matchId === state.matchId) {
         const btn = document.getElementById(`btn-submit-u${data.side}`);
@@ -1105,24 +1069,21 @@ socket.on('lineup_submitted_status', (data) => {
         }
     }
 });
-  // 🌟 彻底重构：清除冲突逻辑，补全缺失的结束大括号，精准隐藏团队小场的赛前遮罩
-  function enterSingleMatchScoring() {
+
+function enterSingleMatchScoring() {
     state.sportType = 'badminton'; 
     activeModule = SportModules['badminton'];
 
-    // 1. 获取当前小项的信息
-    const subIdx = state.teamTie.currentSubIndex;
-    const subMatchName = state.teamTie.order[subIdx];
+    const subIdx = state.teamTie ? state.teamTie.currentSubIndex : 0;
+    const subMatchName = state.teamTie ? state.teamTie.order[subIdx] : "羽毛球比赛";
     const tieScore = getTeamTieScore();
 
-    // 2. 重置计分状态（单场计分）
     state.p1.score = 0; state.p2.score = 0;
     state.p1.sets = 0; state.p2.sets = 0;
     state.currentSet = 1;
     state.setHistory = [];
     state.breakTriggered = false;
 
-    // 3. UI 切换：显示计分器，隐藏团体赛列表
     document.querySelectorAll('.sport-module').forEach(el => el.style.display = 'none');
     const badmintonModule = document.getElementById('module-badminton');
     badmintonModule.style.display = 'flex';
@@ -1132,34 +1093,33 @@ socket.on('lineup_submitted_status', (data) => {
     document.getElementById('generic-score-container').style.setProperty('display', 'flex', 'important');
     document.getElementById('generic-info-bar').style.display = 'flex';
 
-    // 判定是否直接开始
-    if (state.teamTie) {
-        state.isStarted = true; 
-        document.getElementById('prep-overlay').style.display = 'none'; // 团体赛小场名单直接揭晓，必须隐藏赛前准备遮罩
-    } else {
-        state.isStarted = false;
-        document.getElementById('prep-overlay').style.display = 'flex'; 
+    state.isStarted = false;
+    document.getElementById('prep-overlay').style.setProperty('display', 'flex', 'important'); 
+
+    // 进入子项计分时，激活底部的全局小场提交按钮
+    const submitBtn = document.getElementById('submit-btn');
+    if(submitBtn) {
+        submitBtn.style.setProperty('display', 'inline-block', 'important');
+        submitBtn.style.border = "none";
+        submitBtn.style.transform = "none";
     }
 
-    // 4. 更新标题栏（显示小项名称及当前团体总分）
-    document.getElementById('match-title').innerHTML = `
-        <span style="color:#fff">${subMatchName}</span> 
-        <span style="color:#ffeb3b; margin-left:10px;">(团体总分 ${tieScore})</span>
-    `;
+    if (state.teamTie) {
+        document.getElementById('match-title').innerHTML = `
+            <span style="color:#fff">${subMatchName}</span> 
+            <span style="color:#ffeb3b; margin-left:10px;">(团体总分 ${tieScore})</span>
+        `;
+    } else {
+        document.getElementById('match-title').innerText = "羽毛球单项赛";
+    }
 
-    // 5. 强制触发 UI 刷新，让双打站位与红蓝名字面板即时生效
     updateUI(); 
-  }
-
-// ==========================================
-// 🏀 篮球专用全局函数 (修复计时卡死逻辑)
-// ==========================================
+}
 
 function bbTimeout(n) {
     if (state.bb['p' + n + 'TO'] > 0) {
         if (confirm(`确认使用一次暂停？`)) {
             state.bb['p' + n + 'TO']--;
-            // 暂停时自动停止比赛计时器
             state.bb.timerRunning = false;
             syncBbTimerBtn();
             updateUI();
@@ -1176,22 +1136,21 @@ function syncBbTimerBtn() {
 
     if (state.bb.timerRunning) {
         btn.innerText = "暂停计时";
-        btn.style.background = "#d97706"; // 橙色
+        btn.style.background = "#d97706"; 
         if(statusEl) { statusEl.innerText = "● RUNNING"; statusEl.style.color = "#ff9800"; }
     } else {
         btn.innerText = "开始计时";
-        btn.style.background = "#059669"; // 绿色
+        btn.style.background = "#059669"; 
         if(statusEl) { statusEl.innerText = "● READY"; statusEl.style.color = "#27ae60"; }
     }
 }
+
 function bbAdd(n, pts) {
     const backup = structuredClone(state);
-    backup.history = []; // 防止内存爆炸
+    backup.history = []; 
     state.history.push(backup);
-
     state['p'+n].score += pts;
     
-    // 🌟 核心新增：只要是加分（pts > 0），就自动重置 24 秒计时器
     if (pts > 0) {
         bbResetShot(24);
     }
@@ -1203,21 +1162,19 @@ function bbAdd(n, pts) {
     });
     updateUI();
 }
+
 function bbFoul(n) {
     state.bb['p'+n+'Fouls']++;
     updateUI();
 }
 
 function bbToggleTimer() {
-    // 切换状态
     state.bb.timerRunning = !state.bb.timerRunning;
-    // 同步按钮 UI
     syncBbTimerBtn();
 }
 
 function bbResetShot(sec) {
     state.bb.shotTime = sec;
-    // 如果 24 秒违例后重置，保持当前计时状态或手动点开始
     updateUI();
 }
 
@@ -1228,7 +1185,7 @@ function bbNextPeriod() {
         state.bb.p2Fouls = 0;
         state.bb.gameTime = 600;
         state.bb.shotTime = 24;
-        state.bb.timerRunning = false; // 换节强制停止
+        state.bb.timerRunning = false; 
         syncBbTimerBtn();
         updateUI();
     }
@@ -1236,26 +1193,21 @@ function bbNextPeriod() {
 
 function bbTick() {
     if (state.sportType === 'basketball' && state.bb && state.bb.timerRunning) {
-        // 游戏时间计时
         if (state.bb.gameTime > 0) {
             state.bb.gameTime--;
         } else {
             state.bb.timerRunning = false;
-            syncBbTimerBtn(); // 🌟 关键：时间到，同步按钮
+            syncBbTimerBtn(); 
         }
 
-        // 24秒计时
         if (state.bb.shotTime > 0) {
             state.bb.shotTime--;
         } else {
             state.bb.timerRunning = false;
-            syncBbTimerBtn(); // 🌟 关键：违例停止，同步按钮
+            syncBbTimerBtn(); 
             console.warn("24秒违例"); 
-            // 如果需要弹窗提醒，可以用下面的方式，但 alert 会阻塞代码执行
-            // setTimeout(() => { alert("24秒违例！"); }, 10);
         }
         
-        // 局部更新时钟文字，不触发完整的 updateUI 以防卡顿
         const m = Math.floor(state.bb.gameTime / 60);
         const s = state.bb.gameTime % 60;
         const clockEl = document.getElementById('bb-game-clock');
@@ -1264,16 +1216,12 @@ function bbTick() {
         if(shotEl) shotEl.innerText = state.bb.shotTime;
     }
 }
-    // ==========================================
-    // 主控台公共逻辑
-    // ==========================================
 
-    socket.on('update_config', (data) => {
+socket.on('update_config', (data) => {
     console.log("收到场地配置更新:", data);
     const container = document.getElementById('court-buttons-container');
     if (!container) return;
     
-    // [核心修复] 强制清空容器后再生成
     container.innerHTML = '';
     const max = data.maxCourts || 6; 
     for (let i = 1; i <= max; i++) {
@@ -1285,7 +1233,7 @@ function bbTick() {
     }
 });
 
-   function initCourt(num) {
+function initCourt(num) {
     state.court = num;
     document.getElementById('display-court-num').innerText = num + "号场地";
     document.getElementById('setup-screen').style.display = 'none';
@@ -1295,19 +1243,16 @@ function bbTick() {
     
     socket.off(`court_${num}_match`); 
     socket.on(`court_${num}_match`, (data) => {
-        renderMatchList(data); // 刷新待赛列表
+        renderMatchList(data); 
 
-        // 🌟 核心修复：如果当前正在执裁，且收到了新的名单更新
         if (state.isLive && state.matchId) {
             const currentMatchData = data.find(m => String(m.id) === String(state.matchId));
             if (currentMatchData) {
-                // 检查名单是否从“待定”或占位符变成了真实姓名
                 const isP1Updated = currentMatchData.p1 && !currentMatchData.p1.includes('组第') && currentMatchData.p1 !== "待定";
                 const isP2Updated = currentMatchData.p2 && !currentMatchData.p2.includes('组第') && currentMatchData.p2 !== "待定";
 
                 if (isP1Updated || isP2Updated) {
                     console.log("检测到名单更新，正在同步至计分板...");
-                    // 更新本地状态
                     if (isP1Updated) {
                         state.p1.players = currentMatchData.p1.split('/').map(s => s.trim());
                         if (currentMatchData.u1Roster) currentRosters.u1 = currentMatchData.u1Roster;
@@ -1316,7 +1261,6 @@ function bbTick() {
                         state.p2.players = currentMatchData.p2.split('/').map(s => s.trim());
                         if (currentMatchData.u2Roster) currentRosters.u2 = currentMatchData.u2Roster;
                     }
-                    // 强制刷新 UI
                     updateUI();
                 }
             }
@@ -1324,7 +1268,7 @@ function bbTick() {
     });
 }
 
-  function renderMatchList(queue) {
+function renderMatchList(queue) {
     const container = document.getElementById('match-queue-container');
     container.innerHTML = '';
     
@@ -1333,18 +1277,15 @@ function bbTick() {
         return;
     }
 
-    // 1. 对比赛队列按时间进行升序排序
     const sortedQueue = [...queue].sort((a, b) => {
         const timeA = (a.time && a.time !== "待定") ? a.time : "99:99";
         const timeB = (b.time && b.time !== "待定") ? b.time : "99:99";
         return timeA.localeCompare(timeB);
     });
 
-    // 2. 渲染列表
     sortedQueue.forEach(match => {
         const div = document.createElement('div');
         
-        // 如果是已完赛，改变样式并显示结果
         let statusHtml = '';
         if (match.isFinished) {
             div.style = "background:#222; opacity:0.7; padding:15px; border-radius:10px; border-left:5px solid #555; color:white; cursor:pointer; position:relative; margin-bottom:10px;";
@@ -1357,11 +1298,9 @@ function bbTick() {
         const totalSets = parseInt(match.format) || 3;
         const winThreshold = Math.ceil(totalSets / 2);
 
-        // 🌟 核心修复点：提取纯净的单位/队名，切掉括号里冗长的一大串运动员名单
         const displayP1 = match.p1.split(/[\(（]/)[0].trim();
         const displayP2 = match.p2.split(/[\(（]/)[0].trim();
 
-        // 🌟 项目类型映射微调：让团体赛更显眼
         const projectText = match.sportType === 'badminton_team' || (match.title && match.title.includes('团体')) 
             ? '🏸 羽毛球团体赛' 
             : (match.sportType === 'badminton' ? '羽毛球' : match.sportType === 'table_tennis' ? '乒乓球' : match.sportType === 'basketball' ? '篮球' : '自定义对抗');
@@ -1391,70 +1330,63 @@ function bbTick() {
         container.appendChild(div);
     });
 }
-    function startOfficiating(matchData) {
-        document.getElementById('match-list-screen').style.display = 'none';
-        document.getElementById('umpire-screen').style.display = 'flex';
-        loadMatch(matchData);
-    }
+
+function startOfficiating(matchData) {
+    document.getElementById('match-list-screen').style.display = 'none';
+    document.getElementById('umpire-screen').style.display = 'flex';
+    loadMatch(matchData);
+}
 
 let currentRosters = { u1: [], u2: [] }; 
-let pendingLineupData = { p1: null, p2: null }; // 本地暂存
-// 修改 loadMatch 函数
+let pendingLineupData = { p1: null, p2: null }; 
+
 function loadMatch(data) {
     if (!data) return;
     state.isLive = true; 
-    const unitRegex = /[\(（](.*?)[\)）]/;
-    // 🌟 新增：重置团体赛提交状态和名单缓存
+    const unitRegex = /[\(（]/;
+    
+    // 🌟【修改点】：每次大场切换时，根据后端最新传入的数据，初始化本大场两队的名单提交锁定状态
     submittedSides = { 
-    1: !!data.p1Submitted, 
-    2: !!data.p2Submitted 
-};
-tieLineups = { 
-    p1: data.p1Full || null, 
-    p2: data.p2Full || null 
-};
-    // 🌟 修复点 1：保存管理端传来的名单池
+        1: !!data.p1FullSubmitted, // 对应A队整场出场表是否已锁
+        2: !!data.p2FullSubmitted  // 对应B队整场出场表是否已锁
+    };
+    
+    // 🌟【修改点】：初始化或清空大场总出场表缓存
+    tieLineups = { 
+        p1: data.p1Full || null, 
+        p2: data.p2Full || null 
+    };
+    
     currentRosters.u1 = data.u1Roster || [];
     currentRosters.u2 = data.u2Roster || [];
-    // 🌟 核心修复：智能判定是否为团体赛，精准剥离场地中间的水印文字
     const isTeamEvent = data.sportType === 'badminton_team' || (data.title && data.title.includes('团体')) || !!state.teamTie;
     
     if (isTeamEvent) {
-        // 🏆 团体赛：括号外面才是纯净的单位名（如“初一-3”），直接切掉括号
         state.p1.unit = data.u1 || data.p1.split(/[\(（]/)[0].trim();
         state.p2.unit = data.u2 || data.p2.split(/[\(（]/)[0].trim();
     } else {
-        // 🏸 单项赛：保持原样，括号里面是单位名，外面是选手名
-        const unitRegex = /[\(（](.*?)[\)）]/;
-        state.p1.unit = data.u1 || (data.p1.match(unitRegex) ? data.p1.match(unitRegex)[1] : "");
-        state.p2.unit = data.u2 || (data.p2.match(unitRegex) ? data.p2.match(unitRegex)[1] : "");
+        const matchP1Unit = data.p1.match(/[\(（](.*?)[\)）]/);
+        const matchP2Unit = data.p2.match(/[\(（](.*?)[\)）]/);
+        state.p1.unit = data.u1 || (matchP1Unit ? matchP1Unit[1] : "");
+        state.p2.unit = data.u2 || (matchP2Unit ? matchP2Unit[1] : "");
     }
     
-
-    if (state.matchId === data.id) {
+    // 🌟【修改点】：如果是一场全新的大场比赛（ID不一致），彻底清空上一大场的历史缓存
+    if (state.matchId !== data.id) {
+        state.matchId = data.id;
+        state.format = data.format || 3; 
+        state.sportType = data.sportType || 'badminton';
+        state.isStarted = false; 
         state.isDoubles = data.p1.includes('/') || data.p2.includes('/');
-        state.p1.players = state.isDoubles ? data.p1.replace(unitRegex,"").split('/').map(s=>s.trim()) : [data.p1.replace(unitRegex,""), ""];
-        state.p2.players = state.isDoubles ? data.p2.replace(unitRegex,"").split('/').map(s=>s.trim()) : [data.p2.replace(unitRegex,""), ""];
-        if (state.sportType === 'badminton_team') {
-            state.teamOrder = data.teamOrder || [];
-            if (state.teamTie) state.teamTie.order = state.teamOrder;
-        }
-        updateUI();
-        return; 
+        state.p1.score = 0; state.p2.score = 0; 
+        state.p1.sets = 0; state.p2.sets = 0;
+        state.server = 1; state.currentSet = 1; 
+        state.history = []; state.setHistory = [];
+        state.breakTriggered = false;
     }
 
-    state.matchId = data.id;
-    state.format = data.format || 3; 
-    state.sportType = data.sportType || 'badminton';
-    state.isStarted = false; 
-    state.isDoubles = data.p1.includes('/') || data.p2.includes('/');
-    state.p1.score = 0; state.p2.score = 0; 
-    state.p1.sets = 0; state.p2.sets = 0;
-    state.server = 1; state.currentSet = 1; 
-    state.history = []; state.setHistory = [];
-    state.breakTriggered = false;
-    state.p1.players = state.isDoubles ? data.p1.replace(unitRegex,"").split('/').map(s=>s.trim()) : [data.p1.replace(unitRegex,""), ""];
-    state.p2.players = state.isDoubles ? data.p2.replace(unitRegex,"").split('/').map(s=>s.trim()) : [data.p2.replace(unitRegex,""), ""];
+    state.p1.players = state.isDoubles ? data.p1.replace(/[\(（].*?[\)）]/g,"").split('/').map(s=>s.trim()) : [data.p1.replace(/[\(（].*?[\)）]/g,""), ""];
+    state.p2.players = state.isDoubles ? data.p2.replace(/[\(（].*?[\)）]/g,"").split('/').map(s=>s.trim()) : [data.p2.replace(/[\(（].*?[\)）]/g,""), ""];
 
     if (state.sportType === 'badminton_team') {
         state.teamOrder = data.teamOrder || [];
@@ -1486,30 +1418,19 @@ tieLineups = {
         document.getElementById('prep-overlay').style.display = 'flex';
     }
     updateUI();
-
-    const submitBtn = document.getElementById('submit-btn');
-    if(submitBtn) {
-        submitBtn.style.display = 'inline-block';
-        submitBtn.style.border = "none";
-    }
 }
-   function addPoint(n) {
+function addPoint(n) {
     if (!state.isLive || !state.isStarted) return;
-    
-    // 记录历史用于撤回
     state.history.push(structuredClone({p1:state.p1, p2:state.p2, server:state.server}));
-    
     if (state.history.length > 21) {
         state.history.shift(); 
     }
-// 分发给对应的模块处理加分逻辑
     if (activeModule && activeModule.addPoint) {
         activeModule.addPoint(n);
     }
-
-    // 调用 updateUI，它会自动执行 socket.emit
     updateUI();
 }
+
 function getTeamTieScore() {
     if (!state.teamTie) return "0:0";
     let t1 = 0, t2 = 0;
@@ -1521,23 +1442,17 @@ function getTeamTieScore() {
     return `${t1}:${t2}`;
 }
 
-// --- 1. 变量定义 ---
 let tieLineups = { p1: null, p2: null }; 
 let activeEditingSide = 1;
 
-// --- 2. 刷新团体赛界面逻辑 ---
-// --- 2. 刷新团体赛界面逻辑 ---
 function renderTeamTieUI() {
     const listContainer = document.getElementById('bt-match-list');
     if (!listContainer || !state.teamTie) return;
     
-    // 🌟 判定是否已揭晓名单
     const isRevealed = (tieLineups.p1 !== null && tieLineups.p2 !== null);
 
-    // 🌟【核心新增】：如果名单已揭晓，自动检查并直接结算包含“弃权”的子场次，无需点开始比赛
     if (isRevealed) {
         state.teamTie.order.forEach((name, idx) => {
-            // 只处理处于等待状态（null）且包含弃权的大场
             if (state.teamTie.scores[idx] === null) {
                 const p1Arr = tieLineups.p1[idx] || [];
                 const p2Arr = tieLineups.p2[idx] || [];
@@ -1545,22 +1460,16 @@ function renderTeamTieUI() {
                 const p2WO = p2Arr.includes("弃权");
                 
                 if (p1WO || p2WO) {
-                    // 根据比赛局数动态计算完赛局分（如3局2胜制胜场为2，5局3胜制胜场为3）
                     const winThreshold = Math.ceil(state.format / 2);
                     let finalScore = "0:0";
-                    
                     if (p1WO && p2WO) {
-                        finalScore = "0:0"; // 双方均弃权
+                        finalScore = "0:0"; 
                     } else if (p1WO) {
-                        finalScore = `0:${winThreshold}`; // A队弃权，B队直接全胜（如 0:2）
+                        finalScore = `0:${winThreshold}`; 
                     } else if (p2WO) {
-                        finalScore = `${winThreshold}:0`; // B队弃权，A队直接全胜（如 2:0）
+                        finalScore = `${winThreshold}:0`; 
                     }
-                    
-                    // 1. 自动写入当前场次比分
                     state.teamTie.scores[idx] = finalScore;
-                    
-                    // 2. 重新计算大比分并立即同步给大屏幕、管理端
                     const currentTieScore = getTeamTieScore();
                     socket.emit('update_score', { 
                         id: state.matchId, 
@@ -1574,7 +1483,6 @@ function renderTeamTieUI() {
         });
     }
 
-    // 🌟 下方原有渲染逻辑保持不变，但由于上方自动计分，弃权场次会自动变成绿色完赛状态
     listContainer.innerHTML = '';
     const tieScore = getTeamTieScore(); 
     document.getElementById('bt-tie-score').innerText = tieScore.split(':').join(' : ');
@@ -1584,43 +1492,47 @@ function renderTeamTieUI() {
         const btnHeader = document.createElement('div');
         btnHeader.innerHTML = `
             <button onclick="openFullLineupModal()" style="width:100%; padding:15px; background:${bothReady ? '#f39c12':'#e67e22'}; color:white; border:none; border-radius:8px; margin-bottom:15px; font-weight:bold; font-size:16px;">
-                📝 ${bothReady ? '名单已就绪，正在同步...' : '填写双方出场名单 (盲交)'}
+                📝 ${bothReady ? '名单已就绪，正在同步...' : '填写双方出场名单'}
             </button>
         `;
         listContainer.appendChild(btnHeader);
     }
 
-    state.teamTie.order.forEach((name, idx) => {
-        const score = state.teamTie.scores[idx];
-        const isFinished = score !== null;
-        
-        let matchupDesc = "名单待提交";
-        if (isRevealed && tieLineups.p1[idx] && tieLineups.p2[idx]) {
-            matchupDesc = `${tieLineups.p1[idx].join('/')} VS ${tieLineups.p2[idx].join('/')}`;
-        }
+    // umpire.html 核心修复：对阵列表重绘时精准拦截已完赛项
+state.teamTie.order.forEach((name, idx) => {
+    const score = state.teamTie.scores[idx];
+    const isFinished = score !== null; // 检查是否已完赛
+    
+    let matchupDesc = "名单待提交";
+    if (isRevealed && tieLineups.p1[idx] && tieLineups.p2[idx]) {
+        matchupDesc = `${tieLineups.p1[idx].join('/')} VS ${tieLineups.p2[idx].join('/')}`;
+    }
 
-        const div = document.createElement('div');
-        div.style = `background:#222; padding:15px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border:1px solid ${isFinished?'#444':'#27ae60'}`;
-        div.innerHTML = `
-            <div style="flex:1;">
-                <div style="color:#888; font-size:12px;">第 ${idx+1} 场 · ${name}</div>
-                <div style="font-size:16px; font-weight:bold; margin-top:4px;">${matchupDesc}</div>
-            </div>
-            <div style="text-align:right;">
-                ${isFinished ? 
-                    `<span style="color:#27ae60; font-weight:bold; font-size:20px;">${score}</span>` : 
-                    (isRevealed ? `<button onclick="startScoringSubMatch(${idx})" style="background:#27ae60; color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold;">开始比赛</button>` : `<span style="color:#555;">等待名单</span>`)
-                }
-            </div>`;
-        listContainer.appendChild(div);
-    });
+    const div = document.createElement('div');
+    // 如果已经完赛，卡片变成深灰色且移除发光绿边
+    div.style = `background:${isFinished ? '#161616' : '#222'}; padding:15px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border:1px solid ${isFinished?'#333':'#27ae60'}`;
+    
+    // 🌟【核心修复】：如果已经完赛，右侧显示大比分，不再渲染“开始比赛”按钮，彻底斩断二次执裁路经
+    div.innerHTML = `
+        <div style="flex:1; opacity: ${isFinished ? 0.5 : 1};">
+            <div style="color:#888; font-size:12px;">第 ${idx+1} 场 · ${name} ${isFinished ? '[已锁定]' : ''}</div>
+            <div style="font-size:16px; font-weight:bold; margin-top:4px;">${matchupDesc}</div>
+        </div>
+        <div style="text-align:right;">
+            ${isFinished ? 
+                `<span style="color:#8c8c8c; font-family:Arial; font-weight:bold; font-size:20px; padding-right:10px;">${score}</span>` : 
+                (isRevealed ? `<button onclick="startScoringSubMatch(${idx})" style="background:#27ae60; color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">开始比赛</button>` : `<span style="color:#555;">等待名单</span>`)
+            }
+        </div>`;
+    listContainer.appendChild(div);
+});
 
     const scores = tieScore.split(':').map(Number);
     const tieWinThreshold = Math.ceil(state.teamTie.order.length / 2); 
 
     if (scores[0] >= tieWinThreshold || scores[1] >= tieWinThreshold) {
         const finishTieBtn = document.createElement('button');
-        finishTieBtn.innerHTML = "🏆 团体赛已分胜负：点此提交大比分结果";
+        finishTieBtn.innerHTML = "🏆 团体赛已分胜负：点此提交比赛结果";
         finishTieBtn.style.cssText = "width:100%; padding:18px; background:#f39c12; color:white; border:none; border-radius:10px; font-weight:bold; font-size:18px; margin-top:20px; box-shadow: 0 4px 12px rgba(243,156,18,0.4);";
         finishTieBtn.onclick = () => {
             if(confirm(`整个团体赛已结束，最终总大比分为 ${tieScore}，确认全部完赛并上传最终结果吗？`)) {
@@ -1638,30 +1550,66 @@ function renderTeamTieUI() {
         listContainer.appendChild(finishTieBtn);
     }
 }
-// 🌟 核心监听：当双方都交完名单，服务器下发此指令
+
 socket.on('tie_lineups_revealed', (data) => {
     if (data.matchId === state.matchId) {
         console.log("【团体赛】双方名单已揭晓，正在自动返回...");
-        
-        // 1. 写入真实名单数据
         tieLineups.p1 = data.p1Full;
         tieLineups.p2 = data.p2Full;
-        
-        // 2. 强制同步状态
         submittedSides = { 1: true, 2: true }; 
-        
-        // 3. 🌟 核心修复：强制关闭名单填写弹窗，返回主对阵列表
         const modal = document.getElementById('lineup-modal');
         if (modal) {
             modal.style.setProperty('display', 'none', 'important');
         }
-        
-        // 4. 重新渲染列表以显示真实人名
         renderTeamTieUI(); 
     }
 });
 
-// 监听单侧提交状态（变色提示）
+// 🌟 新增：接收服务器发回的断线/刷新保底比分，原地复活比赛
+socket.on('sync_frozen_score', (frozenData) => {
+    // 检查发过来的比分是不是当前手机正在执裁的这场比赛
+    if (typeof state !== 'undefined' && state && state.matchId === frozenData.id) {
+        console.log("⚡ 检测到刷新或掉线重连，正在从 SQLite 数据库恢复赛事实时比分...", frozenData);
+        
+        // 1. 恢复单项赛的分数和局分
+        if (typeof state.score !== 'undefined') {
+            state.score.p1 = frozenData.s1;
+            state.score.p2 = frozenData.s2;
+            state.score.p1Sets = frozenData.p1Sets;
+            state.score.p2Sets = frozenData.p2Sets;
+        }
+        
+        // 保留原汁原味的左右挑边状态
+        state.isSwapped = frozenData.isSwapped;
+        
+        // 2. 如果是团体赛，恢复各分场小项的完赛状态和实时分数
+        if (state.teamTie && frozenData.subMatches && frozenData.subMatches.length > 0) {
+            // 完美无损地将服务器的 subMatches 覆盖回裁判终端内存中
+            state.teamTie.subMatches = frozenData.subMatches;
+            
+            // 自动推算当前正在打第几场，精准定位高亮
+            const activeIdx = frozenData.subMatches.findIndex(sm => sm.status === 'playing');
+            if (activeIdx !== -1) {
+                state.teamTie.currentSubIndex = activeIdx;
+                // 同步复活当前分场小项在单局记分板上的即时小分
+                const scoreParts = (frozenData.subMatches[activeIdx].score || "0:0").split(':').map(Number);
+                if (scoreParts.length === 2 && typeof state.score !== 'undefined') {
+                    state.score.p1 = scoreParts[0];
+                    state.score.p2 = scoreParts[1];
+                }
+            }
+        }
+        
+        // 3. 强力调用你原版代码中的 UI 刷新函数，让屏幕上的比分数字瞬间亮起！
+        if (typeof updateUI === 'function') {
+            updateUI();
+        }
+        
+        // 4. 同步更新本地持久化，防止二次刷错
+        localStorage.setItem('umpire_current_match', JSON.stringify(state));
+    }
+});
+
 socket.on('tie_lineup_submitted_status', (data) => {
     if (data.matchId === state.matchId) {
         submittedSides[data.side] = true;
@@ -1673,7 +1621,10 @@ socket.on('tie_lineup_submitted_status', (data) => {
         }
     }
 });
+
 function openFullLineupModal() {
+    document.getElementById('tab-u1').innerText = state.p1.unit || "A队名单";
+    document.getElementById('tab-u2').innerText = state.p2.unit || "B队名单";
     document.getElementById('lineup-modal').style.display = 'flex';
     switchLineupSide(1);
 }
@@ -1692,7 +1643,7 @@ function switchLineupSide(side) {
             <div style="text-align:center; padding:50px 20px;">
                 <div style="font-size:50px; margin-bottom:20px;">🔒</div>
                 <div style="color:#27ae60; font-size:20px; font-weight:bold;">
-                    ${side === 1 ? 'A队' : 'B队'}出场名单已锁定
+                    ${unitName} 出场名单已锁定
                 </div>
             </div>`;
         document.getElementById('btn-submit-full').style.display = 'none';
@@ -1700,8 +1651,8 @@ function switchLineupSide(side) {
     }
 
     document.getElementById('btn-submit-full').style.display = 'block';
-    let html = `<h3 style="color:#fff;text-align:center;margin-bottom:20px;">填写：${unitName}</h3>`;
-    
+    document.getElementById('btn-submit-full').innerText = `确认并提交【${unitName}】出场表`;
+    let html = ``;
     state.teamTie.order.forEach((matchName, mIdx) => {
         const isDoubles = matchName.includes("双");
         html += `<div style="background:#2a2a2a; padding:15px; border-radius:8px; margin-bottom:15px;">
@@ -1709,7 +1660,6 @@ function switchLineupSide(side) {
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">`;
         
         roster.forEach(playerName => {
-            // 🌟 核心增补：提取干净的名字，并智能生成性别高亮胶囊标签
             const nameOnly = playerName.split(/[\(（]/)[0].trim();
             const gender = playerName.includes("女") ? "女" : "男";
             const badgeBg = gender === "男" ? "var(--blue)" : "var(--red)";
@@ -1723,6 +1673,33 @@ function switchLineupSide(side) {
                     </label>`;
         });
         
+        html += `<div style="grid-column: span 2; background:#1f1f1f; padding:12px; border-radius:6px; border:1px dashed #555; margin:6px 0;">
+                    <div style="color:#aaa; font-size:12px; margin-bottom:6px;">✍️ 或者在此手动填入（若不在名单池中）：</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">`;
+        if (isDoubles) {
+            html += `   <div style="display:flex; gap:6px;">
+                            <input type="text" id="manual_${mIdx}_side_${side}_1" placeholder="队员1 姓名" style="flex:1; padding:6px; background:#111; border:1px solid #444; color:#fff; border-radius:4px; font-size:14px;">
+                            <select id="gender_${mIdx}_side_${side}_1" style="padding:6px; background:#111; border:1px solid #444; color:#fff; border-radius:4px; font-size:14px;">
+                                <option value="男">男</option><option value="女">女</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <input type="text" id="manual_${mIdx}_side_${side}_2" placeholder="队员2 姓名" style="flex:1; padding:6px; background:#111; border:1px solid #444; color:#fff; border-radius:4px; font-size:14px;">
+                            <select id="gender_${mIdx}_side_${side}_2" style="padding:6px; background:#111; border:1px solid #444; color:#fff; border-radius:4px; font-size:14px;">
+                                <option value="男">男</option><option value="女">女</option>
+                            </select>
+                        </div>`;
+        } else {
+            html += `   <div style="display:flex; gap:6px;">
+                            <input type="text" id="manual_${mIdx}_side_${side}_1" placeholder="选手姓名" style="flex:1; padding:6px; background:#111; border:1px solid #444; color:#fff; border-radius:4px; font-size:14px;">
+                            <select id="gender_${mIdx}_side_${side}_1" style="padding:6px; background:#111; border:1px solid #444; color:#fff; border-radius:4px; font-size:14px;">
+                                <option value="男">男</option><option value="女">女</option>
+                            </select>
+                        </div>`;
+        }
+        html += `   </div>
+                 </div>`;
+        
         html += `<label style="background:#5a1a1a; padding:10px; border-radius:6px; display:flex; align-items:center; gap:5px; border:1px solid #ff5252; grid-column: span 2;">
                     <input type="${isDoubles?'checkbox':'radio'}" name="match_${mIdx}_side_${side}" value="弃权">
                     <span style="color:#ff5252; font-weight:bold;">🏳️ 弃权本场</span>
@@ -1731,6 +1708,7 @@ function switchLineupSide(side) {
     });
     editor.innerHTML = html;
 }
+
 function submitCurrentSideFullLineup() {
     let fullLineup = {};
     const side = activeEditingSide;
@@ -1741,17 +1719,32 @@ function submitCurrentSideFullLineup() {
         const required = isDoubles ? 2 : 1;
         const checked = document.querySelectorAll(`input[name="match_${mIdx}_side_${side}"]:checked`);
         
-        let values = Array.from(checked).map(el => el.value); // 这里拿到的是类似 "张三(男)" 的完整带标数据
+        let values = Array.from(checked).map(el => el.value); 
         
         if (values.includes("弃权")) {
             values = isDoubles ? ["弃权", "弃权"] : ["弃权"];
         } else {
+            const m1 = document.getElementById(`manual_${mIdx}_side_${side}_1`)?.value.trim();
+            const g1 = document.getElementById(`gender_${mIdx}_side_${side}_1`)?.value;
+            const m2 = isDoubles ? document.getElementById(`manual_${mIdx}_side_${side}_2`)?.value.trim() : null;
+            const g2 = isDoubles ? document.getElementById(`gender_${mIdx}_side_${side}_2`)?.value : null;
+
+            if (m1 || (isDoubles && m2)) {
+                if (!m1 || (isDoubles && !m2)) {
+                    alert(`❌ 填写错误：\n"${matchName}" 手动填入选手不完整，请填写完整或清空！`);
+                    return;
+                }
+                values = [`${m1}(${g1})`];
+                if (isDoubles) {
+                    values.push(`${m2}(${g2})`);
+                }
+            }
+
             if (values.length !== required) { 
-                alert(`❌ 选人错误：\n"${matchName}" 要求选择 ${required} 人（当前已选 ${values.length} 人），请仔细核对。`); 
+                alert(`❌ 选人错误：\n"${matchName}" 要求选择 ${required} 人（当前已选/填写 ${values.length} 人），请仔细核对。`); 
                 return; 
             }
             
-            // 🌟 核心新增：提取所选人员的真实性别数组进行合规审查
             const genders = values.map(v => v.includes("女") ? "女" : "男");
             
             if (matchName.includes("男单")) {
@@ -1774,127 +1767,148 @@ function submitCurrentSideFullLineup() {
         }
         fullLineup[mIdx] = values;
     }    
+    
+    // 🌟【关键修改】：领队提交时，本场对阵本地立即锁定状态置为 true 
     submittedSides[side] = true;
+    
+    // 🌟【关键修改】：发出给后端的锁定及提交事件（确保通知到裁判和其他端）
     socket.emit('submit_full_tie_lineup', { matchId: state.matchId, side: side, fullLineup: fullLineup });
+    
+    // 刷新界面布局，此时切换过去该单位的名单编辑区会自动变成“🔒已锁定”字样
     switchLineupSide(side);
 }
+
+// umpire.html -> 核心修复 2：进入具体单场子赛时，深度清洗上一局的残余数据
 function startScoringSubMatch(idx) {
     const subMatchName = state.teamTie.order[idx];
-    state.teamTie.currentSubIndex = idx;
-    
-    // 根据场次名称自动判定单双打
+    state.teamTie.currentSubIndex = idx; // 精准锚定当前小项索引
     state.isDoubles = subMatchName.includes("双"); 
     
-    // 🌟 核心修复：计分落位时，切掉人名后面携带的性别括号，维持球场比分格的纯净
+    // 注入盲盒解密出来的当前小场选手名字
     state.p1.players = (tieLineups.p1[idx] || []).map(p => p.split(/[\(（]/)[0].trim());
     state.p2.players = (tieLineups.p2[idx] || []).map(p => p.split(/[\(（]/)[0].trim());
     
-    // 初始化位置：双打默认为 0/1 站位，单打默认为 0 站位
-    state.p1.pos = 0;
-    state.p2.pos = 0;
+    // 🌟【清洗核心】：将上一小项的即时比分、小局局分、历史栈全面硬编码归零！
+    state.p1.score = 0; state.p2.score = 0;
+    state.p1.sets = 0;  state.p2.sets = 0;
+    state.currentSet = 1;
+    state.setHistory = [];
+    state.breakTriggered = false;
 
-    console.log(`进入场次：${subMatchName}, 是否双打: ${state.isDoubles}`);
-    enterSingleMatchScoring();
+    console.log(`流水线切入第 ${idx+1} 场执裁：${subMatchName}`);
+    enterSingleMatchScoring(); // 唤醒单场计分板
 }
-    function updateUI() {
-    // 1. 更新通用大分牌本地显示
+function updateUI() {
     document.getElementById('score-p1').innerText = state.p1.score;
     document.getElementById('score-p2').innerText = state.p2.score;
     document.getElementById('set-score-p1').innerText = state.p1.sets;
     document.getElementById('set-score-p2').innerText = state.p2.sets;
     document.getElementById('current-set-num').innerText = state.currentSet;
     const labelP1 = document.getElementById('name-label-p1');
-        const labelP2 = document.getElementById('name-label-p2');
-        if (labelP1 && labelP2) {
-            labelP1.innerText = state.p1.players.filter(p => p).join(' / ') || "待定";
-            labelP2.innerText = state.p2.players.filter(p => p).join(' / ') || "待定";
-        }
-    // 2. 分发给对应模块渲染专有UI（球场、发球点等）
+    const labelP2 = document.getElementById('name-label-p2');
+    if (labelP1 && labelP2) {
+        labelP1.innerText = state.p1.players.filter(p => p).join(' / ') || "待定";
+        labelP2.innerText = state.p2.players.filter(p => p).join(' / ') || "待定";
+    }
     if (activeModule && activeModule.renderUI) {
         activeModule.renderUI();
     }
 
- if (state.matchId) {
-    localStorage.setItem('umpire_current_match', JSON.stringify({
-        matchId: state.matchId,
-        court: state.court,
-        sportType: state.sportType, // 🌟 新增：保存运动类型
-        title: document.getElementById('match-title').innerText, // 🌟 新增：保存标题
-        p1: state.p1, // 🌟 新增：保存完整的 p1 对象（含姓名、单位、分、局）
-        p2: state.p2, // 🌟 新增：保存完整的 p2 对象
-        server: state.server,
-        isSwapped: state.isSwapped,
-        isDoubles: state.isDoubles, // 🌟 新增：保存单双打状态
-        currentSet: state.currentSet,
-        setHistory: state.setHistory,
-        format: state.format, 
-        tieLineups: tieLineups,
-        submittedSides: submittedSides,
-        teamTie: state.teamTie
-    }));
-if (state.teamTie && state.sportType === 'badminton') {
-        const subMatchName = state.teamTie.order[state.teamTie.currentSubIndex];
-        const tieScore = getTeamTieScore();
-        document.getElementById('match-title').innerHTML = `
-            <span style="color:#fff">${subMatchName}</span> 
-            <span style="color:#ffeb3b; margin-left:10px;">(团体 ${tieScore})</span>
-        `;
+    if (state.matchId) {
+        localStorage.setItem('umpire_current_match', JSON.stringify({
+            matchId: state.matchId,
+            court: state.court,
+            sportType: state.sportType, 
+            title: document.getElementById('match-title').innerText, 
+            p1: state.p1, 
+            p2: state.p2, 
+            server: state.server,
+            isSwapped: state.isSwapped,
+            isDoubles: state.isDoubles, 
+            currentSet: state.currentSet,
+            setHistory: state.setHistory,
+            format: state.format, 
+            tieLineups: tieLineups,
+            submittedSides: submittedSides,
+            teamTie: state.teamTie
+        }));
+
+        if (state.teamTie && state.sportType === 'badminton') {
+            const subMatchName = state.teamTie.order[state.teamTie.currentSubIndex];
+            const tieScore = getTeamTieScore();
+            document.getElementById('match-title').innerHTML = `
+                <span style="color:#fff">${subMatchName}</span> 
+                <span style="color:#ffeb3b; margin-left:10px;">(团体 ${tieScore})</span>
+            `;
+        }
+        
+        let scorePayload = { 
+            id: state.matchId, court: state.court, s1: state.p1.score, s2: state.p2.score,
+            p1Sets: state.p1.sets, p2Sets: state.p2.sets,
+            isSwapped: state.isSwapped 
+        };
+        if (state.teamTie && state.sportType === 'badminton') {
+            scorePayload.subMatchIndex = state.teamTie.currentSubIndex;
+        }
+        socket.emit('update_score', scorePayload);
     }
-    // 原有的发送给服务器的逻辑保持不变
-    let scorePayload = { 
-        id: state.matchId, court: state.court, s1: state.p1.score, s2: state.p2.score,
-        p1Sets: state.p1.sets, p2Sets: state.p2.sets,
-        isSwapped: state.isSwapped 
-    };
-    if (state.teamTie && state.sportType === 'badminton') {
-        scorePayload.subMatchIndex = state.teamTie.currentSubIndex;
-    }
-    socket.emit('update_score', scorePayload);
 }
-}
-// 🌟 新增：统一提交决策中心（完美兼容团体小场与单项赛返航）
+
+// 🌟【关键更新】：拦截并精细化处理提交行为
 function handleGlobalSubmit(e) {
     if(e) e.stopPropagation();
 
-    // 【情景 A】如果是：团体赛架构下的某一场子项目小比赛提交结果
-    if (state.teamTie && state.sportType === 'badminton') {
-        const winThreshold = Math.ceil(state.format / 2);
-        if (state.p1.sets < winThreshold && state.p2.sets < winThreshold) {
-            alert(`本场比赛尚未结束（${state.format}局${winThreshold}胜制）`);
-            return;
-        }
-
-        if (!confirm("确定保存本场比分并返回团体对阵列表吗？")) return;
-
-        const subIdx = state.teamTie.currentSubIndex;
-        state.teamTie.scores[subIdx] = `${state.p1.sets}:${state.p2.sets}`;
-        const newTieScore = getTeamTieScore();
-        
-        // 发送给大屏与管理端
-        socket.emit('update_score', { 
-            id: state.matchId, 
-            court: state.court, 
-            teamScore: newTieScore, 
-            subMatchIndex: subIdx,
-            subMatchScore: `${state.p1.sets}:${state.p2.sets}`
-        });
-
-        // 切回团体对阵列表视图
-        state.sportType = 'badminton_team';
-        activeModule = SportModules['badminton_team'];
-        
-        document.getElementById('module-badminton').classList.remove('active');
-        document.getElementById('module-badminton').style.display = 'none';
-        document.getElementById('module-badminton_team').style.setProperty('display', 'flex', 'important');
-        document.getElementById('generic-score-container').style.setProperty('display', 'none', 'important');
-        document.getElementById('prep-overlay').style.display = 'none';
-
-        renderTeamTieUI(); // 刷新团体赛对阵列表
-        updateUI();        
+    // 1. 如果当前处于团体赛的“大项总界面”，直接拦截，提示使用黄色专属提交按钮
+    if (state.sportType === 'badminton_team') {
+        alert("请在对阵列表中分出胜负后，使用列表中弹出的『团体赛已分胜负：点此提交』按钮进行提交。");
         return;
     }
 
-    // 【情景 B】如果是：独立单项项目（单打/双打/乒乓球/篮球）的最终大比分提交
+// umpire.html -> handleGlobalSubmit 函数内部团体赛处理分支
+if (state.teamTie && state.sportType === 'badminton') {
+    const winThreshold = Math.ceil(state.format / 2);
+    if (state.p1.sets < winThreshold && state.p2.sets < winThreshold) {
+        alert(`本场单项赛尚未结束（${state.format}局${winThreshold}胜制）`);
+        return;
+    }
+
+    if (!confirm("确定保存本场比分并返回团体对阵列表吗？")) return;
+
+    const subIdx = state.teamTie.currentSubIndex;
+    // 锁死当前小项大局分到内存
+    state.teamTie.scores[subIdx] = `${state.p1.sets}:${state.p2.sets}`;
+    const newTieScore = getTeamTieScore();
+    
+    // 🌟【关键加固】：向服务器发送小项完赛结算数据包
+    socket.emit('update_score', { 
+        id: state.matchId, 
+        court: state.court, 
+        teamScore: newTieScore, 
+        subMatchIndex: subIdx,
+        subMatchScore: `${state.p1.sets}:${state.p2.sets}`
+    });
+
+    // 🌟【强制脱敏】：洗掉局分，防重入覆盖
+    state.p1.score = 0; state.p2.score = 0;
+    state.p1.sets = 0;  state.p2.sets = 0;
+    state.currentSet = 1;
+    state.setHistory = [];
+
+    // 切回团体赛大视图
+    state.sportType = 'badminton_team';
+    activeModule = SportModules['badminton_team'];
+    
+    document.getElementById('module-badminton').classList.remove('active');
+    document.getElementById('module-badminton').style.display = 'none';
+    document.getElementById('module-badminton_team').style.setProperty('display', 'flex', 'important');
+    document.getElementById('generic-score-container').style.setProperty('display', 'none', 'important');
+    document.getElementById('prep-overlay').style.display = 'none';
+
+    renderTeamTieUI(); 
+    updateUI();        
+    return;
+}
+    // 3. 常规单项赛（非团体赛）的原有全局提交逻辑
     const winThreshold = Math.ceil(state.format / 2);
     if (state.sportType !== 'basketball' && state.p1.sets < winThreshold && state.p2.sets < winThreshold) {
         showResultModal("⚠️ 提示", `比赛尚未结束！\n目前大比分为 ${state.p1.sets}:${state.p2.sets}，请继续比赛。`, null, false);
@@ -1924,7 +1938,6 @@ function handleGlobalSubmit(e) {
     const confirmMsg = `${finalWinner} 胜 ${finalDetails}\n\n确认上传至记录台吗？`;
     
     showResultModal("🏆 最终成绩确认", confirmMsg, () => {
-        // 向后端发送完赛数据
         socket.emit('finish_match', { 
             id: state.matchId, 
             court: state.court,
@@ -1934,7 +1947,6 @@ function handleGlobalSubmit(e) {
         });
         localStorage.removeItem('umpire_current_match');
         
-        // 🌟 核心返航修复：彻底关闭裁判工作面板，返回该场地的待赛列表队列
         state.isLive = false;
         state.isStarted = false;
         state.matchId = null;
@@ -1942,14 +1954,13 @@ function handleGlobalSubmit(e) {
         document.getElementById('prep-overlay').style.display = 'none';
         document.getElementById('match-list-screen').style.display = 'flex';
         
-        // 重新请求并接收一次当前场地的排队列表
         if (state.court > 0) socket.emit('join_court', state.court); 
     });
 }
+
 function finishMatch() {
     const winThreshold = Math.ceil(state.format / 2);
 
-    // 🌟 新增：强制校验比分，防止第一局结束就提交
     if (state.p1.sets < winThreshold && state.p2.sets < winThreshold) {
         showResultModal("⚠️ 提示", `比赛尚未结束！\n当前赛制为 ${state.format} 局 ${winThreshold} 胜制，目前大比分为 ${state.p1.sets}:${state.p2.sets}，请继续比赛或点击“结束局”。`, null, false);
         return;
@@ -1969,17 +1980,15 @@ function finishMatch() {
     const p1Name = state.p1.players.filter(p => p).map(p => p.trim()).join('/');
     const p2Name = state.p2.players.filter(p => p).map(p => p.trim()).join('/');
     
-    // 判定最终赢家
     const isP1Win = state.p1.sets > state.p2.sets;
     const finalWinner = isP1Win ? p1Name : p2Name;
 
-    // 🌟 核心逻辑：重新排列所有小分，让获胜者的分数始终在左边
     const finalDetails = history.filter(s => s !== "0:0").map(s => {
         const pts = s.split(':');
         return isP1Win ? `${pts[0]}:${pts[1]}` : `${pts[1]}:${pts[0]}`;
     }).join('  ');
     
-   const confirmMsg = `${finalWinner} 胜 ${finalDetails}\n\n确认上传至记录台吗？`;
+    const confirmMsg = `${finalWinner} 胜 ${finalDetails}\n\n确认上传至记录台吗？`;
     
     showResultModal("🏆 最终成绩确认", confirmMsg, () => {
         socket.emit('finish_match', { 
@@ -1989,102 +1998,173 @@ function finishMatch() {
             setScore1: state.p1.sets,
             setScore2: state.p2.sets 
         });
-localStorage.removeItem('umpire_current_match');
+        localStorage.removeItem('umpire_current_match');
         showSetup(); 
     });
 }
-    function requestNextMatch() { socket.emit('join_court', state.court); }
-   // 1. 修改开始比赛函数
+
+function requestNextMatch() { socket.emit('join_court', state.court); }
+
 function startMatchNow() {
-    // 锁定比赛后，先弹出 120 秒赛前练习
-    socket.emit('lock_match', state.matchId);
+    const payload = { matchId: state.matchId };
+    if (state.teamTie && state.teamTie.currentSubIndex !== -1) {
+        payload.subMatchIndex = state.teamTie.currentSubIndex;
+    }
+    socket.emit('lock_match', payload);
 }
 
+// umpire.html -> 找到 socket.on('lock_status', ...) 内部对应代码进行替换，强化服务端数据至高无上权
 socket.on('lock_status', (res) => {
     if (res.success) {
-        state.isStarted = true;
+        if (typeof state !== 'undefined' && state) {
+            state.isStarted = true; 
+        }
         document.getElementById('prep-overlay').style.display = 'none';
+        console.log("🔒 场次锁定成功！");
         
-        // 🌟 新增：锁定成功后进入赛前练习
-        startBreakTimer("🏸 赛前练习", "运动员热身中", 120);
+        if (res.frozenScore && state) {
+            const fs = res.frozenScore;
+            console.log("⚡ 正在接收最新高位权威数据包...", fs);
+            
+            // 如果是团体赛，强制锁定同步大项的进度
+            if (state.teamTie) {
+                // 如果当前整体状态还停留在大列表视图，坚决清零单场记分牌的垃圾残留值
+                if (state.sportType === 'badminton_team') {
+                    state.p1.score = fs.s1 || 0; 
+                    state.p2.score = fs.s2 || 0;
+                }
+                
+                const btTieScoreEl = document.getElementById('bt-tie-score');
+                if (btTieScoreEl) btTieScoreEl.innerText = `${fs.s1 || 0} : ${fs.s2 || 0}`;
+            } else {
+                state.p1.score = fs.s1;
+                state.p2.score = fs.s2;
+            }
+            
+            state.p1.sets = fs.p1Sets || 0;
+            state.p2.sets = fs.p2Sets || 0;
+            state.isSwapped = fs.isSwapped || false;
+            
+            if (state.teamTie && fs.subMatches && fs.subMatches.length > 0) {
+                state.teamTie.subMatches = fs.subMatches;
+                fs.subMatches.forEach((sm, sIdx) => {
+                    if (sm.status === 'finished') {
+                        state.teamTie.scores[sIdx] = sm.score;
+                    }
+                });
+                
+                const activeIdx = fs.subMatches.findIndex(sm => sm.status === 'playing');
+                if (activeIdx !== -1 && state.sportType === 'badminton') {
+                    state.teamTie.currentSubIndex = activeIdx;
+                    const scoreParts = (fs.subMatches[activeIdx].score || "0:0").split(':').map(Number);
+                    if (scoreParts.length === 2) {
+                        state.p1.score = scoreParts[0];
+                        state.p2.score = scoreParts[1];
+                    }
+                }
+            }
+            
+            // 🌟 锁死权威状态覆盖，防止被旧缓存反向吞噬
+            localStorage.setItem('umpire_current_match', JSON.stringify(state));
+            if (typeof updateUI === 'function') updateUI();
+        }
     } else {
         alert(res.message);
+        showScreen('match-list-screen');
     }
 });
-// 3. 监听其他裁判的锁定动作
 socket.on('match_occupied', (data) => {
-    // 如果当前选中的比赛被别人锁定了
     if (data.matchId === state.matchId && data.locked) {
-        // 如果我还没开始（还处在准备界面），则显示遮罩屏蔽操作
         if (!state.isStarted) {
-            document.getElementById('occupied-overlay').style.display = 'flex';
+            if (state.teamTie && state.teamTie.currentSubIndex !== -1) {
+                if (Number(data.subMatchIndex) === Number(state.teamTie.currentSubIndex)) {
+                    document.getElementById('occupied-overlay').style.display = 'flex';
+                }
+            } else {
+                document.getElementById('occupied-overlay').style.display = 'flex';
+            }
         }
     } else if (data.matchId === state.matchId && !data.locked) {
-        // 比赛释放锁定时，隐藏遮罩
-        document.getElementById('occupied-overlay').style.display = 'none';
+        if (state.teamTie && state.teamTie.currentSubIndex !== -1) {
+            if (Number(data.subMatchIndex) === Number(state.teamTie.currentSubIndex)) {
+                document.getElementById('occupied-overlay').style.display = 'none';
+            }
+        } else {
+            document.getElementById('occupied-overlay').style.display = 'none';
+        }
     }
 });
 
-// 4. 修改原有 showSetup 函数，确保重置状态
 function showSetup() {
-    state.isLive = false;
-    state.isStarted = false; // 重置开始状态
-    state.matchId = null;
-    document.getElementById('occupied-overlay').style.display = 'none'; // 隐藏遮罩
+    // 只有在【整个大场完全清空】或者【确认完赛】时才允许销毁全部缓存
+    // 如果正在执裁团体赛，绝不允许销毁大比分
+    if (state.teamTie && state.sportType === 'badminton_team') {
+        // 如果只是想退回大场地选择，不清除本地缓存
+        state.isLive = false;
+        state.isStarted = false; 
+    } else {
+        state.isLive = false;
+        state.isStarted = false; 
+        state.matchId = null;
+        localStorage.removeItem('umpire_current_match');
+    }
+    
+    document.getElementById('occupied-overlay').style.display = 'none'; 
     document.getElementById('umpire-screen').style.display = 'none';
     document.getElementById('match-list-screen').style.display = 'none';
     document.getElementById('setup-screen').style.display = 'flex';
 }
-    // 修改后的换边逻辑：实现 180 度物理旋转效果
 function swapSides() {
-        state.isSwapped = !state.isSwapped;
-        const dir = state.isSwapped ? 'row-reverse' : 'row';
-        
-        const genericScore = document.getElementById('generic-score-container');
-        if (genericScore) genericScore.style.setProperty('flex-direction', dir, 'important');
-        
-        const ttMain = document.querySelector('.tt-main');
-        if (ttMain) ttMain.style.setProperty('flex-direction', dir, 'important');
-        
-        const ttHeader = document.querySelector('.tt-header');
-        if (ttHeader) ttHeader.style.setProperty('flex-direction', dir, 'important');
-
-        updateUI(); 
-    }    function manualToggleServer() { state.server = 3 - state.server; updateUI(); }
-   function manualSwapPos(visualSide) { 
-        // 🌟 核心修复4：面板控制也走视觉映射
-        let n = state.isSwapped ? (visualSide === 1 ? 2 : 1) : visualSide;
-        state['p'+n].pos = 1 - state['p'+n].pos; 
-        updateUI(); 
-    }
-    function manualSetPos(visualSide, visualZone) { 
-        if (!state.isStarted) { 
-            // 🌟 核心修复3：将点击的视觉坐标，反向还原为真实的队伍和逻辑坐标
-            let n = state.isSwapped ? (visualSide === 1 ? 2 : 1) : visualSide;
-            let logicZone = state.isSwapped ? (1 - visualZone) : visualZone;
-
-            state.server = n; 
-            const tZ = (n === 1 ? 0 : 1); 
-            if(logicZone !== tZ) {
-                state['p'+n].pos = 1 - state['p'+n].pos; 
-            }
-            updateUI(); 
-        } 
-    }
+    state.isSwapped = !state.isSwapped;
+    const dir = state.isSwapped ? 'row-reverse' : 'row';
     
-    function undo() { 
-        if(state.history.length > 0) { 
-            const h = state.history.pop(); 
-            state.p1=h.p1; state.p2=h.p2; state.server=h.server; 
-            updateUI(); 
-        } 
-    }
-  // 记录硬币当前的旋转总角度，保证多次点击都能顺畅连转
+    const genericScore = document.getElementById('generic-score-container');
+    if (genericScore) genericScore.style.setProperty('flex-direction', dir, 'important');
+    
+    const ttMain = document.querySelector('.tt-main');
+    if (ttMain) ttMain.style.setProperty('flex-direction', dir, 'important');
+    
+    const ttHeader = document.querySelector('.tt-header');
+    if (ttHeader) ttHeader.style.setProperty('flex-direction', dir, 'important');
+
+    updateUI(); 
+}
+
+function manualToggleServer() { state.server = 3 - state.server; updateUI(); }
+
+function manualSwapPos(visualSide) { 
+    let n = state.isSwapped ? (visualSide === 1 ? 2 : 1) : visualSide;
+    state['p'+n].pos = 1 - state['p'+n].pos; 
+    updateUI(); 
+}
+
+function manualSetPos(visualSide, visualZone) { 
+    if (!state.isStarted) { 
+        let n = state.isSwapped ? (visualSide === 1 ? 2 : 1) : visualSide;
+        let logicZone = state.isSwapped ? (1 - visualZone) : visualZone;
+
+        state.server = n; 
+        const tZ = (n === 1 ? 0 : 1); 
+        if(logicZone !== tZ) {
+            state['p'+n].pos = 1 - state['p'+n].pos; 
+        }
+        updateUI(); 
+    } 
+}
+    
+function undo() { 
+    if(state.history.length > 0) { 
+        const h = state.history.pop(); 
+        state.p1=h.p1; state.p2=h.p2; state.server=h.server; 
+        updateUI(); 
+    } 
+}
+
     let coinRotation = 0;
     let isTossing = false;
 
     function runToss() {
-        if (isTossing) return; // 防止动画期间重复点击
+        if (isTossing) return; 
         isTossing = true;
         
         const resDiv = document.getElementById('toss-result');
@@ -2092,34 +2172,26 @@ function swapSides() {
         
         resDiv.innerHTML = `<span style="color:#aaa; font-size:14px;">硬币抛空中...</span>`;
         
-        // 随机决定结果：0 为正面，1 为反面
         const result = Math.floor(Math.random() * 2); 
-        
-        // 每次点击至少转 5 圈 (1800度)
         const baseSpins = 5 * 360; 
         coinRotation += baseSpins;
         
-        // 修正最终落点的角度
         if (result === 0) {
-            // 正面：必须是 360 的整数倍
             coinRotation = Math.ceil(coinRotation / 360) * 360;
         } else {
-            // 反面：必须是 360 的整数倍 + 180度
             coinRotation = Math.ceil(coinRotation / 360) * 360 + 180;
         }
-        
-        // 执行物理翻转动画
         coin.style.transform = `rotateY(${coinRotation}deg)`;
         
-        // 2秒动画结束后，公布结果
         setTimeout(() => {
             const faceName = result === 0 ? "正面" : "反面";
             const faceColor = result === 0 ? "#f1c40f" : "#bdc3c7";
             
             resDiv.innerHTML = `Toss 结果: <span style="color:${faceColor}; font-size:20px; margin-left:8px;">${faceName}</span>`;
-            isTossing = false; // 解除锁定，允许下一次 TOSS
+            isTossing = false; 
         }, 2000); 
     }
+
 function finishSet() { 
     const winThreshold = Math.ceil(state.format / 2);
     
@@ -2133,7 +2205,6 @@ function finishSet() {
     const p1Name = state.p1.players.filter(p => p).map(p => p.trim()).join('/');
     const p2Name = state.p2.players.filter(p => p).map(p => p.trim()).join('/');
     
-    // 1. 判定本局赢家并确保本局比分赢家在前
     const isP1SetWin = s1 > s2;
     const setWinnerName = isP1SetWin ? p1Name : p2Name;
     const setScoreText = isP1SetWin ? `${s1}:${s2}` : `${s2}:${s1}`;
@@ -2156,27 +2227,22 @@ function finishSet() {
             const isP1MatchWin = state.p1.sets > state.p2.sets;
             const finalWinner = isP1MatchWin ? p1Name : p2Name;
             
-            // 🌟 核心逻辑：处理历史小分，确保每一局都是赢家分数在前
             const finalDetails = state.setHistory.map(s => {
                 const pts = s.split(':');
                 return isP1MatchWin ? `${pts[0]}:${pts[1]}` : `${pts[1]}:${pts[0]}`;
             }).join('  ');
             
-            // 按照图片要求的简洁格式显示
             const msg = `${finalWinner} 胜 ${finalDetails}\n\n📢 请点击底部“🏆 提交”按钮完成上传！`;
-                showResultModal("🏆 比赛结束", msg, null, false);
+            showResultModal("🏆 比赛结束", msg, null, false);
                 
-                // 高亮提交按钮，提醒裁判点击
-                const submitBtn = document.getElementById('submit-btn');
-                if(submitBtn) {
-                    submitBtn.style.border = "4px solid #ffeb3b";
-                    submitBtn.style.transform = "scale(1.05)";
-                    submitBtn.style.transition = "all 0.3s ease";
-                }
-            }, 100);
-        }
-else {
-        // 进入下一局逻辑不变...
+            const submitBtn = document.getElementById('submit-btn');
+            if(submitBtn) {
+                submitBtn.style.border = "4px solid #ffeb3b";
+                submitBtn.style.transform = "scale(1.05)";
+                submitBtn.style.transition = "all 0.3s ease";
+            }
+        }, 100);
+    } else {
         state.server = setWinner;
         state.p1.score = 0; state.p2.score = 0; state.currentSet++; state.breakTriggered = false;
         startBreakTimer("☕ 局间休息", `第 ${state.currentSet-1} 局已结束，请稍作休息`, 120);
@@ -2187,20 +2253,49 @@ else {
         updateUI(); 
     }
 }
-// 🌟 功能 1：返回待赛列表
-    function cancelPrep() {
-        state.isLive = false;
-        state.isStarted = false;
-        state.matchId = null;
-localStorage.removeItem('umpire_current_match');
-        document.getElementById('prep-overlay').style.display = 'none';
-        document.getElementById('umpire-screen').style.display = 'none';
-        document.getElementById('match-list-screen').style.display = 'flex';
-    }
 
-    // 🌟 功能 2：呼出弃权选择面板
-   function handleWalkover() {
-    // 检查是否已载入比赛
+// umpire.html -> 核心修复 4：安全退出与视图切换拦截器
+// umpire.html -> 完整替换 cancelPrep，保证返回行为同步刷新持久层记忆，解决重进丢失数据的终极命门
+function cancelPrep() {
+    if (state.teamTie && state.sportType === 'badminton') {
+        state.sportType = 'badminton_team';
+        activeModule = SportModules['badminton_team'];
+        
+        document.getElementById('module-badminton').classList.remove('active');
+        document.getElementById('module-badminton').style.display = 'none';
+        document.getElementById('module-badminton_team').style.setProperty('display', 'flex', 'important');
+        document.getElementById('generic-score-container').style.setProperty('display', 'none', 'important');
+        document.getElementById('generic-info-bar').style.display = 'none'; // 隐藏底部的多余局分条
+        document.getElementById('prep-overlay').style.display = 'none';
+
+        // 🌟【关键修复】：返回大项时，立即把单场遗留的小分、局分内存擦除干净，并同步更新 localStorage 存档状态
+        state.p1.score = 0; state.p2.score = 0;
+        state.p1.sets = 0;  state.p2.sets = 0;
+        state.currentSet = 1;
+        state.setHistory = [];
+
+        localStorage.setItem('umpire_current_match', JSON.stringify({
+            matchId: state.matchId, court: state.court, sportType: state.sportType,
+            title: document.getElementById('match-title').innerText,
+            p1: state.p1, p2: state.p2, server: state.server, isSwapped: state.isSwapped,
+            isDoubles: state.isDoubles, currentSet: state.currentSet, setHistory: state.setHistory,
+            format: state.format, tieLineups: tieLineups, submittedSides: submittedSides, teamTie: state.teamTie
+        }));
+
+        renderTeamTieUI(); 
+        updateUI();        
+        return;
+    }
+    
+    // 如果是在团体大对阵列表点返回，退回到场馆总待赛列表
+    state.isLive = false;
+    state.isStarted = false;
+    localStorage.removeItem('umpire_current_match'); // 彻底解绑清空
+    document.getElementById('prep-overlay').style.display = 'none';
+    document.getElementById('umpire-screen').style.display = 'none';
+    document.getElementById('match-list-screen').style.display = 'flex';
+}
+function handleWalkover() {
     if (!state.matchId) return;
 
     const p1Name = state.p1.players.filter(p => p).join('/');
@@ -2220,11 +2315,9 @@ localStorage.removeItem('umpire_current_match');
         <option value="both">❌ 双方弃权 (无胜者)</option>
     `;
     
-    // 🌟 现在这个 modal 已经不在 prep-overlay 里面了，可以正常显示
     document.getElementById('walkover-modal').style.display = 'flex';
 }
 
-    // 🌟 功能 3：自动结算比分并提交给管理端
 function confirmWalkover() {
     const selectEl = document.getElementById('walkover-select');
     const val = selectEl.value;
@@ -2239,33 +2332,27 @@ function confirmWalkover() {
     let confirmMsg = "";
     const winThreshold = Math.ceil(state.format / 2);
 
-    // 1. 获取名字并清理空格
     const p1Name = state.p1.players.filter(p => p).map(p => p.trim()).join('/');
     const p2Name = state.p2.players.filter(p => p).map(p => p.trim()).join('/');
 
     if (val === "both") {
         confirmMsg = "确定判决【双方弃权】吗？";
         details = "双方弃权(Double W/O)";
-    } 
-    else {
+    } else {
         const [loserNum, type] = val.split('_');
         const isLoserP1 = (loserNum === '1');
         const loserName = isLoserP1 ? p1Name : p2Name;
         const winnerName = isLoserP1 ? p2Name : p1Name;
 
         if (type === 'injury') {
-            // 🌟 因伤弃权逻辑：保留已打完的局分 + 当前进行中的比分
             let historyStr = state.setHistory.join('  ');
             let currentScore = `${state.p1.score}:${state.p2.score}`;
             details = (historyStr ? historyStr + '  ' : '') + currentScore + " (因伤)";
             
-            // 获胜方拿到足够胜出的局数，失败方保留已赢局数
             finalSets1 = isLoserP1 ? state.p1.sets : winThreshold;
             finalSets2 = isLoserP1 ? winThreshold : state.p2.sets;
             confirmMsg = `确定判决【${loserName}】因伤弃权吗？\n当前比分 [${currentScore}] 将被保留。`;
-        } 
-        else {
-            // 直接弃权逻辑：比分通常判为全负（0:2 或 0:3）
+        } else {
             details = "弃权(W/O)";
             finalSets1 = isLoserP1 ? 0 : winThreshold;
             finalSets2 = isLoserP1 ? winThreshold : 0;
@@ -2273,32 +2360,25 @@ function confirmWalkover() {
         }
     }
 
-    // 使用自定义弹窗避免微信关闭网页
     showResultModal("🏳️ 弃权确认", confirmMsg, () => {
         document.getElementById('walkover-modal').style.display = 'none';
         
-        // ✅ 核心修复：区分“团体赛小场”和“单项整场比赛”的弃权逻辑
-        // 如果当前是团体赛，且正在执裁羽毛球小项
         if (state.teamTie && activeModule === SportModules['badminton']) {
             const subIdx = state.teamTie.currentSubIndex;
             
-            // 1. 记录本小场比分（判定当前小场的胜负局数）
             state.p1.sets = finalSets1;
             state.p2.sets = finalSets2;
             state.teamTie.scores[subIdx] = `${finalSets1}:${finalSets2}`;
-            
             const newTieScore = getTeamTieScore();
             
-            // 2. 将小场比分推给服务器大屏，附带 (弃权/因伤) 标记
             socket.emit('update_score', { 
                 id: state.matchId, 
                 court: state.court, 
                 teamScore: newTieScore, 
                 subMatchIndex: subIdx,
-                subMatchScore: details // 使用 details (例如 "0:0 (因伤)")
+                subMatchScore: details 
             });
 
-            // 3. 界面切回团体对阵列表
             state.sportType = 'badminton_team';
             activeModule = SportModules['badminton_team'];
             
@@ -2309,13 +2389,11 @@ function confirmWalkover() {
             document.getElementById('generic-score-container').style.setProperty('display', 'none', 'important');
             document.getElementById('prep-overlay').style.display = 'none';
 
-            renderTeamTieUI(); // 刷新大名单列表
-            updateUI();        // 保存状态
+            renderTeamTieUI(); 
+            updateUI();        
             
             showResultModal("✅ 判决成功", "当前小场已判决结束，请准备进行团体赛的下一场。", null, false);
-
         } else {
-            // ✅ 原有逻辑：非团体赛小场，直接结束整场比赛
             socket.emit('finish_match', { 
                 id: state.matchId, 
                 court: state.court,
@@ -2325,11 +2403,12 @@ function confirmWalkover() {
             });
 
             showResultModal("✅ 判决成功", "比分已成功上传至记录台。", () => {
-                cancelPrep(); // 返回列表
+                cancelPrep(); 
             }, false);
         }
     });
 }
+
 let breakInterval = null;
 
 function startBreakTimer(title, msg, seconds) {
@@ -2352,17 +2431,18 @@ function startBreakTimer(title, msg, seconds) {
         if (timeLeft <= 0) closeBreak();
     }, 1000);
 }
+
 function closeBreak() {
     if(breakInterval) clearInterval(breakInterval);
     document.getElementById('break-overlay').style.display = 'none';
 }
+
 function showResultModal(title, content, onConfirm, showCancel = true) {
     document.getElementById('result-title').innerText = title;
     document.getElementById('result-content').innerText = content;
     document.getElementById('result-overlay').style.display = 'flex';
     document.getElementById('result-cancel').style.display = showCancel ? 'block' : 'none';
     
-    // 绑定点击事件
     const confirmBtn = document.getElementById('result-confirm');
     confirmBtn.onclick = () => {
         closeResultModal();
@@ -2373,20 +2453,22 @@ function showResultModal(title, content, onConfirm, showCancel = true) {
 function closeResultModal() {
     document.getElementById('result-overlay').style.display = 'none';
 }
+
 socket.on('manager_revoke_result', (data) => {
     if (state.matchId === data.id) {
         showResultModal("↩️ 撤销通知", "管理员已撤销本场比赛结果，该场次已重新回到待赛列表，您可以重新加载并提交正确的成绩。", () => {
-            showSetup(); // 返回场地选择/列表页重新进入
+            showSetup(); 
         }, false);
     }
 });
+
+// umpire.html -> 完整替换 window.load 监听，消灭红蓝牌堆叠怪象
 window.addEventListener('load', () => {
     const savedStateStr = localStorage.getItem('umpire_current_match');
     if (savedStateStr) {
         try {
             const savedData = JSON.parse(savedStateStr);
-            if (confirm(`检测到你有未完成的执裁 (场地 ${savedData.court})，是否恢复？`)) {
-                // 1. 完整恢复 state 核心数据
+            if (confirm(`检测到你有未完成的执裁 (场地 ${savedData.court})，是否恢复进度？`)) {
                 state.matchId = savedData.matchId;
                 state.court = savedData.court;
                 state.sportType = savedData.sportType;
@@ -2398,49 +2480,66 @@ window.addEventListener('load', () => {
                 state.isSwapped = savedData.isSwapped;
                 state.currentSet = savedData.currentSet;
                 state.setHistory = savedData.setHistory;
-                state.isStarted = true;
                 state.isLive = true;
-if (savedData.tieLineups) tieLineups = savedData.tieLineups;
-        if (savedData.submittedSides) submittedSides = savedData.submittedSides;
-        if (savedData.teamTie) state.teamTie = savedData.teamTie;
-                // 2. 重新激活对应的运动模块 (🌟 关键修复)
+                
+                if (savedData.tieLineups) tieLineups = savedData.tieLineups;
+                if (savedData.submittedSides) submittedSides = savedData.submittedSides;
+                if (savedData.teamTie) state.teamTie = savedData.teamTie;
+                
+                state.isStarted = (state.sportType === 'badminton'); 
+                
+                if (state.teamTie && typeof getTeamTieScore === 'function') {
+                    if (savedData.teamTie.scores) state.teamTie.scores = savedData.teamTie.scores;
+                    const currentRealTieScore = getTeamTieScore();
+                    const btTieScoreEl = document.getElementById('bt-tie-score');
+                    if (btTieScoreEl) btTieScoreEl.innerText = currentRealTieScore.split(':').join(' : ');
+                }
+                
                 document.querySelectorAll('.sport-module').forEach(el => {
                     el.classList.remove('active');
                     el.style.setProperty('display', 'none', 'important');
                 });
                 
-                activeModule = SportModules[state.sportType]; // 重新绑定逻辑模块
+                activeModule = SportModules[state.sportType]; 
                 const moduleContainer = document.getElementById(`module-${state.sportType}`);
                 if (moduleContainer) {
                     moduleContainer.classList.add('active');
                     moduleContainer.style.setProperty('display', 'flex', 'important');
                 }
 
-                // 3. 恢复 UI 显示
                 document.getElementById('match-title').innerText = savedData.title || "比赛恢复中";
                 document.getElementById('setup-screen').style.display = 'none';
                 document.getElementById('match-list-screen').style.display = 'none';
                 document.getElementById('umpire-screen').style.display = 'flex';
-                document.getElementById('prep-overlay').style.display = 'none';
+                
+                // 🌟【关键修复】：根据恢复后的 sportType，强制清洗红蓝牌和信息条的显示状态，杜绝右侧幽灵错位
+                if (state.sportType === 'badminton_team') {
+                    document.getElementById('generic-score-container').style.setProperty('display', 'none', 'important');
+                    document.getElementById('generic-info-bar').style.display = 'none';
+                    document.getElementById('prep-overlay').style.display = 'none';
+                } else {
+                    document.getElementById('generic-score-container').style.setProperty('display', 'flex', 'important');
+                    document.getElementById('generic-info-bar').style.display = 'flex';
+                }
 
-                // 4. 网络重连与同步
                 socket.emit('join_court', state.court);
-                socket.emit('lock_match', state.matchId);
+                
+                const loadPayload = { matchId: state.matchId };
+                if (state.teamTie && state.teamTie.currentSubIndex !== -1) {
+                    loadPayload.subMatchIndex = state.teamTie.currentSubIndex;
+                }
+                socket.emit('lock_match', loadPayload);
 
-                // 5. 强制执行一次换边视觉同步
                 if (state.isSwapped) {
                     const dir = 'row-reverse';
                     document.getElementById('generic-score-container').style.setProperty('flex-direction', dir, 'important');
-                    const ttMain = document.querySelector('.tt-main');
-                    if (ttMain) ttMain.style.setProperty('flex-direction', dir, 'important');
                 }
-
-                updateUI(); // 触发最终渲染
+                updateUI(); 
             } else {
                 localStorage.removeItem('umpire_current_match');
             }
         } catch (e) {
-            console.error("恢复状态失败", e);
+            console.error("恢复记忆体失败", e);
         }
     }
 });
