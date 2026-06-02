@@ -440,7 +440,13 @@
             <div class="match-type-title">${m.matchType || "羽毛球比赛"}</div>
         `;
 
-        const isTeamMatchDetected = m.isTeamMatch || m.isTeamEvent || (m.matchType && m.matchType.includes("团体"));
+        // 🌟 终极强力防线：兼容英文 "team" 值和中文 "团体" 值，并兜底布尔值
+        const isTeamMatchDetected = m.isTeamMatch === true || 
+                                    m.isTeamMatch === 'true' || 
+                                    m.isTeamEvent === true || 
+                                    (m.sportType && (m.sportType.includes("团体") || m.sportType.includes("team"))) || 
+                                    (m.matchType && m.matchType.includes("团体")) || 
+                                    (m.subMatches && m.subMatches.length > 0);
 
         if (isTeamMatchDetected) {
             const leftTeamClean = cleanTeamName(isSwapped ? m.p2 : m.p1);
