@@ -1317,7 +1317,15 @@ function renderMatchList(queue) {
             if (match.isFinished) {
                 const cleanP1 = match.p1.replace(/[\(（].*?[\)）]/g, "").trim();
                 const cleanP2 = match.p2.replace(/[\(（].*?[\)）]/g, "").trim();
-                alert(`🏅 本场比赛已结束\n\n${cleanP1}  ${match.finalScore}  ${cleanP2}\n\n详情：${match.details}`);
+                
+                // 🌟 修复 1：处理详情 undefined 的问题，给它一个兜底的文字
+                const matchDetails = match.details && match.details !== "undefined" ? match.details : "暂无小场比分";
+                
+                const showContent = `${cleanP1}  ${match.finalScore || ''}  ${cleanP2}\n\n详情：${matchDetails}`;
+                
+                // 🌟 修复 2：不再使用带有“关闭网页”按钮的逻辑，直接改用系统自带的不显眼的 alert 弹窗
+                // 这样既能展示成绩，又绝对不会多出任何“关闭网页”的误导选项！
+                alert(`🏅 本场比赛已结束\n\n${showContent}`);
                 return; 
             }
             document.getElementById('match-list-screen').style.display = 'none';
@@ -1527,19 +1535,28 @@ function renderTeamTieUI() {
         finishTieBtn.innerHTML = "🏆 团体赛已分胜负：点此提交整场比赛";
         finishTieBtn.style.cssText = "width:100%; padding:20px; background:#f39c12; color:white; border:none; border-radius:10px; font-weight:bold; font-size:18px; margin-top:20px; box-shadow: 0 4px 12px rgba(243,156,18,0.5);";
         finishTieBtn.onclick = () => {
-            if(confirm(`整个团体赛已结束，最终总大比分为 ${tieScoreStr}，确认全部完赛并上传最终结果吗？`)) {
-                socket.emit('finish_match', { 
-                    id: state.matchId, 
-                    court: state.court,
-                    details: `团体总比分 ${tieScoreStr}`, 
-                    setScore1: scoresArr[0],
-                    setScore2: scoresArr[1],
-                    isTeamEventEnd: true 
-                });
-                localStorage.removeItem('umpire_current_match');
-                window.location.reload(); 
-            }
-        };
+    if(confirm(`整个团体赛已结束，最终总大比分为 ${tieScoreStr}，确认全部完赛并上传最终结果吗？`)) {
+        socket.emit('finish_match', { 
+            id: state.matchId, 
+            court: state.court,
+            details: `团体总比分 ${tieScoreStr}`, 
+            setScore1: scoresArr[0],
+            setScore2: scoresArr[1],
+            isTeamEventEnd: true 
+        });
+        localStorage.removeItem('umpire_current_match');
+        
+        // 核心修复：不使用 window.location.reload()，而是通过清空状态返回场地列表
+        state.isLive = false;
+        state.isStarted = false;
+        state.matchId = null;
+        state.teamTie = null;
+        
+        document.getElementById('umpire-screen').style.display = 'none';
+        document.getElementById('match-list-screen').style.display = 'none';
+        document.getElementById('setup-screen').style.display = 'flex'; // 直接切回最开始的选择场地或列表
+    }
+};
         listContainer.appendChild(finishTieBtn);
     }
 }
@@ -1854,9 +1871,6 @@ function handleGlobalSubmit(e) {
 
         if (!confirm("确认提交本场比赛结果？")) return;
         
-        // ⚠️ 注意：这里已经删除了重复的 const subIdx = ...，不会再崩溃了！
-
-        // 1. 强制更新本地团体赛的数据数组
         state.teamTie.scores[subIdx] = `${state.p1.sets}:${state.p2.sets}`;
         if (state.teamTie.subMatches && state.teamTie.subMatches[subIdx]) {
             state.teamTie.subMatches[subIdx].status = 'finished';
