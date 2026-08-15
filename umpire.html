@@ -794,9 +794,20 @@
 
 <script>
     const socket = io(window.location.origin);
+    
+    // --- 新增：提取比赛代码并强制入房 ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const tournamentCode = urlParams.get('code');
+
+    if (!tournamentCode) {
+        document.body.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#000; color:#ff5252; text-align:center; padding:20px;"><h2>🚫 错误：URL 缺少比赛代码<br><br>请在网址末尾加上 ?code=你的代码<br><br>例如: ' + window.location.href + '?code=2026A</h2></div>';
+        throw new Error("Missing tournament code");
+    }
+
+    // 完整的状态变量定义
     let state = {
         court: 0, matchId: null, sportType: 'badminton', format: 3,
-        isLive: false, isStarted: false,isSwapped: false,
+        isLive: false, isStarted: false, isSwapped: false,
         p1: { players: [], score: 0, sets: 0, pos: 0 },
         p2: { players: [], score: 0, sets: 0, pos: 0 },
         server: 1, currentSet: 1, history: [], setHistory: [],
@@ -806,7 +817,12 @@
     let activeModule = null;
 
     socket.on('disconnect', () => { document.getElementById('match-title').innerHTML = "<span style='color:var(--red)'>⚠️网络已断开</span>"; });
-    socket.on('connect', () => { if(state.court > 0) socket.emit('join_court', state.court); });
+    
+    // 连上服务器后立即入房
+    socket.on('connect', () => { 
+        socket.emit('join_tournament', tournamentCode);
+        if(state.court > 0) socket.emit('join_court', state.court); 
+    });
 
 const SportModules = {
     badminton: {

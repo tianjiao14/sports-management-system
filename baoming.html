@@ -183,6 +183,16 @@
 
 <script>
     const socket = io();
+    
+    // --- 新增：提取比赛代码并强制入房 ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const tournamentCode = urlParams.get('code');
+
+    if (!tournamentCode) {
+        document.body.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#f4f7f6; color:#f56c6c; text-align:center; padding:20px;"><h2>🚫 错误：URL 缺少比赛代码<br><br>请在网址末尾加上 ?code=你的比赛代码<br><br>领队请联系主办方获取完整报名链接。</h2></div>';
+        throw new Error("Missing tournament code");
+    }
+
     let currentUnit = "";
     let currentPass = "";
     let authCredential = ""; 
@@ -190,8 +200,8 @@
     let deadlineTimer = null;
  let targetDeadlineStr = "";
 
- // 页面连上时，除了要名字，顺便把截止时间也要过来
  socket.on('connect', () => {
+     socket.emit('join_tournament', tournamentCode);
      socket.emit('get_tournament_name');
      socket.emit('get_registration_deadline'); // 🌟 新增
  });

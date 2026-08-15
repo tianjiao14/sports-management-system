@@ -407,6 +407,10 @@
                     <label style="font-weight:bold; color:#1a73e8;">🏆 赛事名称 </label>
                     <input type="text" id="global-tournament-title" class="form-control" placeholder="例如：2026年德阳市青少年羽毛球联赛" oninput="syncTournamentName(this.value)">
                 </div>
+<div class="form-group mb-3" style="background: #fff7e6; padding: 15px; border-radius: 8px; border: 1px solid #ffa940;">
+    <label style="font-weight:bold; color:#d46b08;">🔑 比赛代码 (更改代码后页面会自动刷新并切换频道)</label>
+    <input type="text" id="global-tournament-code" class="form-control" placeholder="请输入比赛代码，例如：2026A" onchange="updateTournamentCode(this.value)">
+</div>
                 <div class="form-group mb-3">
                     <label style="font-weight:bold;">项目名称</label>
                     <input type="text" id="sport-name" class="form-control" value="新比赛" required>
@@ -541,6 +545,40 @@
 <script>
 const socket = io(window.location.origin); 
 
+// 1. 静默读取本地存储的比赛代码（如果没有，默认分配一个如 2026A）
+let tournamentCode = localStorage.getItem('current_tournament_code') || "2026A";
+
+// 2. 连上服务器后立即加入对应代码房间
+socket.on('connect', () => {
+    socket.emit('join_tournament', tournamentCode);
+});
+
+// 3. 页面渲染时，更新输入框和侧边栏的显示内容
+document.addEventListener('DOMContentLoaded', () => {
+    const codeInput = document.getElementById('global-tournament-code');
+    if (codeInput) {
+        codeInput.value = tournamentCode;
+    }
+
+    const sidebarHeader = document.querySelector('.sidebar-header');
+    if (sidebarHeader) {
+        sidebarHeader.innerHTML = `赛事助手 v2.0 <br><span style="font-size:12px; color:#f39c12">当前代码: ${tournamentCode}</span>`;
+    }
+});
+
+// 4. 新增函数：当你在页面里修改了代码输入框后触发
+function updateTournamentCode(newCode) {
+    newCode = newCode.trim();
+    if (!newCode) {
+        alert("❌ 比赛代码不能为空！");
+        document.getElementById('global-tournament-code').value = tournamentCode;
+        return;
+    }
+    if (newCode !== tournamentCode) {
+        localStorage.setItem('current_tournament_code', newCode);
+        location.reload(); // 自动刷新网页，连接新的赛事房间
+    }
+}
 socket.on('score_to_manager', (data) => {
     const matchNode = document.getElementById(data.id);
     if (matchNode && !matchNode.classList.contains('decided')) {
