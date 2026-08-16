@@ -6,8 +6,65 @@
     <title>体育赛事管理系统</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <style>
+/* 二维码入口区域样式 */
+.qr-container {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.qr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+.qr-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.qr-canvas {
+    padding: 8px;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+}
+.qr-canvas img, .qr-canvas canvas {
+    display: block;
+}
+.qr-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 8px 0;
+    text-align: center;
+    font-weight: bold;
+    font-size: 13px;
+    border-radius: 4px;
+    color: #fff;
+    cursor: default;
+    user-select: none;
+}
+.qr-url {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #8c8c8c;
+    word-break: break-all;
+    text-align: center;
+    font-family: monospace;
+}
         :root {
             --primary-color: #27ae60;
             --placement-color: #f39c12;
@@ -359,7 +416,31 @@
 
 <div class="main-content">
     <div class="content-container">
-        
+        <div class="qr-container">
+    <h3 style="margin: 0; color: #d46b08; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+        📱 系统访问入口（扫码使用）
+    </h3>
+    <div class="qr-grid">
+        <!-- 领队报名 -->
+        <div class="qr-card">
+            <div id="qr-leader" class="qr-canvas"></div>
+            <div class="qr-btn" style="background-color: #1a73e8;">领队报名</div>
+            <div id="url-leader" class="qr-url"></div>
+        </div>
+        <!-- 裁判录入 -->
+        <div class="qr-card">
+            <div id="qr-umpire" class="qr-canvas"></div>
+            <div class="qr-btn" style="background-color: #27ae60;">裁判录入</div>
+            <div id="url-umpire" class="qr-url"></div>
+        </div>
+        <!-- 大屏/成绩看板 -->
+        <div class="qr-card">
+            <div id="qr-scoreboard" class="qr-canvas"></div>
+            <div class="qr-btn" style="background-color: #8b5cf6;">大屏幕 / 成绩查询</div>
+            <div id="url-scoreboard" class="qr-url"></div>
+        </div>
+    </div>
+</div>
         <div id="step1-view" class="container">
             <div class="container" style="background:#f0f7ff; border:1px solid #1a73e8; margin-bottom:20px;">
                 <h3 style="color:#1a73e8; margin-top:0;">⚙️ 参赛组别预设</h3>
@@ -2883,7 +2964,42 @@ function exportScheduleOnly() {
     const results = document.getElementById('results'); results.classList.add('print-schedule-only');
     window.print(); results.classList.remove('print-schedule-only');
 }
+function renderAccessQRCodes() {
+    const origin = window.location.origin;
+    const codeParam = encodeURIComponent(tournamentCode);
 
+    const portals = [
+        { elemId: 'qr-leader', urlId: 'url-leader', path: `/baoming.html?code=${codeParam}` },
+        { elemId: 'qr-umpire', urlId: 'url-umpire', path: `/umpire.html?code=${codeParam}` },
+        { elemId: 'qr-scoreboard', urlId: 'url-scoreboard', path: `/scoreboard.html?code=${codeParam}` }
+    ];
+
+    portals.forEach(p => {
+        const fullUrl = `${origin}${p.path}`;
+        const container = document.getElementById(p.elemId);
+        const urlDisplay = document.getElementById(p.urlId);
+
+        if (container) {
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: fullUrl,
+                width: 150,
+                height: 150,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+        if (urlDisplay) {
+            urlDisplay.innerText = fullUrl;
+        }
+    });
+}
+
+// 在 DOMContentLoaded 或 init 结束处调用
+document.addEventListener('DOMContentLoaded', () => {
+    renderAccessQRCodes();
+});
 function exportGlobalSchedule() {
     const ids = Object.keys(allTournaments); if (ids.length === 0) return alert("目前没有任何比赛项目。");
     let allMatches = []; const parser = new DOMParser();
