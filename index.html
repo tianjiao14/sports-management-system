@@ -300,7 +300,7 @@
     .match-status-text { display: none !important; }
     @page { size: auto; margin: 10mm 10mm; }
     .sidebar, .mobile-nav-bar,#setup-view, #step1-view, #step2-view, #name-entry-view, 
-    #controls-container, .button-group, button, select, .score-inputs, .delete-btn, .qualification-box { display: none !important; }
+    #controls-container, .button-group, button, select, .score-inputs, .delete-btn, .qualification-box, .qr-container { display: none !important; }
     .print-schedule-only .crosstable, .print-schedule-only .qualification-box, .print-schedule-only #final-standings-container { display: none !important; }
     
     /* 🌟 核心分页编排调优 */
@@ -399,10 +399,10 @@
     <div class="sidebar-menu">
         <div class="menu-label">基础流程</div>
         <div class="menu-item active" id="nav-import" onclick="showStep(1)">
-            <span>📁</span>名单导入解析
+            <span>📁</span>报名设置
         </div>
         <div class="menu-item" id="nav-setup" onclick="showStep(2)">
-            <span>⚙️</span> 新建赛事设置
+            <span>⚙️</span> 赛事设置
         </div>
         
         <div class="menu-label" style="margin-top:20px;">我的比赛项目</div>
@@ -416,32 +416,10 @@
 
 <div class="main-content">
     <div class="content-container">
-        <div class="qr-container">
-    <h3 style="margin: 0; color: #d46b08; font-size: 16px; display: flex; align-items: center; gap: 8px;">
-        📱 系统访问入口（扫码使用）
-    </h3>
-    <div class="qr-grid">
-        <!-- 领队报名 -->
-        <div class="qr-card">
-            <div id="qr-leader" class="qr-canvas"></div>
-            <div class="qr-btn" style="background-color: #1a73e8;">领队报名</div>
-            <div id="url-leader" class="qr-url"></div>
-        </div>
-        <!-- 裁判录入 -->
-        <div class="qr-card">
-            <div id="qr-umpire" class="qr-canvas"></div>
-            <div class="qr-btn" style="background-color: #27ae60;">裁判录入</div>
-            <div id="url-umpire" class="qr-url"></div>
-        </div>
-        <!-- 大屏/成绩看板 -->
-        <div class="qr-card">
-            <div id="qr-scoreboard" class="qr-canvas"></div>
-            <div class="qr-btn" style="background-color: #8b5cf6;">大屏幕 / 成绩查询</div>
-            <div id="url-scoreboard" class="qr-url"></div>
-        </div>
-    </div>
-</div>
+        
         <div id="step1-view" class="container">
+            
+
             <div class="container" style="background:#f0f7ff; border:1px solid #1a73e8; margin-bottom:20px;">
                 <h3 style="color:#1a73e8; margin-top:0;">⚙️ 参赛组别预设</h3>
                 <div style="display:flex; gap:10px; align-items:center;">
@@ -450,12 +428,14 @@
                 </div>
                 <p style="font-size:12px; color:#666; margin-top:8px;">提示：此处设置的组别将直接出现在领队的手机下拉菜单中。</p>
             </div>
-<div style="background: #fff8f2; padding: 12px 20px; border-radius: 8px; border: 1px solid #ffbb96; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-    <span style="font-weight: bold; color: #d46b08; font-size: 14px;">⏱️ 远程报名截止设置：</span>
-    <input type="datetime-local" id="admin-deadline-input" style="width: 220px; padding: 6px; border: 1px solid #d9d9d9; border-radius: 4px;">
-    <button class="main-button" style="background: #fa8c16; padding: 6px 15px; font-size: 13px;" onclick="saveRegistrationDeadline()">💾 锁定截止时间</button>
-    <span id="admin-deadline-status" style="color: #8c8c8c; font-size: 13px;">未设置（无限期开放）</span>
-</div>
+            
+            <div style="background: #fff8f2; padding: 12px 20px; border-radius: 8px; border: 1px solid #ffbb96; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <span style="font-weight: bold; color: #d46b08; font-size: 14px;">⏱️ 远程报名截止设置：</span>
+                <input type="datetime-local" id="admin-deadline-input" style="width: 220px; padding: 6px; border: 1px solid #d9d9d9; border-radius: 4px;">
+                <button class="main-button" style="background: #fa8c16; padding: 6px 15px; font-size: 13px;" onclick="saveRegistrationDeadline()">💾 锁定截止时间</button>
+                <span id="admin-deadline-status" style="color: #8c8c8c; font-size: 13px;">未设置（无限期开放）</span>
+            </div>
+            
             <h1 class="section-title" style="color:#1a73e8; border-left-color: #1a73e8;">第一步：名单导入</h1>
             <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
                 <b>📁 点击选择文件夹 或 拖入 Excel 报名表</b><br>
@@ -479,9 +459,29 @@
                 <button id="dlBtn" onclick="exportToExcel()" class="secondary-button" disabled>⬇️ 导出全项目汇总表 (.xlsx)</button>
             </div>
             <div id="parsed-projects-list" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
-        </div>
-
-        <div id="step2-view" class="container" style="display:none;">
+<div class="qr-container">
+                <h3 style="margin: 0; color: #d46b08; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                    📱 系统访问入口（扫码使用）
+                </h3>
+                <div class="qr-grid">
+                    <div class="qr-card">
+                        <div id="qr-leader" class="qr-canvas"></div>
+                        <div class="qr-btn" style="background-color: #1a73e8;">领队报名</div>
+                        <div id="url-leader" class="qr-url"></div>
+                    </div>
+                    <div class="qr-card">
+                        <div id="qr-umpire" class="qr-canvas"></div>
+                        <div class="qr-btn" style="background-color: #27ae60;">裁判录入</div>
+                        <div id="url-umpire" class="qr-url"></div>
+                    </div>
+                    <div class="qr-card">
+                        <div id="qr-scoreboard" class="qr-canvas"></div>
+                        <div class="qr-btn" style="background-color: #8b5cf6;">大屏幕 / 成绩查询</div>
+                        <div id="url-scoreboard" class="qr-url"></div>
+                    </div>
+                </div>
+            </div>
+        </div> <div id="step2-view" class="container" style="display:none;">
             <h1 class="section-title">第二步：赛事基础设置</h1>
             <form id="setup-form">
                 <div class="form-group mb-3" style="background: #f8fbff; padding: 15px; border-radius: 8px; border: 1px solid #1a73e8;">
@@ -1076,11 +1076,16 @@ function pushAllScheduledMatches() {
 }
 
 const dbMgr = {
-    dbName: "TournamentDB", storeName: "tournaments", db: null,
+    // 🌟 将数据库名称加上当前比赛代码后缀，实现不同赛事代码数据完全独立
+    get dbName() {
+        return `TournamentDB_${tournamentCode}`;
+    },
+    storeName: "tournaments", 
+    db: null,
     open() {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.dbName, 2);
-            request.onupgradeneeded = (e) => {
+        request.onupgradeneeded = (e) => {
                 const db = e.target.result;
                 if (!db.objectStoreNames.contains(this.storeName)) db.createObjectStore(this.storeName, { keyPath: "id" });
             };
@@ -1237,7 +1242,7 @@ let draggedItem = null;
 
 function renderSidebarList() {
     ui.tournamentList.innerHTML = '';
-    let order = JSON.parse(localStorage.getItem('tournament_order') || "[]");
+    let order = JSON.parse(localStorage.getItem(`tournament_order_${tournamentCode}`) || "[]");
     let sortedIds = Object.keys(allTournaments);
     if (order.length > 0) {
         sortedIds.sort((a, b) => {
@@ -1286,7 +1291,7 @@ function renderSidebarList() {
 
 function saveNewOrder() {
     const currentOrder = Array.from(ui.tournamentList.children).map(node => node.getAttribute('data-id'));
-    localStorage.setItem('tournament_order', JSON.stringify(currentOrder));
+    localStorage.setItem(`tournament_order_${tournamentCode}`, JSON.stringify(currentOrder));
 }
 
 function setActive(id) {
@@ -3032,12 +3037,17 @@ function exportGlobalSchedule() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const savedName = localStorage.getItem('globalTournamentName') || "体育赛事管理系统";
+    // 🌟 按照比赛代码读取赛事名称
+    const savedName = localStorage.getItem(`globalTournamentName_${tournamentCode}`) || "体育赛事管理系统";
     const input = document.getElementById('global-tournament-title');
     if (input) { input.value = savedName; setTimeout(() => syncTournamentName(savedName), 1000); }
 });
 
-function syncTournamentName(name) { localStorage.setItem('globalTournamentName', name); if (socket && socket.connected) socket.emit('set_tournament_name', name); }
+function syncTournamentName(name) { 
+    // 🌟 按照比赛代码分别存储赛事名称
+    localStorage.setItem(`globalTournamentName_${tournamentCode}`, name); 
+    if (socket && socket.connected) socket.emit('set_tournament_name', name); 
+}
 function toggleMobileSidebar() { document.querySelector('.sidebar').classList.toggle('mobile-active'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
 
 document.querySelectorAll('.menu-item').forEach(item => { item.addEventListener('click', () => { if (window.innerWidth <= 768) toggleMobileSidebar(); }); });
