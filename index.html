@@ -136,7 +136,7 @@
         .crosstable th:first-child, .crosstable td:first-child { width: 120px !important; text-align:center; }
         .crosstable th:nth-last-child(1), .crosstable td:nth-last-child(1),
         .crosstable th:nth-last-child(2), .crosstable td:nth-last-child(2),
-        .crosstable th:nth-last-child(3), .crosstable td:nth-last-child(3) { width: 50px !important; padding: 4px; }        
+        .crosstable th:nth-last-child(3), .crosstable td:nth-last-child(3) { width: 40px !important; padding: 4px; }        
         .crosstable th, .crosstable td { word-wrap: break-word; word-break: break-all; }
         .schedule-table th { background-color: #2c3e50; color: white; }
         
@@ -536,13 +536,15 @@
 
                 <div id="round-robin-settings" style="display:none; margin-top: 20px; padding: 20px; background: #fdfdfd; border: 1px solid #eee; border-radius: 8px;">
                     <h4 style="margin-top:0; color: var(--primary-color);">⚙️ 循环赛/小组赛规则</h4>
-                    <div class="form-row">
-                        <div class="form-col"><label>胜场积分</label><input type="number" id="pts-win" value="3"></div>
-                        <div class="form-col"><label>平局积分</label><input type="number" id="pts-draw" value="0"></div>
-                        <div class="form-col"><label>负场积分</label><input type="number" id="pts-loss" value="0"></div>
-                        <div class="form-col"><label>小组数 (留空自动)</label><input type="number" id="num-groups" placeholder="自动计算"></div>
-                        <div class="form-col"><label>每组出线人数</label><input type="number" id="num-advance-per-group" value="2"></div>
-                    </div>
+                    <div class="form-row" style="flex-wrap: wrap;">
+    <div class="form-col"><label>常规胜积分</label><input type="number" id="pts-win" value="3"></div>
+    <div class="form-col"><label>常规平局积分</label><input type="number" id="pts-draw" value="1"></div>
+    <div class="form-col"><label>常规负积分</label><input type="number" id="pts-loss" value="0"></div>
+    <div class="form-col"><label>点球胜积分</label><input type="number" id="pts-pen-win" value="2"></div>
+    <div class="form-col"><label>点球负积分</label><input type="number" id="pts-pen-loss" value="1"></div>
+    <div class="form-col"><label>小组数 (留空自动)</label><input type="number" id="num-groups" placeholder="自动计算"></div>
+    <div class="form-col"><label>每组出线人数</label><input type="number" id="num-advance-per-group" value="2"></div>
+</div>
                 </div>
                 <div id="team-event-settings" style="display:none; margin-top: 20px; padding: 20px; background: #f0f7ff; border: 1px solid #bae7ff; border-radius: 8px;">
                     <h4 style="margin-top:0; color: #1890ff;">🏸 团体赛出场顺序设置</h4>
@@ -586,27 +588,45 @@
         <div id="results" style="margin-top: 30px;"></div>
 
         <div id="controls-container" class="container" style="display:none; padding: 25px 35px; margin-top: 30px;">
-            <div style="background: #ebf5ff; padding: 15px 25px; border-radius: 8px; border: 1px solid #409eff; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
-                <div style="color: #1a73e8; font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px;">🌐 全局编排</div>
-                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-                    <label style="margin:0;">场地数：</label>
-                    <input type="number" id="controls-global-courts" value="5" min="1" style="width: 60px; padding: 5px;">
-                    <label style="color: #e67e22; margin:0;">上午开始：</label>
-                    <input type="time" id="global-start-time" value="09:00" style="width: 100px; padding: 5px;">
-                    <label style="margin:0;">时长(分)：</label>
-                    <input type="number" id="global-duration" value="20" style="width: 60px; padding: 5px;">
-                    <label style="color: #e67e22; margin:0;">上午截止：</label>
-                    <input type="time" id="morning-end-time" value="12:00" style="width: 100px; padding: 5px;">
-                    <label style="color: #e74c3c; margin:0;">下午开始：</label>
-                    <input type="time" id="afternoon-start-time" value="14:00" style="width: 100px; padding: 5px;">
-                    <label style="color: #e74c3c; margin:0;">下午截止：</label>
-                    <input type="time" id="afternoon-end-time" value="18:00" style="width: 100px; padding: 5px;">
-                    <button type="button" onclick="assignGlobalCourts('controls-global-courts')" class="blue-button" style="padding: 10px 20px; background-color: #1a73e8;">⚡ 编排当前组别</button>
-                    <button type="button" onclick="pushAllScheduledMatches()" class="blue-button" style="padding: 10px 20px; background-color: #f39c12;">📤 推送当前组别</button>
-                    <button type="button" onclick="assignEverythingGlobal('controls-global-courts')" class="secondary-button" style="padding: 10px 20px; background-color: #e74c3c;">🌎 一键全局编排</button>
-                    <button type="button" onclick="pushEverythingGlobal()" class="blue-button" style="padding: 10px 20px; background-color: #9c27b0;">🌍 一键推送全部</button>
-                </div>
-            </div>
+           <div style="background: #ebf5ff; padding: 15px 25px; border-radius: 8px; border: 1px solid #409eff; margin-bottom: 25px; display: flex; flex-direction: column; gap: 15px;">
+    <div style="color: #1a73e8; font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px;">🌐 全局编排参数设置</div>
+    
+    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #cce5ff;">
+    <label style="margin:0; font-weight:bold; color:#1a73e8;">📅 比赛首日：</label>
+    <input type="date" id="global-start-date" style="width: 135px; padding: 5px;">
+    
+    <label style="margin:0; font-weight:bold; color:#1a73e8; margin-left: 5px;">🗓️ 比赛日：</label>
+    <div id="match-weekdays" style="display: flex; gap: 8px; align-items: center; font-size: 13px;">
+        <label><input type="checkbox" value="1"> 周一</label>
+        <label><input type="checkbox" value="2"> 周二</label>
+        <label><input type="checkbox" value="3"> 周三</label>
+        <label><input type="checkbox" value="4"> 周四</label>
+        <label><input type="checkbox" value="5"> 周五</label>
+        <label><input type="checkbox" value="6"> 周六</label>
+        <label><input type="checkbox" value="0"> 周日</label>
+        <label><input type="checkbox" id="skip-holidays-checkbox" checked> 🚫 避开法定节假日</label>
+    </div>
+    
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <label style="margin:0;">场地数：</label>
+        <input type="number" id="controls-global-courts" value="2" min="1" style="width: 55px; padding: 5px;">
+        <label style="margin:0;">时长(分)：</label>
+        <input type="number" id="global-duration" value="40" style="width: 55px; padding: 5px;">
+        <label style="color: #e67e22; margin:0;">上午开始：</label>
+        <input type="time" id="global-start-time" value="" style="width: 95px; padding: 5px;">
+        <label style="color: #e67e22; margin:0;">上午截止：</label>
+        <input type="time" id="morning-end-time" value="" style="width: 95px; padding: 5px;">
+        <label style="color: #e74c3c; margin:0;">下午开始：</label>
+        <input type="time" id="afternoon-start-time" value="16:00" style="width: 95px; padding: 5px;">
+        <label style="color: #e74c3c; margin:0;">下午截止：</label>
+        <input type="time" id="afternoon-end-time" value="17:30" style="width: 95px; padding: 5px;">
+        
+        <button type="button" onclick="assignGlobalCourts('controls-global-courts')" class="blue-button" style="padding: 8px 15px; background-color: #1a73e8;">⚡ 编排当前组别</button>
+        <button type="button" onclick="pushAllScheduledMatches()" class="blue-button" style="padding: 8px 15px; background-color: #f39c12;">📤 推送当前组别</button>
+        <button type="button" onclick="assignEverythingGlobal('controls-global-courts')" class="secondary-button" style="padding: 8px 15px; background-color: #e74c3c;">🌎 一键全局编排</button>
+        <button type="button" onclick="pushEverythingGlobal()" class="blue-button" style="padding: 8px 15px; background-color: #9c27b0;">🌍 一键推送全部</button>
+    </div>
+</div>
 
             <div class="button-group" style="justify-content: center; gap: 12px;">
                 <button id="refresh-btn" style="background-color: #f59e0b;">🔀 随机重抽签</button>
@@ -2787,17 +2807,120 @@ root.querySelectorAll('.match').forEach(m => {
     return queue;
 }
 
-function applySchedulingLogic(matchQueue, inputId) {
-    const numCourts = parseInt(document.getElementById(inputId).value) || 5;
-    const duration = parseInt(document.getElementById('global-duration').value) || 20;
-    const restTime = 10; 
-    const morningStart = document.getElementById('global-start-time').value ? timeToMins(document.getElementById('global-start-time').value) : timeToMins("09:00");
-    const morningEnd = document.getElementById('morning-end-time').value ? timeToMins(document.getElementById('morning-end-time').value) : Infinity;
-    const afternoonStart = document.getElementById('afternoon-start-time').value ? timeToMins(document.getElementById('afternoon-start-time').value) : Infinity;
-    const afternoonEnd = document.getElementById('afternoon-end-time').value ? timeToMins(document.getElementById('afternoon-end-time').value) : Infinity;
+// 🌟 内置中国法定节假日日期集合（格式：YYYY-MM-DD）
+// 覆盖主流长赛程可能跨越的节日（如需自定义年份可继续补充）
+const CHINA_HOLIDAYS = new Set([
+    // 2025年节假日
+    "2025-01-01",
+    "2025-01-28", "2025-01-29", "2025-01-30", "2025-01-31", "2025-02-01", "2025-02-02", "2025-02-03", "2025-02-04",
+    "2025-04-04", "2025-04-05", "2025-04-06",
+    "2025-05-01", "2025-05-02", "2025-05-03", "2025-05-04", "2025-05-05",
+    "2025-05-31", "2025-06-01", "2025-06-02",
+    "2025-10-01", "2025-10-02", "2025-10-03", "2025-10-04", "2025-10-05", "2025-10-06", "2025-10-07", "2025-10-08",
+    
+    // 2026年法定节假日（含元旦、春节、清明、劳动节、端午、中秋、国庆）
+    "2026-01-01", "2026-01-02", "2026-01-03",
+    "2026-02-15", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-21", "2026-02-22", "2026-02-23",
+    "2026-04-04", "2026-04-05", "2026-04-06",
+    "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05",
+    "2026-06-19", "2026-06-20", "2026-06-21",
+    "2026-09-25", "2026-09-26", "2026-09-27", // 中秋节
+    "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07", // 国庆节
 
-    matchQueue.sort((a, b) => { if (a.type !== b.type) return a.type === 'rr' ? -1 : 1; return a.round - b.round; });
-    let currentDay = 0; let courtUsage = new Array(numCourts).fill(morningStart); let playerBusyUntil = {};
+    // 2027年常规节点预设
+    "2027-01-01", "2027-01-02", "2027-01-03",
+    "2027-02-05", "2027-02-06", "2027-02-07", "2027-02-08", "2027-02-09", "2027-02-10", "2027-02-11",
+    "2027-05-01", "2027-05-02", "2027-05-03",
+    "2027-10-01", "2027-10-02", "2027-10-03", "2027-10-04", "2027-10-05", "2027-10-06", "2027-10-07"
+]);
+
+function applySchedulingLogic(matchQueue, inputId) {
+    const numCourts = parseInt(document.getElementById(inputId).value) || 2;
+    const duration = parseInt(document.getElementById('global-duration').value) || 40;
+    const restTime = 10; 
+
+    // 读取上下午设置
+    const morningStartVal = document.getElementById('global-start-time').value;
+    const morningEndVal = document.getElementById('morning-end-time').value;
+    const afternoonStartVal = document.getElementById('afternoon-start-time').value;
+    const afternoonEndVal = document.getElementById('afternoon-end-time').value;
+
+    const hasMorning = !!morningStartVal;
+    const hasAfternoon = !!afternoonStartVal;
+
+    const morningStart = hasMorning ? timeToMins(morningStartVal) : null;
+    const morningEnd = (hasMorning && morningEndVal) ? timeToMins(morningEndVal) : null;
+    const afternoonStart = hasAfternoon ? timeToMins(afternoonStartVal) : null;
+    const afternoonEnd = (hasAfternoon && afternoonEndVal) ? timeToMins(afternoonEndVal) : null;
+
+    // 若上午没填，开赛时段直接按下午起始时间排
+    const dayFirstSlot = hasMorning ? morningStart : (hasAfternoon ? afternoonStart : timeToMins("09:00"));
+
+    // 星期勾选过滤
+    const selectedDays = Array.from(document.querySelectorAll('#match-weekdays input:checked')).map(cb => parseInt(cb.value));
+    
+    // 是否启用避开节假日
+    const shouldSkipHolidays = document.getElementById('skip-holidays-checkbox')?.checked ?? true;
+
+    // 默认基准日期
+    let startDateInput = document.getElementById('global-start-date')?.value;
+    let baseDate = startDateInput ? new Date(startDateInput + 'T00:00:00') : new Date();
+
+    // 辅助：获取 YYYY-MM-DD 字符串
+    function getISODateStr(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    // 🌟 核心判断：某天是否允许打比赛（需同时通过：星期几匹配 + 非法定节假日）
+    function isDayValidForMatch(d) {
+        // 1. 检查星期
+        if (selectedDays.length > 0 && !selectedDays.includes(d.getDay())) {
+            return false;
+        }
+        // 2. 检查法定节假日
+        if (shouldSkipHolidays && CHINA_HOLIDAYS.has(getISODateStr(d))) {
+            return false;
+        }
+        return true;
+    }
+
+    // 寻找下一个可用的比赛日
+    function getNextMatchDate(dateObj) {
+        let d = new Date(dateObj);
+        while (!isDayValidForMatch(d)) {
+            d.setDate(d.getDate() + 1);
+        }
+        return d;
+    }
+
+    // 推进到新的一天
+    function advanceToNextMatchDay(dateObj) {
+        let nextD = new Date(dateObj);
+        nextD.setDate(nextD.getDate() + 1);
+        return getNextMatchDate(nextD);
+    }
+
+    // 确保首个比赛日符合条件
+    let currentDate = getNextMatchDate(baseDate);
+
+    // 格式化输出具体日期
+    function formatConcreteDate(dateObj) {
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        const weekNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        return `${m}-${d}(${weekNames[dateObj.getDay()]}) `;
+    }
+
+    matchQueue.sort((a, b) => { 
+        if (a.type !== b.type) return a.type === 'rr' ? -1 : 1; 
+        return a.round - b.round; 
+    });
+
+    let courtUsage = new Array(numCourts).fill(dayFirstSlot); 
+    let playerBusyUntil = {};
 
     matchQueue.forEach((match, index) => {
         let p1 = "", p2 = "";
@@ -2806,34 +2929,66 @@ function applySchedulingLogic(matchQueue, inputId) {
             p2 = match.node.querySelector('[data-slot="bottom"]')?.textContent.trim() || "";
         } else {
             const nameSpans = match.node.querySelectorAll('.p-name');
-            if (nameSpans.length >= 2) { p1 = nameSpans[0].textContent.trim(); p2 = nameSpans[1].textContent.trim(); }
+            if (nameSpans.length >= 2) { 
+                p1 = nameSpans[0].textContent.trim(); 
+                p2 = nameSpans[1].textContent.trim(); 
+            }
         }
 
-        const getReadyTime = (name) => { if (!name || name === "待定" || name === "轮空" || name.includes("负者") || name.includes("胜者")) return 0; return playerBusyUntil[name] ? (playerBusyUntil[name] + restTime) : 0; };
+        const getReadyTime = (name) => { 
+            if (!name || name === "待定" || name === "轮空" || name.includes("负者") || name.includes("胜者")) return 0; 
+            return playerBusyUntil[name] ? (playerBusyUntil[name] + restTime) : 0; 
+        };
+
         const playersReadyAt = Math.max(getReadyTime(p1), getReadyTime(p2));
         let bestCourtIdx = index % numCourts;
         let startTime = Math.max(courtUsage[bestCourtIdx], playersReadyAt);
 
-        if (morningEnd !== Infinity && startTime + duration > morningEnd && startTime < afternoonStart) startTime = afternoonStart;
-        if (afternoonEnd !== Infinity && startTime + duration > afternoonEnd) { currentDay++; courtUsage = new Array(numCourts).fill(morningStart); playerBusyUntil = {}; startTime = morningStart; }
+        // 上午打完，跨入下午开始时间
+        if (hasMorning && morningEnd && (startTime + duration > morningEnd) && hasAfternoon && startTime < afternoonStart) {
+            startTime = afternoonStart;
+        }
 
-        const timeStr = minsToTime(startTime); const dayPrefix = currentDay > 0 ? `D${currentDay + 1} ` : ""; const courtNum = bestCourtIdx + 1;
+        // 当天时间打完，顺延到下一个可用比赛日（自动跳过节假日）
+        const dayEndLimit = (hasAfternoon && afternoonEnd) ? afternoonEnd : (hasMorning && morningEnd ? morningEnd : 1380);
+        if (startTime + duration > dayEndLimit) {
+            currentDate = advanceToNextMatchDay(currentDate);
+            courtUsage = new Array(numCourts).fill(dayFirstSlot);
+            playerBusyUntil = {};
+            startTime = dayFirstSlot;
+        }
+
+        const timeStr = minsToTime(startTime);
+        const datePrefix = formatConcreteDate(currentDate);
+        const courtNum = bestCourtIdx + 1;
         const color = ROUND_COLORS[match.round % ROUND_COLORS.length] || '#27ae60';
 
         if (match.type === 'ko') {
-            let tag = match.node.querySelector('.court-tag') || document.createElement('div'); tag.className = 'court-tag'; tag.style.backgroundColor = color;
-            tag.innerHTML = `${dayPrefix}${timeStr} | ${courtNum}号场 <span style="cursor:pointer; margin-left:5px; border-left:1px solid #fff; padding-left:5px;" onclick="event.stopPropagation(); pushToCourt('${match.node.id}', ${courtNum})">⚡推送</span>`;
+            let tag = match.node.querySelector('.court-tag') || document.createElement('div');
+            tag.className = 'court-tag';
+            tag.style.backgroundColor = color;
+            tag.setAttribute('data-date', datePrefix.trim());
+            tag.setAttribute('data-time', timeStr);
+            tag.setAttribute('data-court', courtNum);
+            tag.innerHTML = `${datePrefix}${timeStr} | ${courtNum}号场 <span style="cursor:pointer; margin-left:5px; border-left:1px solid #fff; padding-left:5px;" onclick="event.stopPropagation(); pushToCourt('${match.node.id}', ${courtNum})">⚡推送</span>`;
             match.node.appendChild(tag);
         } else {
-            let info = match.node.querySelector('.court-info') || document.createElement('span'); info.className = 'court-info'; info.style.color = color;
-            info.innerHTML = `<br>${dayPrefix}${timeStr} ${courtNum}号场`; match.node.appendChild(info);
+            let info = match.node.querySelector('.court-info') || document.createElement('span');
+            info.className = 'court-info';
+            info.style.color = color;
+            info.setAttribute('data-date', datePrefix.trim());
+            info.setAttribute('data-time', timeStr);
+            info.setAttribute('data-court', courtNum);
+            info.innerHTML = `<br>${datePrefix}${timeStr} ${courtNum}号场`;
+            match.node.appendChild(info);
         }
-        const finishTime = startTime + duration; courtUsage[bestCourtIdx] = finishTime;
+
+        const finishTime = startTime + duration;
+        courtUsage[bestCourtIdx] = finishTime;
         if (p1 && p1 !== "待定" && p1 !== "轮空") playerBusyUntil[p1] = finishTime;
         if (p2 && p2 !== "待定" && p2 !== "轮空") playerBusyUntil[p2] = finishTime;
     });
 }
-
 function assignGlobalCourts(inputId) {
     const courtInput = document.getElementById(inputId); const numCourts = parseInt(courtInput.value) || 5;
     if (socket && socket.connected) { socket.emit('update_config', { maxCourts: numCourts }); socket.emit('update_max_courts', numCourts); }
@@ -2886,23 +3041,71 @@ function handleTableBlur(e) {
 }
 
 function calculateGroupStandings(table, rootNode = document, projectId = activeId) {
-    const rows = Array.from(table.querySelectorAll('tbody tr')); const groupContainer = table.closest('.group-container'); const scheduleTable = groupContainer ? groupContainer.querySelector('.schedule-table') : null;
+    const rows = Array.from(table.querySelectorAll('tbody tr')); 
+    const groupContainer = table.closest('.group-container'); 
+    const scheduleTable = groupContainer ? groupContainer.querySelector('.schedule-table') : null;
+
     const winPts = document.getElementById('pts-win') ? parseInt(document.getElementById('pts-win').value) : 3;
     const drawPts = document.getElementById('pts-draw') ? parseInt(document.getElementById('pts-draw').value) : 1;
     const lossPts = document.getElementById('pts-loss') ? parseInt(document.getElementById('pts-loss').value) : 0;
-    let stats = []; let anyMatchPlayed = false; const players = rows.map(row => getRealName(row.cells[0]));
+    
+    // 获取点球胜负积分
+    const penWinPts = document.getElementById('pts-pen-win') ? parseInt(document.getElementById('pts-pen-win').value) : 2;
+    const penLossPts = document.getElementById('pts-pen-loss') ? parseInt(document.getElementById('pts-pen-loss').value) : 1;
+
+    let stats = []; 
+    let anyMatchPlayed = false; 
+    const players = rows.map(row => getRealName(row.cells[0]));
 
     rows.forEach((row, rowIndex) => {
-        let totalPts = 0, totalNet = 0; let hasPlayed = false; let isInvalidRanking = false; 
+        let totalPts = 0, totalNet = 0; 
+        let hasPlayed = false; 
+        let isInvalidRanking = false; 
+
         for (let j = 1; j < row.cells.length - 3; j++) {
-            const cellText = row.cells[j].innerText.trim(); const scoreMatch = cellText.match(/^(\d+)\s*[:：\-\s]\s*(\d+)/);
+            const cellText = row.cells[j].innerText.trim(); 
+            // 匹配格式：如 "1:1" 或 "1:1\n5:3" 或 "1:1 (5:3)"
+            const scoreMatch = cellText.match(/^(\d+)\s*[:：\-\s]\s*(\d+)/);
             if (scoreMatch) {
-                anyMatchPlayed = true; hasPlayed = true; const s1 = parseInt(scoreMatch[1]), s2 = parseInt(scoreMatch[2]);
-                if (s1 > s2) totalPts += winPts; else if (s1 === s2) totalPts += (s1 === 0 && (cellText.includes("弃权") || cellText.includes("W/O"))) ? lossPts : drawPts; else totalPts += lossPts;
-                totalNet += (s1 - s2); if ((cellText.includes("弃权") || cellText.includes("W/O")) && s1 <= s2) isInvalidRanking = true;
+                anyMatchPlayed = true; 
+                hasPlayed = true; 
+                const s1 = parseInt(scoreMatch[1]), s2 = parseInt(scoreMatch[2]);
+                
+                // 探测常规赛比分后面是否有第二行/点球小分
+                const penaltyMatch = cellText.substring(scoreMatch[0].length).match(/(\d+)\s*[:：\-\s]\s*(\d+)/);
+
+                if (s1 > s2) {
+                    totalPts += winPts;
+                } else if (s1 < s2) {
+                    totalPts += lossPts;
+                } else {
+                    // 常规赛打平
+                    if (penaltyMatch) {
+                        const p1 = parseInt(penaltyMatch[1]), p2 = parseInt(penaltyMatch[2]);
+                        if (p1 > p2) {
+                            totalPts += penWinPts; // 点球胜（如 5:3 得到 2分）
+                        } else if (p1 < p2) {
+                            totalPts += penLossPts; // 点球负（如 3:5 得到 1分/0分）
+                        } else {
+                            totalPts += drawPts;
+                        }
+                    } else {
+                        // 无点球，纯常规赛平局
+                        if (s1 === 0 && (cellText.includes("弃权") || cellText.includes("W/O"))) {
+                            totalPts += lossPts;
+                        } else {
+                            totalPts += drawPts;
+                        }
+                    }
+                }
+                
+                // 净胜球计算（按常规赛）
+                totalNet += (s1 - s2); 
+                if ((cellText.includes("弃权") || cellText.includes("W/O")) && s1 <= s2) isInvalidRanking = true;
             }
         }
-        row.cells[row.cells.length - 3].innerText = hasPlayed ? totalPts : ""; row.cells[row.cells.length - 2].innerText = hasPlayed ? totalNet : "";
+        row.cells[row.cells.length - 3].innerText = hasPlayed ? totalPts : ""; 
+        row.cells[row.cells.length - 2].innerText = hasPlayed ? totalNet : "";
         stats.push({ row: row, name: players[rowIndex], pts: totalPts, net: totalNet, hasPlayed: hasPlayed, isInvalidRanking: isInvalidRanking });
     });
 
@@ -2912,29 +3115,59 @@ function calculateGroupStandings(table, rootNode = document, projectId = activeI
             if (pNames.length >= 2) {
                 const p1 = pNames[0].getAttribute('data-realname') || pNames[0].innerText.replace(/\s*\n\s*/g, '').trim();
                 const p2 = pNames[1].getAttribute('data-realname') || pNames[1].innerText.replace(/\s*\n\s*/g, '').trim();
-                const idx1 = players.indexOf(p1); const idx2 = players.indexOf(p2);
+                const idx1 = players.indexOf(p1); 
+                const idx2 = players.indexOf(p2);
                 if (idx1 !== -1 && idx2 !== -1) {
-                    const crossCell = table.rows[idx1 + 1].cells[idx2 + 1]; const scoreMatch = crossCell.innerText.trim().match(/^(\d+)\s*[:：\-\s]\s*(\d+)/);
+                    const crossCell = table.rows[idx1 + 1].cells[idx2 + 1]; 
+                    const scoreMatch = crossCell.innerText.trim().match(/^(\d+)\s*[:：\-\s]\s*(\d+)/);
                     let courtInfo = cell.querySelector('.court-info');
-                    if (scoreMatch) { if (!courtInfo) { courtInfo = document.createElement('span'); courtInfo.className = 'court-info'; cell.appendChild(courtInfo); } courtInfo.style.color = '#999'; courtInfo.innerHTML = `<br><span class="match-status-text">[已完赛 ${scoreMatch[1]}:${scoreMatch[2]}]</span>`; cell.style.backgroundColor = '#f9fafc'; }
-                    else if (courtInfo && !courtInfo.innerText.includes('号场')) { courtInfo.remove(); cell.style.backgroundColor = ''; }
+                    if (scoreMatch) { 
+                        if (!courtInfo) { 
+                            courtInfo = document.createElement('span'); 
+                            courtInfo.className = 'court-info'; 
+                            cell.appendChild(courtInfo); 
+                        } 
+                        courtInfo.style.color = '#999'; 
+                        courtInfo.innerHTML = `<br><span class="match-status-text">[已完赛 ${scoreMatch[1]}:${scoreMatch[2]}]</span>`; 
+                        cell.style.backgroundColor = '#f9fafc'; 
+                    } else if (courtInfo && !courtInfo.innerText.includes('号场')) { 
+                        courtInfo.remove(); 
+                        cell.style.backgroundColor = ''; 
+                    }
                 }
             }
         });
     }
 
-    if (!anyMatchPlayed) { stats.forEach(item => item.row.cells[item.row.cells.length - 1].innerText = ""); if (groupContainer) groupContainer.querySelectorAll('.rank-select').forEach(sel => sel.value = ""); syncMixedBracket(rootNode, projectId); return; }
-    const sorted = stats.filter(s => s.hasPlayed).sort((a, b) => { if (b.pts !== a.pts) return b.pts - a.pts; return b.net - a.net; });
-    stats.forEach(s => s.row.cells[s.row.cells.length - 1].innerText = ""); let currentRank = 1;
+    if (!anyMatchPlayed) { 
+        stats.forEach(item => item.row.cells[item.row.cells.length - 1].innerText = ""); 
+        if (groupContainer) groupContainer.querySelectorAll('.rank-select').forEach(sel => sel.value = ""); 
+        syncMixedBracket(rootNode, projectId); 
+        return; 
+    }
+
+    const sorted = stats.filter(s => s.hasPlayed).sort((a, b) => { 
+        if (b.pts !== a.pts) return b.pts - a.pts; 
+        return b.net - a.net; 
+    });
+
+    stats.forEach(s => s.row.cells[s.row.cells.length - 1].innerText = ""); 
+    let currentRank = 1;
     sorted.forEach((item, index) => {
         if (!(index > 0 && item.pts === sorted[index - 1].pts && item.net === sorted[index - 1].net)) currentRank = index + 1;
         item.row.cells[item.row.cells.length - 1].innerText = currentRank;
-        if (groupContainer) { const select = groupContainer.querySelector(`.rank-${index + 1}`); if (select) select.value = (item.isInvalidRanking && item.pts <= lossPts) ? "轮空" : item.name; }
+        if (groupContainer) { 
+            const select = groupContainer.querySelector(`.rank-${index + 1}`); 
+            if (select) select.value = (item.isInvalidRanking && item.pts <= lossPts) ? "轮空" : item.name; 
+        }
     });
-    syncMixedBracket(rootNode, projectId); 
-    if (rootNode === document) { updateStandings(); saveData(false); }
-}
 
+    syncMixedBracket(rootNode, projectId); 
+    if (rootNode === document) { 
+        updateStandings(); 
+        saveData(false); 
+    }
+}
 function toggleEditNamesMode() {
     isEditMode = !isEditMode; const btn = document.getElementById('toggle-edit-names-btn');
     const allTargets = document.querySelectorAll('.participant:not(.winner):not(.loser), .crosstable th.player-header');
@@ -3006,34 +3239,119 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAccessQRCodes();
 });
 function exportGlobalSchedule() {
-    const ids = Object.keys(allTournaments); if (ids.length === 0) return alert("目前没有任何比赛项目。");
-    let allMatches = []; const parser = new DOMParser();
+    const ids = Object.keys(allTournaments); 
+    if (ids.length === 0) return alert("目前没有任何比赛项目。");
+    
+    let allMatches = []; 
+    const parser = new DOMParser();
 
     ids.forEach(id => {
-        const t = allTournaments[id]; const doc = parser.parseFromString(t.html, 'text/html');
+        const t = allTournaments[id]; 
+        const doc = parser.parseFromString(t.html, 'text/html');
+        
         doc.querySelectorAll('.match, .schedule-table td').forEach(node => {
             const tag = node.querySelector('.court-tag, .court-info');
             if (tag && tag.innerText.includes('号场')) {
-                const tagText = tag.innerText; const dayMatch = tagText.match(/D(\d+)/); const timeMatch = tagText.match(/\d{2}:\d{2}/); const courtMatch = tagText.match(/(\d+)号场/);
-                let p1 = "待定", p2 = "待定";
-                if (node.classList.contains('match')) { p1 = node.querySelector('[data-slot="top"]')?.innerText.trim() || "待定"; p2 = node.querySelector('[data-slot="bottom"]')?.innerText.trim() || "待定"; } 
-                else {
-                    const pNames = node.querySelectorAll('.p-name');
-                    if (pNames.length >= 2) { p1 = pNames[0].getAttribute('data-realname') || pNames[0].innerText.replace(/\s*\n\s*/g, '').trim(); p2 = pNames[1].getAttribute('data-realname') || pNames[1].innerText.replace(/\s*\n\s*/g, '').trim(); } 
-                    else { const names = node.innerText.split(/VS/i); if(names.length >= 2) { p1 = names[0].split('\n')[0].trim(); p2 = names[1].split('\n')[0].trim(); } }
+                const tagText = tag.innerText.trim();
+
+                // 优先从属性读取，其次通过正则匹配具体日期（如 09-08(周三)）
+                let dateStr = tag.getAttribute('data-date') || "";
+                if (!dateStr) {
+                    const dateMatch = tagText.match(/(\d{2,4}-)?\d{1,2}-\d{1,2}(\([^)]+\))?/);
+                    dateStr = dateMatch ? dateMatch[0] : "比赛日";
                 }
-                if (timeMatch && courtMatch) allMatches.push({ day: dayMatch ? parseInt(dayMatch[1]) : 1, time: timeMatch[0], court: parseInt(courtMatch[1]), project: t.sportName, matchup: `${p1} VS ${p2}` });
+
+                // 提取时间与场地
+                let timeStr = tag.getAttribute('data-time') || "";
+                if (!timeStr) {
+                    const timeMatch = tagText.match(/(\d{1,2}:\d{2})/);
+                    timeStr = timeMatch ? timeMatch[1] : "";
+                }
+                timeStr = timeStr.padStart(5, '0');
+
+                let courtNum = parseInt(tag.getAttribute('data-court') || 0);
+                if (!courtNum) {
+                    const courtMatch = tagText.match(/(\d+)号场/);
+                    courtNum = courtMatch ? parseInt(courtMatch[1]) : 1;
+                }
+
+                let p1 = "待定", p2 = "待定";
+                if (node.classList.contains('match')) { 
+                    p1 = node.querySelector('[data-slot="top"]')?.innerText.trim() || "待定"; 
+                    p2 = node.querySelector('[data-slot="bottom"]')?.innerText.trim() || "待定"; 
+                } else {
+                    const pNames = node.querySelectorAll('.p-name');
+                    if (pNames.length >= 2) { 
+                        p1 = pNames[0].getAttribute('data-realname') || pNames[0].innerText.replace(/\s*\n\s*/g, '').trim(); 
+                        p2 = pNames[1].getAttribute('data-realname') || pNames[1].innerText.replace(/\s*\n\s*/g, '').trim(); 
+                    } else { 
+                        const names = node.innerText.split(/VS/i); 
+                        if (names.length >= 2) { 
+                            p1 = names[0].split('\n')[0].trim(); 
+                            p2 = names[1].split('\n')[0].trim(); 
+                        } 
+                    }
+                }
+
+                if (timeStr && courtNum) {
+                    allMatches.push({ 
+                        dateStr: dateStr,
+                        time: timeStr, 
+                        court: courtNum, 
+                        project: t.sportName, 
+                        matchup: `${p1} VS ${p2}` 
+                    });
+                }
             }
         });
     });
 
-    if (allMatches.length === 0) return alert("未发现已编排的赛程");
-    allMatches.sort((a, b) => { if (a.day !== b.day) return a.day - b.day; if (a.time !== b.time) return a.time.localeCompare(b.time); return a.court - b.court; });
-    let tableRows = allMatches.map((m, i) => `<tr><td>D${m.day}</td><td style="font-weight:bold; color:#666;">${i + 1}</td><td style="font-weight:bold; width:80px">${m.time}</td><td>${m.court}号场</td><td style="color:#27ae60;">${m.project}</td><td style="text-align:left; padding-left:15px;">${m.matchup}</td></tr>`).join('');
-    let globalTableHtml = `<div id="global-print-view"><h1 style="text-align:center; margin-bottom:20px;">赛事总日程表</h1><table class="data-table"><thead><tr><th>日期</th><th>场序</th><th>时间</th><th>场地</th><th>比赛项目</th><th>对阵详情</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
+    if (allMatches.length === 0) return alert("未发现已编排的赛程，请先点击【编排】。");
 
-    const originalContent = ui.results.innerHTML; ui.results.innerHTML = globalTableHtml;
-    setTimeout(() => { window.print(); ui.results.innerHTML = originalContent; }, 100);
+    // 严谨排序：第一优先级具体日期 -> 第二优先级开赛时间 -> 第三优先级场地号
+    allMatches.sort((a, b) => { 
+        if (a.dateStr !== b.dateStr) return a.dateStr.localeCompare(b.dateStr); 
+        if (a.time !== b.time) return a.time.localeCompare(b.time); 
+        return a.court - b.court; 
+    });
+
+    // 重新从 1 开始生成按比赛编排推进的连续场序
+    let tableRows = allMatches.map((m, i) => `
+        <tr>
+            <td style="font-weight:bold; white-space:nowrap;">${m.dateStr}</td>
+            <td style="font-weight:bold; color:#1a73e8;">${i + 1}</td>
+            <td style="font-weight:bold; width:80px">${m.time}</td>
+            <td>${m.court}号场</td>
+            <td style="color:#27ae60;">${m.project}</td>
+            <td style="text-align:left; padding-left:15px;">${m.matchup}</td>
+        </tr>
+    `).join('');
+
+    let globalTableHtml = `
+        <div id="global-print-view">
+            <h1 style="text-align:center; margin-bottom:20px;">赛事总日程表</h1>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>比赛日期</th>
+                        <th>场序</th>
+                        <th>时间</th>
+                        <th>场地</th>
+                        <th>比赛项目</th>
+                        <th>对阵详情</th>
+                    </tr>
+                </thead>
+                <tbody>${tableRows}</tbody>
+            </table>
+        </div>
+    `;
+
+    const originalContent = ui.results.innerHTML; 
+    ui.results.innerHTML = globalTableHtml;
+    setTimeout(() => { 
+        window.print(); 
+        ui.results.innerHTML = originalContent; 
+    }, 100);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
