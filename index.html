@@ -595,17 +595,21 @@
     <label style="margin:0; font-weight:bold; color:#1a73e8;">📅 比赛首日：</label>
     <input type="date" id="global-start-date" style="width: 135px; padding: 5px;">
     
-    <label style="margin:0; font-weight:bold; color:#1a73e8; margin-left: 5px;">🗓️ 比赛日：</label>
-    <div id="match-weekdays" style="display: flex; gap: 8px; align-items: center; font-size: 13px;">
-        <label><input type="checkbox" value="1"> 周一</label>
-        <label><input type="checkbox" value="2"> 周二</label>
-        <label><input type="checkbox" value="3"> 周三</label>
-        <label><input type="checkbox" value="4"> 周四</label>
-        <label><input type="checkbox" value="5"> 周五</label>
-        <label><input type="checkbox" value="6"> 周六</label>
-        <label><input type="checkbox" value="0"> 周日</label>
-        <label><input type="checkbox" id="skip-holidays-checkbox" checked> 🚫 避开法定节假日</label>
-    </div>
+   <label style="margin:0; font-weight:bold; color:#1a73e8; margin-left: 5px;">🗓️ 比赛日：</label>
+<div id="match-weekdays" style="display: flex; gap: 8px; align-items: center; font-size: 13px;">
+    <label><input type="checkbox" value="1"> 周一</label>
+    <label><input type="checkbox" value="2"> 周二</label>
+    <label><input type="checkbox" value="3"> 周三</label>
+    <label><input type="checkbox" value="4"> 周四</label>
+    <label><input type="checkbox" value="5"> 周五</label>
+    <label><input type="checkbox" value="6"> 周六</label>
+    <label><input type="checkbox" value="0"> 周日</label>
+</div>
+
+<!-- 独立放置并加红色提示 -->
+<label style="margin:0; font-weight:bold;  margin-left: 5px color: #e74c3c; ">
+    <input type="checkbox" id="skip-holidays-checkbox" checked> 🚫 避开法定节假日
+</label>
     
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
         <label style="margin:0;">场地数：</label>
